@@ -455,6 +455,56 @@ canvas {
   color: var(--yellow);
 }
 
+/* ===== Model Loading Bar ===== */
+#model-loading-bar {
+  margin-bottom: 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--yellow);
+  display: none;
+}
+
+#model-loading-bar.visible {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+#model-loading-bar .loading-label {
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#model-loading-bar .loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+#model-loading-bar .loading-track {
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+#model-loading-bar .loading-fill {
+  height: 100%;
+  background: var(--yellow);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+#model-loading-bar .loading-steps {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
 /* Webcam elements */
 #webcam-video {
   width: 100%;

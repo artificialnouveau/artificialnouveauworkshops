@@ -22,8 +22,26 @@
   let webcamLoop = null;
 
   const models = { cocoSsd: null, nsfw: null, faceApiLoaded: false };
+  const loadingBar = document.getElementById('model-loading-bar');
+  const loadingFill = document.getElementById('loading-fill');
+  const loadingPercent = document.getElementById('loading-percent');
+  const loadingSteps = document.getElementById('loading-steps');
 
   const NSFW_CLASSES = { 0: 'Drawing', 1: 'Hentai', 2: 'Neutral', 3: 'Porn', 4: 'Sexy' };
+
+  function showLoading(stepText, percent) {
+    loadingBar.classList.add('visible');
+    loadingFill.style.width = percent + '%';
+    loadingPercent.textContent = percent + '%';
+    loadingSteps.textContent = stepText;
+  }
+
+  function hideLoading() {
+    loadingFill.style.width = '100%';
+    loadingPercent.textContent = '100%';
+    loadingSteps.textContent = 'All models ready';
+    setTimeout(() => { loadingBar.classList.remove('visible'); }, 600);
+  }
 
   const activeLayers = {
     demographics: true,
@@ -44,8 +62,10 @@
 
       if (cb.checked) {
         chip.classList.add('loading');
+        showLoading(`Loading ${layer} model...`, 10);
         await ensureModel(layer);
         chip.classList.remove('loading');
+        hideLoading();
       }
 
       if (currentImg && !webcamActive) await analyzeImage(currentImg);
@@ -500,15 +520,22 @@
         try {
           const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model';
           console.log('Loading face-api.js models from:', MODEL_URL);
-          await Promise.all([
-            faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-            faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
-            faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
-          ]);
+
+          showLoading('Loading face detector...', 15);
+          await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+
+          showLoading('Loading age & gender model...', 40);
+          await faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL);
+
+          showLoading('Loading expression model...', 65);
+          await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+
           models.faceApiLoaded = true;
+          showLoading('Face analysis models ready', 80);
           console.log('face-api.js models loaded successfully (age/gender/expression)');
         } catch (err) {
           console.error('face-api.js model loading failed:', err);
+          showLoading('Face analysis model failed — check console', 0);
         }
       }
       return;
@@ -518,6 +545,7 @@
     }
     if (layer === 'objects' && !models.cocoSsd) {
       try {
+        showLoading('Loading object detection model...', 50);
         console.log('Loading COCO-SSD...');
         models.cocoSsd = await cocoSsd.load();
         console.log('COCO-SSD loaded');
@@ -527,9 +555,10 @@
     }
     if (layer === 'nsfw' && !models.nsfw) {
       try {
+        showLoading('Loading content classification model...', 30);
         console.log('Loading NSFW model (self-hosted)...');
         models.nsfw = await tf.loadLayersModel('models/nsfw/model.json');
-        // Warm up with a dummy prediction
+        showLoading('Warming up content model...', 70);
         const dummy = tf.zeros([1, 224, 224, 3]);
         const warmup = models.nsfw.predict(dummy);
         await warmup.data();
@@ -547,11 +576,33 @@
   }
 
   async function ensureActiveModels() {
-    const promises = [];
-    for (const [layer, active] of Object.entries(activeLayers)) {
-      if (active) promises.push(ensureModel(layer));
+    const activelist = Object.entries(activeLayers).filter(([,v]) => v).map(([k]) => k);
+    if (activelist.length === 0) return;
+
+    // Check if any models actually need loading
+    const needsLoading = activelist.some(layer => {
+      if (layer === 'demographics') return !models.faceApiLoaded && typeof faceapi !== 'undefined';
+      if (layer === 'objects') return !models.cocoSsd;
+      if (layer === 'nsfw') return !models.nsfw;
+      return false;
+    });
+
+    if (needsLoading) {
+      showLoading('Preparing models...', 5);
     }
-    await Promise.all(promises);
+
+    let step = 0;
+    const total = activelist.length;
+    for (const layer of activelist) {
+      step++;
+      const pct = Math.round((step / total) * 90) + 5;
+      showLoading(`Loading ${layer}...`, pct);
+      await ensureModel(layer);
+    }
+
+    if (needsLoading) {
+      hideLoading();
+    }
   }
 
   // ── Render ──
