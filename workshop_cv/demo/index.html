@@ -14,11 +14,13 @@
   <!-- COCO-SSD (object detection) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd/dist/coco-ssd.min.js"></script>
   <!-- NSFWJS (nudity/content classification) -->
-  <script src="https://cdn.jsdelivr.net/npm/nsfwjs@4/dist/nsfwjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nsfwjs/dist/nsfwjs.min.js"></script>
   <!-- MediaPipe Face Mesh runtime (must load before face-landmarks-detection) -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
   <!-- Face Landmarks Detection -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@1.0.6/dist/face-landmarks-detection.min.js"></script>
+  <!-- face-api.js (no-bundle version — uses existing TF.js) for age/gender/expression -->
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.nobundle.js"></script>
 </head>
 <body>
   <!-- Loading overlay -->
@@ -80,9 +82,51 @@
         </div>
       </div>
 
+      <!-- Section: Channels -->
+      <div class="explainer-block">
+        <h3>Step 2: Color Channels</h3>
+        <p>Every pixel blends three channels: <strong style="color:#ff6666">Red</strong>, <strong style="color:#66ff66">Green</strong>, and <strong style="color:#6666ff">Blue</strong>. Below you can see your image split into its individual channels. A grayscale version shows how the machine often simplifies the image by discarding color entirely — reducing 3 numbers per pixel to just 1.</p>
+      </div>
+
+      <div class="canvas-row-4">
+        <div class="canvas-container">
+          <h3 style="color:#ff6666">Red Channel</h3>
+          <canvas id="canvas-red"></canvas>
+        </div>
+        <div class="canvas-container">
+          <h3 style="color:#66ff66">Green Channel</h3>
+          <canvas id="canvas-green"></canvas>
+        </div>
+        <div class="canvas-container">
+          <h3 style="color:#6666ff">Blue Channel</h3>
+          <canvas id="canvas-blue"></canvas>
+        </div>
+        <div class="canvas-container">
+          <h3>Grayscale</h3>
+          <canvas id="canvas-gray"></canvas>
+        </div>
+      </div>
+
+      <!-- Section: Edge Detection -->
+      <div class="explainer-block">
+        <h3>Step 3: Edge Detection</h3>
+        <p>Before neural networks, computer vision relied on detecting <strong>edges</strong> — abrupt changes in brightness between neighbouring pixels. This is still the first thing many models "see." The image below shows a simple edge detection filter applied to your photo. Edges are the skeleton of what the machine recognizes.</p>
+      </div>
+
+      <div class="canvas-row">
+        <div class="canvas-container">
+          <h3>Edge Detection</h3>
+          <canvas id="canvas-edges"></canvas>
+        </div>
+        <div class="canvas-container">
+          <h3>Edges + Original</h3>
+          <canvas id="canvas-edges-overlay"></canvas>
+        </div>
+      </div>
+
       <!-- Section: Classification -->
       <div class="explainer-block">
-        <h3>Step 2: Pattern Matching</h3>
+        <h3>Step 4: Pattern Matching</h3>
         <p>A neural network called <strong>MobileNet</strong> has been trained on millions of labelled images. It learned to associate patterns of pixels with labels. It doesn't "understand" your photo — it matches patterns it has seen before and outputs its best guesses with a confidence percentage. These guesses are called <strong>classifications</strong>.</p>
       </div>
 
@@ -93,7 +137,7 @@
 
       <!-- Section: Heatmap -->
       <div class="explainer-block">
-        <h3>Step 3: Where Is It Looking?</h3>
+        <h3>Step 5: Where Is It Looking?</h3>
         <p>Not every pixel matters equally. The <strong>attention heatmap</strong> below shows which regions of your image most influenced the classification. It works by systematically blocking out parts of the image and measuring how much the model's confidence drops — if blocking a region causes a big drop, that region was important. Orange/red areas are where the model is "paying attention." This may not be where <em>you</em> would look.</p>
       </div>
 
@@ -133,8 +177,8 @@
       <h3 class="mono">Detection Layers</h3>
       <div class="toggle-row">
         <label class="toggle-chip active" data-layer="demographics">
-          <input type="checkbox" checked> Face Detection
-          <span class="chip-sub">face / landmarks / bounding box</span>
+          <input type="checkbox" checked> Face Analysis
+          <span class="chip-sub">face / age / gender / expression</span>
         </label>
         <label class="toggle-chip" data-layer="pose">
           <input type="checkbox"> Pose
@@ -172,37 +216,63 @@
   <section id="step-3" class="step">
     <div class="step-intro">
       <h2>Break the Model</h2>
-      <p>Machine vision is fragile. Take a photo designed to confuse it — unusual angles, partial occlusion, dramatic lighting, ambiguous framing. Then compare.</p>
+      <p>Machine vision is fragile. Upload any photo and see what the model thinks. Then try to fool it.</p>
     </div>
 
-    <div id="step3-upload-row">
-      <div class="upload-area" id="upload-area-3a">
-        <label for="file-input-3a" class="upload-label">
-          <span class="upload-icon">1</span>
-          <span>Upload a normal photo</span>
-        </label>
-        <input type="file" id="file-input-3a" accept="image/*" capture="environment">
+    <div class="upload-area" id="upload-area-3">
+      <label for="file-input-3" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a photo</span>
+      </label>
+      <input type="file" id="file-input-3" accept="image/*" capture="environment">
+    </div>
+
+    <!-- Phase 1: Initial classification -->
+    <div id="step3-phase1" class="results hidden">
+      <div class="comparison-card" style="margin-bottom:20px">
+        <h3>The model thinks this is:</h3>
+        <canvas id="canvas-break-a"></canvas>
+        <div id="predictions-a" class="prediction-list"></div>
+        <div class="confidence-meter">
+          <div class="confidence-label">Top Confidence</div>
+          <div class="meter-track"><div class="meter-fill" id="meter-a"></div></div>
+          <span class="meter-value" id="meter-value-a"></span>
+        </div>
+      </div>
+
+      <!-- Challenge prompt -->
+      <div class="explainer-block" style="border-left-color:var(--yellow)">
+        <h3 style="color:var(--yellow)">Challenge: Can you break it?</h3>
+        <p>Now take or upload another photo of the <strong>same subject</strong>, but try to confuse the model. Ideas:</p>
+        <ul style="color:var(--text-dim); margin-top:8px; padding-left:20px; line-height:2">
+          <li>Cover part of the object with your hand</li>
+          <li>Shoot from an extreme angle (underneath, very close)</li>
+          <li>Change the lighting dramatically</li>
+          <li>Add something unexpected to the frame</li>
+          <li>Photograph a reflection or shadow instead</li>
+        </ul>
       </div>
 
       <div class="upload-area" id="upload-area-3b">
         <label for="file-input-3b" class="upload-label">
-          <span class="upload-icon">2</span>
-          <span>Now try to confuse it</span>
+          <span class="upload-icon">VS</span>
+          <span>Upload your trick photo</span>
         </label>
         <input type="file" id="file-input-3b" accept="image/*" capture="environment">
       </div>
     </div>
 
-    <div id="step3-results" class="results hidden">
+    <!-- Phase 2: Comparison -->
+    <div id="step3-phase2" class="results hidden">
       <div class="comparison-row">
         <div class="comparison-card">
           <h3>Original</h3>
-          <canvas id="canvas-break-a"></canvas>
-          <div id="predictions-a" class="prediction-list"></div>
+          <canvas id="canvas-break-a2"></canvas>
+          <div id="predictions-a2" class="prediction-list"></div>
           <div class="confidence-meter">
-            <div class="confidence-label">Model Confidence</div>
-            <div class="meter-track"><div class="meter-fill" id="meter-a"></div></div>
-            <span class="meter-value" id="meter-value-a"></span>
+            <div class="confidence-label">Confidence</div>
+            <div class="meter-track"><div class="meter-fill" id="meter-a2"></div></div>
+            <span class="meter-value" id="meter-value-a2"></span>
           </div>
         </div>
 
@@ -213,14 +283,22 @@
           <canvas id="canvas-break-b"></canvas>
           <div id="predictions-b" class="prediction-list"></div>
           <div class="confidence-meter">
-            <div class="confidence-label">Model Confidence</div>
+            <div class="confidence-label">Confidence</div>
             <div class="meter-track"><div class="meter-fill" id="meter-b"></div></div>
             <span class="meter-value" id="meter-value-b"></span>
           </div>
         </div>
       </div>
 
-      <div id="break-verdict" class="critical-text"></div>
+      <div id="break-verdict" class="explainer-block"></div>
+
+      <div class="upload-area" id="upload-area-3-retry" style="margin-top:16px">
+        <label for="file-input-3-retry" class="upload-label">
+          <span class="upload-icon">+</span>
+          <span>Try again with a new photo</span>
+        </label>
+        <input type="file" id="file-input-3-retry" accept="image/*" capture="environment">
+      </div>
     </div>
   </section>
 

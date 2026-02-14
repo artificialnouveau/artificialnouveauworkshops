@@ -1,6 +1,7 @@
 /**
  * step2-surveillance.js — Full surveillance stack with toggleable layers
- * Uses only models proven to work: BlazeFace, COCO-SSD, NSFWJS
+ * Uses: BlazeFace (face boxes), face-api.js nobundle (age/gender/expression),
+ *       COCO-SSD (objects), NSFWJS (content classification)
  * Sources: image upload or webcam
  */
 
@@ -20,7 +21,7 @@
   let webcamActive = false;
   let webcamLoop = null;
 
-  const models = { cocoSsd: null, nsfw: null };
+  const models = { cocoSsd: null, nsfw: null, faceApiLoaded: false };
 
   const activeLayers = {
     demographics: true,
@@ -143,7 +144,7 @@
       `PROCESSING: CLIENT-SIDE (no data transmitted)`;
   }
 
-  // ── Face Detection via BlazeFace ──
+  // ── Face Detection via BlazeFace + face-api.js for age/gender/expression ──
   async function runFaceDetection(source, ctx, allData) {
     if (!App.models.blazeface) {
       allData.push({ section: 'FACE DETECTION' });
@@ -170,6 +171,28 @@
       return;
     }
 
+    // Run face-api.js for age/gender/expression if available
+    let faceApiResults = null;
+    if (models.faceApiLoaded && typeof faceapi !== 'undefined') {
+      try {
+        // face-api.js needs a canvas or image element
+        let inputEl = source;
+        if (source instanceof HTMLVideoElement) {
+          const tmp = document.createElement('canvas');
+          tmp.width = source.videoWidth;
+          tmp.height = source.videoHeight;
+          tmp.getContext('2d').drawImage(source, 0, 0);
+          inputEl = tmp;
+        }
+        faceApiResults = await faceapi
+          .detectAllFaces(inputEl, new faceapi.TinyFaceDetectorOptions())
+          .withAgeAndGender()
+          .withFaceExpressions();
+      } catch (err) {
+        console.error('face-api.js analysis error:', err);
+      }
+    }
+
     const landmarkNames = ['right eye', 'left eye', 'nose', 'mouth', 'right ear', 'left ear'];
 
     faces.forEach((face, idx) => {
@@ -181,18 +204,33 @@
       const h = y2 - y1;
       const conf = (face.probability[0] * 100).toFixed(0);
 
+      // Try to match this face with a face-api.js result by bounding box overlap
+      let ageGenderResult = null;
+      if (faceApiResults && faceApiResults.length > 0) {
+        ageGenderResult = matchFaceApiResult(faceApiResults, x1, y1, w, h, idx);
+      }
+
       // Green bounding box with brackets
       ctx.strokeStyle = '#00ff66';
       ctx.lineWidth = 2;
       ctx.strokeRect(x1, y1, w, h);
       drawBrackets(ctx, x1, y1, w, h, Math.min(w, h) * 0.15);
 
-      // Label
+      // Label — include age/gender if available
+      let labelText = `SUBJ-${String(idx + 1).padStart(2, '0')}  CONF:${conf}%`;
+      if (ageGenderResult) {
+        const age = Math.round(ageGenderResult.age);
+        const gender = ageGenderResult.gender.toUpperCase();
+        const genderConf = (ageGenderResult.genderProbability * 100).toFixed(0);
+        labelText = `SUBJ-${String(idx + 1).padStart(2, '0')}  AGE:${age}  ${gender}(${genderConf}%)`;
+      }
+
+      const labelW = Math.max(ctx.measureText(labelText).width + 10, w);
       ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-      ctx.fillRect(x1, y1 - 18, Math.max(w, 140), 18);
+      ctx.fillRect(x1, y1 - 18, labelW, 18);
       ctx.fillStyle = '#00ff66';
       ctx.font = '11px monospace';
-      ctx.fillText(`SUBJ-${String(idx + 1).padStart(2, '0')}  CONF:${conf}%`, x1 + 4, y1 - 5);
+      ctx.fillText(labelText, x1 + 4, y1 - 5);
 
       // Draw landmark points
       if (face.landmarks) {
@@ -202,7 +240,6 @@
           ctx.fillStyle = '#ff4a4a';
           ctx.fill();
 
-          // Label each landmark
           ctx.fillStyle = 'rgba(0,0,0,0.7)';
           ctx.fillRect(pt[0] + 7, pt[1] - 7, 62, 14);
           ctx.fillStyle = '#ff4a4a';
@@ -217,13 +254,28 @@
       allData.push({ key: 'BBOX', value: `${Math.round(w)}x${Math.round(h)}px at (${Math.round(x1)},${Math.round(y1)})` });
       allData.push({ key: 'FACE AREA', value: `${(w * h).toFixed(0)}px²` });
 
+      // Age/Gender/Expression from face-api.js
+      if (ageGenderResult) {
+        allData.push({ key: 'AGE (estimated)', value: `${Math.round(ageGenderResult.age)} years` });
+        allData.push({ key: 'GENDER', value: `${ageGenderResult.gender.toUpperCase()} (${(ageGenderResult.genderProbability * 100).toFixed(0)}%)` });
+
+        if (ageGenderResult.expressions) {
+          const sorted = Object.entries(ageGenderResult.expressions)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
+          sorted.forEach(([expr, prob]) => {
+            allData.push({ key: `  ${expr.toUpperCase()}`, value: `${(prob * 100).toFixed(1)}%` });
+          });
+        }
+      } else if (models.faceApiLoaded) {
+        allData.push({ key: 'AGE/GENDER', value: 'Could not match face for analysis' });
+      } else {
+        allData.push({ key: 'AGE/GENDER', value: 'Loading age/gender model...' });
+      }
+
       if (face.landmarks) {
         allData.push({ key: 'LANDMARKS', value: `${face.landmarks.length} keypoints` });
-        face.landmarks.forEach((pt, pi) => {
-          allData.push({ key: `  ${(landmarkNames[pi] || 'pt' + pi).toUpperCase()}`, value: `(${Math.round(pt[0])}, ${Math.round(pt[1])})` });
-        });
 
-        // Compute inter-eye distance and head tilt
         if (face.landmarks.length >= 2) {
           const eyeR = face.landmarks[0];
           const eyeL = face.landmarks[1];
@@ -235,6 +287,29 @@
       }
       allData.push({ spacer: true });
     });
+  }
+
+  // Match a BlazeFace detection to the closest face-api.js result by center distance
+  function matchFaceApiResult(faceApiResults, bx, by, bw, bh, idx) {
+    if (idx < faceApiResults.length) {
+      return faceApiResults[idx];
+    }
+    // Fallback: match by closest center
+    const bcx = bx + bw / 2;
+    const bcy = by + bh / 2;
+    let best = null;
+    let bestDist = Infinity;
+    for (const r of faceApiResults) {
+      const box = r.detection.box;
+      const cx = box.x + box.width / 2;
+      const cy = box.y + box.height / 2;
+      const dist = Math.sqrt(Math.pow(bcx - cx, 2) + Math.pow(bcy - cy, 2));
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = r;
+      }
+    }
+    return best;
   }
 
   // ── Pose: BlazeFace landmarks with connections ──
@@ -261,7 +336,6 @@
     faces.forEach((face, idx) => {
       if (!face.landmarks || face.landmarks.length < 4) return;
 
-      // Draw triangulation between landmarks
       const pts = face.landmarks;
       const connections = [[0, 1], [0, 2], [1, 2], [2, 3], [0, 4], [1, 5]];
 
@@ -274,7 +348,6 @@
         }
       }
 
-      // Compute face direction from nose position relative to eye midpoint
       const eyeMidX = (pts[0][0] + pts[1][0]) / 2;
       const noseX = pts[2][0];
       const noseOffset = noseX - eyeMidX;
@@ -367,8 +440,27 @@
 
   // ── Model loading ──
   async function ensureModel(layer) {
-    if (layer === 'demographics' || layer === 'pose') {
-      // Uses BlazeFace from App.models — loaded at startup
+    if (layer === 'demographics') {
+      // BlazeFace from App.models — loaded at startup
+      // Also load face-api.js models for age/gender/expression
+      if (!models.faceApiLoaded && typeof faceapi !== 'undefined') {
+        try {
+          const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+          console.log('Loading face-api.js models...');
+          await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+            faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+          ]);
+          models.faceApiLoaded = true;
+          console.log('face-api.js models loaded (age/gender/expression)');
+        } catch (err) {
+          console.error('face-api.js model loading failed:', err);
+        }
+      }
+      return;
+    }
+    if (layer === 'pose') {
       return;
     }
     if (layer === 'objects' && !models.cocoSsd) {
