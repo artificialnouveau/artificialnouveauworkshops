@@ -324,6 +324,110 @@ canvas {
   color: var(--text-dim);
 }
 
+/* ===== Step 2: Source Select & Toggles ===== */
+#source-select {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.webcam-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 2px dashed #333;
+  border-radius: var(--radius);
+  padding: 32px 20px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: border-color 0.2s;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+}
+
+.webcam-button:hover {
+  border-color: var(--accent);
+}
+
+.webcam-button.active {
+  border-color: var(--green);
+  border-style: solid;
+}
+
+#layer-toggles {
+  margin-bottom: 20px;
+}
+
+#layer-toggles h3 {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+.toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.toggle-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 14px;
+  background: var(--bg-card);
+  border: 1px solid #333;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.toggle-chip input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-chip.active {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(0, 255, 102, 0.05);
+}
+
+.toggle-chip .chip-sub {
+  font-size: 0.65rem;
+  opacity: 0.6;
+}
+
+.toggle-chip.loading {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+/* Webcam elements */
+#webcam-video {
+  width: 100%;
+  border-radius: 0;
+  background: #000;
+}
+
+#canvas-webcam-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.surveillance-view {
+  position: relative;
+}
+
 /* ===== Step 2: Surveillance ===== */
 .surveillance-view {
   position: relative;
@@ -582,10 +686,15 @@ footer .mono {
     font-size: 1.2rem;
   }
 
+  #source-select,
   .canvas-row,
   #step3-upload-row,
   .mirror-row {
     grid-template-columns: 1fr;
+  }
+
+  .toggle-row {
+    flex-direction: column;
   }
 
   .comparison-row {
