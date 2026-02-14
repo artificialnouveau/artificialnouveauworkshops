@@ -16,7 +16,7 @@
   const video = document.getElementById('webcam-video');
   const webcamOverlay = document.getElementById('canvas-webcam-overlay');
 
-  const FACE_API_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+  const FACE_API_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 
   // State
   let currentImg = null;
@@ -177,12 +177,18 @@
     statsDiv.innerHTML =
       `FRAME RESOLUTION: ${canvas.width}x${canvas.height}<br>` +
       `ACTIVE LAYERS: ${activeList}<br>` +
-      `PROCESSING: CLIENT-SIDE (no data transmitted)`;
+      `PROCESSING: CLIENT-SIDE (no data transmitted)<br>` +
+      `MODELS LOADED: faceapi=${loaded.faceapi}, cocoSsd=${!!loaded.cocoSsd}, nsfw=${!!loaded.nsfw}`;
   }
 
   // ── Demographics via face-api.js ──
   async function runDemographics(source, ctx, allData) {
-    if (!loaded.faceapi) return;
+    if (!loaded.faceapi) {
+      allData.push({ section: 'DEMOGRAPHICS' });
+      allData.push({ key: 'STATUS', value: 'Model not loaded — check console for errors' });
+      allData.push({ spacer: true });
+      return;
+    }
 
     let detections;
     try {
@@ -409,16 +415,31 @@
   async function ensureModel(layer) {
     if (layer === 'demographics' && !loaded.faceapi) {
       try {
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(FACE_API_MODEL_URL),
-          faceapi.nets.faceLandmark68TinyNet.loadFromUri(FACE_API_MODEL_URL),
-          faceapi.nets.ageGenderNet.loadFromUri(FACE_API_MODEL_URL),
-          faceapi.nets.faceExpressionNet.loadFromUri(FACE_API_MODEL_URL),
-        ]);
+        console.log('Loading face-api models from:', FACE_API_MODEL_URL);
+        dataDiv.innerHTML = '<div class="data-row">Loading demographics model...</div>';
+
+        // Load models one by one for better error isolation
+        console.log('Loading TinyFaceDetector...');
+        await faceapi.nets.tinyFaceDetector.loadFromUri(FACE_API_MODEL_URL);
+        console.log('TinyFaceDetector loaded');
+
+        console.log('Loading FaceLandmark68TinyNet...');
+        await faceapi.nets.faceLandmark68TinyNet.loadFromUri(FACE_API_MODEL_URL);
+        console.log('FaceLandmark68TinyNet loaded');
+
+        console.log('Loading AgeGenderNet...');
+        await faceapi.nets.ageGenderNet.loadFromUri(FACE_API_MODEL_URL);
+        console.log('AgeGenderNet loaded');
+
+        console.log('Loading FaceExpressionNet...');
+        await faceapi.nets.faceExpressionNet.loadFromUri(FACE_API_MODEL_URL);
+        console.log('FaceExpressionNet loaded');
+
         loaded.faceapi = true;
-        console.log('face-api.js models loaded');
+        console.log('All face-api.js models loaded successfully');
       } catch (err) {
         console.error('face-api.js failed to load:', err);
+        dataDiv.innerHTML = `<div class="data-row" style="color:var(--red)">Demographics model failed: ${err.message}</div>`;
       }
     }
 
