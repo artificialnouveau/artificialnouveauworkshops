@@ -1,6 +1,6 @@
 /**
  * step2-surveillance.js — Full surveillance stack with toggleable layers
- * Layers: demographics (Human), pose (Human), objects (COCO-SSD), content/nudity (NSFWJS)
+ * Layers: demographics (face-api.js), pose (BlazeFace), objects (COCO-SSD), content (NSFWJS)
  * Sources: image upload or webcam
  */
 
@@ -16,14 +16,16 @@
   const video = document.getElementById('webcam-video');
   const webcamOverlay = document.getElementById('canvas-webcam-overlay');
 
+  const FACE_API_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
   // State
   let currentImg = null;
   let webcamActive = false;
   let webcamLoop = null;
 
-  // Lazy-loaded models
-  const models = {
-    human: null,
+  // Lazy-loaded model flags
+  const loaded = {
+    faceapi: false,
     cocoSsd: null,
     nsfw: null,
   };
@@ -34,24 +36,6 @@
     pose: false,
     objects: false,
     nsfw: false,
-  };
-
-  // Human library config
-  const humanConfig = {
-    backend: 'webgl',
-    modelBasePath: 'https://cdn.jsdelivr.net/npm/@vladmandic/human/models/',
-    face: {
-      enabled: true,
-      detector: { enabled: true, rotation: false },
-      mesh: { enabled: false },
-      iris: { enabled: false },
-      description: { enabled: true },
-      emotion: { enabled: true },
-    },
-    body: { enabled: false },
-    hand: { enabled: false },
-    gesture: { enabled: false },
-    segmentation: { enabled: false },
   };
 
   // ── Toggle setup ──
@@ -69,7 +53,6 @@
         chip.classList.remove('loading');
       }
 
-      // Re-run on current image if not webcam
       if (currentImg && !webcamActive) {
         await analyzeImage(currentImg);
       }
@@ -159,22 +142,16 @@
 
     const allData = [];
 
-    if (activeLayers.demographics || activeLayers.pose) {
-      await runHuman(video, octx, allData);
-    }
-    if (activeLayers.objects) {
-      await runObjectDetection(video, octx, allData);
-    }
-    if (activeLayers.nsfw) {
-      await runNSFW(video, allData);
-    }
+    if (activeLayers.demographics) await runDemographics(video, octx, allData);
+    if (activeLayers.pose) await runPose(video, octx, allData);
+    if (activeLayers.objects) await runObjectDetection(video, octx, allData);
+    if (activeLayers.nsfw) await runNSFW(video, allData);
 
     renderDataReadout(allData);
 
-    // Loop at ~4fps (models are heavy)
     webcamLoop = setTimeout(() => {
       if (webcamActive) webcamAnalysisLoop();
-    }, 250);
+    }, 300);
   }
 
   // ── Analyze static image ──
@@ -185,144 +162,188 @@
 
     const allData = [];
 
-    if (activeLayers.demographics || activeLayers.pose) {
-      await runHuman(canvas, ctx, allData);
-    }
-    if (activeLayers.objects) {
-      await runObjectDetection(canvas, ctx, allData);
-    }
-    if (activeLayers.nsfw) {
-      await runNSFW(canvas, allData);
-    }
+    if (activeLayers.demographics) await runDemographics(canvas, ctx, allData);
+    if (activeLayers.pose) await runPose(canvas, ctx, allData);
+    if (activeLayers.objects) await runObjectDetection(canvas, ctx, allData);
+    if (activeLayers.nsfw) await runNSFW(canvas, allData);
 
     renderDataReadout(allData);
 
-    statsDiv.innerHTML = `
-      FRAME RESOLUTION: ${canvas.width}x${canvas.height}<br>
-      ACTIVE LAYERS: ${Object.entries(activeLayers).filter(([,v]) => v).map(([k]) => k.toUpperCase()).join(', ') || 'NONE'}<br>
-      PROCESSING: CLIENT-SIDE (no data transmitted)<br>
-      <br>
-      In a real surveillance system, this data would be stored,<br>
-      cross-referenced, and used without your knowledge or consent.
-    `;
+    const activeList = Object.entries(activeLayers)
+      .filter(([, v]) => v)
+      .map(([k]) => k.toUpperCase())
+      .join(', ') || 'NONE';
+
+    statsDiv.innerHTML =
+      `FRAME RESOLUTION: ${canvas.width}x${canvas.height}<br>` +
+      `ACTIVE LAYERS: ${activeList}<br>` +
+      `PROCESSING: CLIENT-SIDE (no data transmitted)`;
   }
 
-  // ── Human library: demographics + pose ──
-  async function runHuman(source, ctx, allData) {
-    if (!models.human) return;
+  // ── Demographics via face-api.js ──
+  async function runDemographics(source, ctx, allData) {
+    if (!loaded.faceapi) return;
 
-    models.human.config.body.enabled = activeLayers.pose;
-    models.human.config.face.enabled = activeLayers.demographics;
-
-    let result;
+    let detections;
     try {
-      result = await models.human.detect(source);
+      detections = await faceapi
+        .detectAllFaces(source, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.4 }))
+        .withFaceLandmarks(true)
+        .withAgeAndGender()
+        .withFaceExpressions();
     } catch (err) {
-      console.error('Human detection error:', err);
+      console.error('face-api error:', err);
+      allData.push({ section: 'DEMOGRAPHICS' });
+      allData.push({ key: 'ERROR', value: err.message });
+      allData.push({ spacer: true });
       return;
     }
 
-    // Demographics
-    if (activeLayers.demographics && result.face) {
-      result.face.forEach((face, idx) => {
-        const box = face.box || [0, 0, 0, 0];
-        const [x, y, w, h] = box;
-
-        // Bounding box
-        ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x, y, w, h);
-        drawBrackets(ctx, x, y, w, h, Math.min(w, h) * 0.15);
-
-        // Label
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.fillRect(x, y - 18, w, 18);
-        ctx.fillStyle = '#00ff66';
-        ctx.font = '11px monospace';
-        const conf = face.score ? (face.score * 100).toFixed(0) : '?';
-        ctx.fillText(`SUBJ-${String(idx + 1).padStart(2, '0')}  ${conf}%`, x + 4, y - 5);
-
-        // Data readout
-        const age = face.age ? Math.round(face.age) : 'N/A';
-        const gender = face.gender || 'N/A';
-        const genderConf = face.genderScore ? (face.genderScore * 100).toFixed(0) + '%' : '';
-        const race = face.race || 'N/A';
-        const raceConf = face.raceScore ? (face.raceScore * 100).toFixed(0) + '%' : '';
-        const emotion = face.emotion || 'N/A';
-        const emotionConf = face.emotionScore ? (face.emotionScore * 100).toFixed(0) + '%' : '';
-
-        allData.push({ section: `SUBJECT ${idx + 1} — DEMOGRAPHICS` });
-        allData.push({ key: 'AGE (estimated)', value: `${age} years` });
-        allData.push({ key: 'GENDER', value: `${gender} ${genderConf}` });
-        allData.push({ key: 'RACE', value: `${race} ${raceConf}` });
-        allData.push({ key: 'EMOTION', value: `${emotion} ${emotionConf}` });
-        allData.push({ key: 'FACE CONFIDENCE', value: `${conf}%` });
-        allData.push({ key: 'BBOX', value: `${Math.round(w)}x${Math.round(h)}px at (${Math.round(x)},${Math.round(y)})` });
-        allData.push({ spacer: true });
-      });
-
-      if (!result.face || result.face.length === 0) {
-        allData.push({ section: 'DEMOGRAPHICS' });
-        allData.push({ key: 'STATUS', value: 'No faces detected' });
-        allData.push({ spacer: true });
-      }
+    if (!detections || detections.length === 0) {
+      allData.push({ section: 'DEMOGRAPHICS' });
+      allData.push({ key: 'STATUS', value: 'No faces detected' });
+      allData.push({ spacer: true });
+      return;
     }
 
-    // Pose
-    if (activeLayers.pose && result.body) {
-      result.body.forEach((body, idx) => {
-        if (!body.keypoints) return;
+    detections.forEach((det, idx) => {
+      const box = det.detection.box;
+      const x = box.x, y = box.y, w = box.width, h = box.height;
+      const conf = (det.detection.score * 100).toFixed(0);
 
-        ctx.fillStyle = '#ff4a4a';
-        ctx.strokeStyle = '#ff4a4a';
-        ctx.lineWidth = 2;
+      // Green bounding box
+      ctx.strokeStyle = '#00ff66';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+      drawBrackets(ctx, x, y, w, h, Math.min(w, h) * 0.15);
 
-        for (const kp of body.keypoints) {
-          if (kp.score > 0.3) {
-            ctx.beginPath();
-            ctx.arc(kp.position[0], kp.position[1], 4, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
+      // Label
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      ctx.fillRect(x, y - 18, Math.max(w, 140), 18);
+      ctx.fillStyle = '#00ff66';
+      ctx.font = '11px monospace';
+      ctx.fillText(`SUBJ-${String(idx + 1).padStart(2, '0')}  ${conf}%`, x + 4, y - 5);
 
-        // Skeleton connections
-        const connections = [
-          [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
-          [5, 11], [6, 12], [11, 12],
-          [11, 13], [13, 15], [12, 14], [14, 16],
-        ];
-        for (const [a, b] of connections) {
-          const kpA = body.keypoints[a];
-          const kpB = body.keypoints[b];
-          if (kpA && kpB && kpA.score > 0.3 && kpB.score > 0.3) {
-            ctx.beginPath();
-            ctx.moveTo(kpA.position[0], kpA.position[1]);
-            ctx.lineTo(kpB.position[0], kpB.position[1]);
-            ctx.stroke();
-          }
-        }
-
-        const visible = body.keypoints.filter(k => k.score > 0.3);
-        allData.push({ section: `BODY ${idx + 1} — POSE` });
-        allData.push({ key: 'KEYPOINTS', value: `${visible.length} / ${body.keypoints.length}` });
-        allData.push({ spacer: true });
-      });
-
-      if (!result.body || result.body.length === 0) {
-        allData.push({ section: 'POSE TRACKING' });
-        allData.push({ key: 'STATUS', value: 'No body detected' });
-        allData.push({ spacer: true });
+      // Draw landmark points
+      if (det.landmarks) {
+        ctx.fillStyle = 'rgba(255, 74, 74, 0.5)';
+        det.landmarks.positions.forEach(pt => {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
       }
+
+      // Data readout
+      const age = Math.round(det.age);
+      const gender = det.gender;
+      const genderConf = (det.genderProbability * 100).toFixed(0);
+
+      // Top expression
+      const expressions = det.expressions;
+      let topExpr = 'N/A', topExprConf = 0;
+      if (expressions) {
+        for (const [expr, score] of Object.entries(expressions)) {
+          if (score > topExprConf) {
+            topExpr = expr;
+            topExprConf = score;
+          }
+        }
+      }
+
+      allData.push({ section: `SUBJECT ${idx + 1} — DEMOGRAPHICS` });
+      allData.push({ key: 'AGE (estimated)', value: `${age} years` });
+      allData.push({ key: 'GENDER', value: `${gender} (${genderConf}%)` });
+      allData.push({ key: 'EXPRESSION', value: `${topExpr} (${(topExprConf * 100).toFixed(0)}%)` });
+      allData.push({ key: 'FACE CONFIDENCE', value: `${conf}%` });
+      allData.push({ key: 'LANDMARKS', value: `${det.landmarks ? det.landmarks.positions.length : 0} points` });
+      allData.push({ key: 'BBOX', value: `${Math.round(w)}x${Math.round(h)}px at (${Math.round(x)},${Math.round(y)})` });
+      allData.push({ spacer: true });
+    });
+  }
+
+  // ── Pose via BlazeFace (face keypoints as lightweight pose proxy) ──
+  async function runPose(source, ctx, allData) {
+    if (!App.models.blazeface) return;
+
+    let predictions;
+    try {
+      predictions = await App.models.blazeface.estimateFaces(source, false);
+    } catch (err) {
+      console.error('BlazeFace pose error:', err);
+      return;
     }
+
+    allData.push({ section: 'POSE / KEYPOINTS' });
+
+    if (!predictions || predictions.length === 0) {
+      allData.push({ key: 'STATUS', value: 'No faces/poses detected' });
+      allData.push({ spacer: true });
+      return;
+    }
+
+    ctx.fillStyle = '#ff4a4a';
+    ctx.strokeStyle = '#ff4a4a';
+    ctx.lineWidth = 2;
+
+    const landmarkNames = ['right eye', 'left eye', 'nose', 'mouth', 'right ear', 'left ear'];
+
+    predictions.forEach((face, idx) => {
+      if (face.landmarks) {
+        // Draw keypoints
+        face.landmarks.forEach((point, pi) => {
+          ctx.beginPath();
+          ctx.arc(point[0], point[1], 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Label
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(point[0] + 7, point[1] - 6, 60, 14);
+          ctx.fillStyle = '#ff4a4a';
+          ctx.font = '10px monospace';
+          ctx.fillText(landmarkNames[pi] || `pt${pi}`, point[0] + 9, point[1] + 5);
+          ctx.fillStyle = '#ff4a4a';
+        });
+
+        // Connect eyes
+        if (face.landmarks.length >= 2) {
+          ctx.beginPath();
+          ctx.moveTo(face.landmarks[0][0], face.landmarks[0][1]);
+          ctx.lineTo(face.landmarks[1][0], face.landmarks[1][1]);
+          ctx.stroke();
+        }
+        // Connect to nose
+        if (face.landmarks.length >= 3) {
+          ctx.beginPath();
+          ctx.moveTo(face.landmarks[0][0], face.landmarks[0][1]);
+          ctx.lineTo(face.landmarks[2][0], face.landmarks[2][1]);
+          ctx.lineTo(face.landmarks[1][0], face.landmarks[1][1]);
+          ctx.stroke();
+        }
+        // Connect to mouth
+        if (face.landmarks.length >= 4) {
+          ctx.beginPath();
+          ctx.moveTo(face.landmarks[2][0], face.landmarks[2][1]);
+          ctx.lineTo(face.landmarks[3][0], face.landmarks[3][1]);
+          ctx.stroke();
+        }
+
+        allData.push({ key: `FACE ${idx + 1} KEYPOINTS`, value: `${face.landmarks.length} landmarks` });
+        face.landmarks.forEach((pt, pi) => {
+          allData.push({ key: `  ${(landmarkNames[pi] || 'pt' + pi).toUpperCase()}`, value: `(${Math.round(pt[0])}, ${Math.round(pt[1])})` });
+        });
+      }
+    });
+    allData.push({ spacer: true });
   }
 
   // ── COCO-SSD: object detection ──
   async function runObjectDetection(source, ctx, allData) {
-    if (!models.cocoSsd) return;
+    if (!loaded.cocoSsd) return;
 
     let predictions;
     try {
-      predictions = await models.cocoSsd.detect(source);
+      predictions = await loaded.cocoSsd.detect(source);
     } catch (err) {
       console.error('COCO-SSD error:', err);
       return;
@@ -337,6 +358,7 @@
     }
 
     ctx.lineWidth = 2;
+    ctx.font = '11px monospace';
     predictions.forEach(pred => {
       const [x, y, w, h] = pred.bbox;
       const label = pred.class;
@@ -344,21 +366,20 @@
 
       ctx.strokeStyle = '#ffd94a';
       ctx.strokeRect(x, y, w, h);
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       const textW = ctx.measureText(`${label} ${conf}%`).width + 10;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(x, y - 16, textW, 16);
       ctx.fillStyle = '#ffd94a';
-      ctx.font = '11px monospace';
       ctx.fillText(`${label} ${conf}%`, x + 4, y - 4);
 
-      allData.push({ key: label.toUpperCase(), value: `${conf}%` });
+      allData.push({ key: label.toUpperCase(), value: `${conf}% — ${Math.round(w)}x${Math.round(h)}px` });
     });
     allData.push({ spacer: true });
   }
 
   // ── NSFWJS: content classification ──
   async function runNSFW(source, allData) {
-    if (!models.nsfw) return;
+    if (!loaded.nsfw) return;
 
     let inputEl = source;
     if (source instanceof HTMLVideoElement) {
@@ -371,7 +392,7 @@
 
     let predictions;
     try {
-      predictions = await models.nsfw.classify(inputEl);
+      predictions = await loaded.nsfw.classify(inputEl);
     } catch (err) {
       console.error('NSFW error:', err);
       return;
@@ -386,27 +407,40 @@
 
   // ── Model loading ──
   async function ensureModel(layer) {
-    if ((layer === 'demographics' || layer === 'pose') && !models.human) {
+    if (layer === 'demographics' && !loaded.faceapi) {
       try {
-        models.human = new Human(humanConfig);
-        await models.human.load();
-        console.log('Human library loaded');
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(FACE_API_MODEL_URL),
+          faceapi.nets.faceLandmark68TinyNet.loadFromUri(FACE_API_MODEL_URL),
+          faceapi.nets.ageGenderNet.loadFromUri(FACE_API_MODEL_URL),
+          faceapi.nets.faceExpressionNet.loadFromUri(FACE_API_MODEL_URL),
+        ]);
+        loaded.faceapi = true;
+        console.log('face-api.js models loaded');
       } catch (err) {
-        console.error('Human library failed:', err);
-        models.human = null;
+        console.error('face-api.js failed to load:', err);
       }
     }
-    if (layer === 'objects' && !models.cocoSsd) {
+
+    if (layer === 'pose') {
+      // Uses BlazeFace from App.models (already loaded at startup)
+      if (!App.models.blazeface) {
+        console.warn('BlazeFace not available for pose');
+      }
+    }
+
+    if (layer === 'objects' && !loaded.cocoSsd) {
       try {
-        models.cocoSsd = await cocoSsd.load();
+        loaded.cocoSsd = await cocoSsd.load();
         console.log('COCO-SSD loaded');
       } catch (err) {
         console.error('COCO-SSD failed:', err);
       }
     }
-    if (layer === 'nsfw' && !models.nsfw) {
+
+    if (layer === 'nsfw' && !loaded.nsfw) {
       try {
-        models.nsfw = await nsfwjs.load();
+        loaded.nsfw = await nsfwjs.load();
         console.log('NSFWJS loaded');
       } catch (err) {
         console.error('NSFWJS failed:', err);
