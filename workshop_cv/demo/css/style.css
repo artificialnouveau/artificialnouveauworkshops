@@ -255,6 +255,36 @@ canvas {
   min-height: 1.6em;
 }
 
+/* ===== Explainer Blocks ===== */
+.explainer-block {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--bg-card);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.explainer-block h3 {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  color: var(--accent);
+}
+
+.explainer-block p {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.explainer-block strong {
+  color: var(--text);
+}
+
+.explainer-block em {
+  color: var(--text);
+  font-style: italic;
+}
+
 /* ===== Heatmap ===== */
 #heatmap-section {
   margin-bottom: 24px;

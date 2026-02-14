@@ -29,26 +29,41 @@
 
   function drawPixelGrid() {
     const canvas = document.getElementById('canvas-pixels');
-    const gridSize = 16; // Show a 16x16 grid from center of image
-    const cellSize = 22;
-    canvas.width = gridSize * cellSize;
-    canvas.height = gridSize * cellSize;
+    const pixelInfo = document.getElementById('pixel-info');
+
+    // Downsample the ENTIRE image to a grid that fits
+    // Use a grid that preserves aspect ratio
+    const maxGridDim = 24; // max cells in either direction
+    const aspect = currentImg.width / currentImg.height;
+    let gridCols, gridRows;
+
+    if (aspect >= 1) {
+      gridCols = maxGridDim;
+      gridRows = Math.max(4, Math.round(maxGridDim / aspect));
+    } else {
+      gridRows = maxGridDim;
+      gridCols = Math.max(4, Math.round(maxGridDim * aspect));
+    }
+
+    const cellSize = Math.floor(360 / gridCols);
+    canvas.width = gridCols * cellSize;
+    canvas.height = gridRows * cellSize;
     const ctx = canvas.getContext('2d');
 
-    // Sample from center of image
+    // Draw the image at grid resolution to sample all pixels
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = currentImg.width;
-    tempCanvas.height = currentImg.height;
+    tempCanvas.width = gridCols;
+    tempCanvas.height = gridRows;
     const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(currentImg, 0, 0);
+    // Disable smoothing so we get nearest-neighbor sampling
+    tempCtx.imageSmoothingEnabled = false;
+    tempCtx.drawImage(currentImg, 0, 0, gridCols, gridRows);
+    const imgData = tempCtx.getImageData(0, 0, gridCols, gridRows);
 
-    const startX = Math.floor((currentImg.width - gridSize) / 2);
-    const startY = Math.floor((currentImg.height - gridSize) / 2);
-    const imgData = tempCtx.getImageData(startX, startY, gridSize, gridSize);
-
-    for (let y = 0; y < gridSize; y++) {
-      for (let x = 0; x < gridSize; x++) {
-        const i = (y * gridSize + x) * 4;
+    // Draw each pixel as a colored cell
+    for (let y = 0; y < gridRows; y++) {
+      for (let x = 0; x < gridCols; x++) {
+        const i = (y * gridCols + x) * 4;
         const r = imgData.data[i];
         const g = imgData.data[i + 1];
         const b = imgData.data[i + 2];
@@ -57,27 +72,32 @@
       }
     }
 
-    // Tap to inspect
-    const pixelInfo = document.getElementById('pixel-info');
+    // Tap to inspect any cell
+    canvas.onclick = null; // remove old listeners
     canvas.addEventListener('click', (e) => {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
       const cx = Math.floor((e.clientX - rect.left) * scaleX / cellSize);
       const cy = Math.floor((e.clientY - rect.top) * scaleY / cellSize);
-      if (cx >= 0 && cx < gridSize && cy >= 0 && cy < gridSize) {
-        const i = (cy * gridSize + cx) * 4;
+      if (cx >= 0 && cx < gridCols && cy >= 0 && cy < gridRows) {
+        const i = (cy * gridCols + cx) * 4;
         const r = imgData.data[i];
         const g = imgData.data[i + 1];
         const b = imgData.data[i + 2];
-        pixelInfo.textContent = `Pixel (${cx}, ${cy}) → R:${r} G:${g} B:${b}`;
+        pixelInfo.innerHTML =
+          `Pixel (${cx}, ${cy}) &rarr; ` +
+          `<span style="color:rgb(${r},100,100)">R:${r}</span> ` +
+          `<span style="color:rgb(100,${g},100)">G:${g}</span> ` +
+          `<span style="color:rgb(100,100,${b})">B:${b}</span>`;
       }
     });
   }
 
   async function runClassification() {
     if (!App.models.mobilenet) {
-      document.getElementById('predictions').innerHTML = '<p style="color:var(--red)">Model failed to load</p>';
+      document.getElementById('predictions').innerHTML =
+        '<p style="color:var(--red)">Classification model failed to load. Check console.</p>';
       return;
     }
 
@@ -87,6 +107,7 @@
 
   async function drawHeatmap() {
     const canvas = document.getElementById('canvas-heatmap');
+    const statusEl = document.getElementById('heatmap-status');
     const maxW = 360;
     const scale = Math.min(1, maxW / currentImg.width);
     const w = Math.floor(currentImg.width * scale);
@@ -96,9 +117,14 @@
     const ctx = canvas.getContext('2d');
     ctx.drawImage(currentImg, 0, 0, w, h);
 
-    if (!App.models.mobilenet) return;
+    if (!App.models.mobilenet) {
+      statusEl.textContent = 'Heatmap unavailable — classification model not loaded.';
+      return;
+    }
 
-    // Simple occlusion-based attention: block regions and measure confidence drop
+    statusEl.textContent = 'Generating heatmap... (this takes a moment)';
+
+    // Occlusion-based attention: block each region, measure confidence drop
     const gridCols = 8;
     const gridRows = 8;
     const cellW = Math.floor(w / gridCols);
@@ -107,12 +133,13 @@
     // Baseline prediction
     const baseline = await App.models.mobilenet.classify(currentImg, 1);
     const baseConf = baseline[0].probability;
+    const baseLabel = baseline[0].className.split(',')[0];
 
     const heatValues = [];
 
     for (let gy = 0; gy < gridRows; gy++) {
       for (let gx = 0; gx < gridCols; gx++) {
-        // Create occluded version
+        // Create version with this region blocked
         const occ = document.createElement('canvas');
         occ.width = w;
         occ.height = h;
@@ -127,13 +154,20 @@
       }
     }
 
-    // Normalize and draw
+    // Normalize and draw overlay
     const maxDrop = Math.max(...heatValues.map(h => h.drop), 0.001);
+
+    // Redraw original image first
+    ctx.drawImage(currentImg, 0, 0, w, h);
 
     for (const { gx, gy, drop } of heatValues) {
       const intensity = drop / maxDrop;
-      ctx.fillStyle = `rgba(255, ${Math.floor(100 * (1 - intensity))}, 0, ${intensity * 0.6})`;
+      ctx.fillStyle = `rgba(255, ${Math.floor(100 * (1 - intensity))}, 0, ${intensity * 0.55})`;
       ctx.fillRect(gx * cellW, gy * cellH, cellW, cellH);
     }
+
+    statusEl.textContent =
+      `Baseline: "${baseLabel}" at ${(baseConf * 100).toFixed(1)}% confidence. ` +
+      `Orange regions caused the biggest confidence drop when blocked.`;
   }
 })();
