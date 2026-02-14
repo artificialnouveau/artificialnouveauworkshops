@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How Does the Machine See Your Photo?</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <!-- MobileNet -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+  <!-- BlazeFace (face detection) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.js"></script>
+  <!-- Face Landmarks Detection -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@1.0.5/dist/face-landmarks-detection.min.js"></script>
+  <!-- MediaPipe Face Mesh runtime -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="loader-content">
+      <div class="spinner"></div>
+      <p>Loading AI models<span class="dots"></span></p>
+      <p class="loader-sub">This may take a moment on first visit</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header id="app-header">
+    <h1>How Does the Machine See Your Photo?</h1>
+    <p class="subtitle">Everything runs on your device. No images are uploaded anywhere.</p>
+  </header>
+
+  <!-- Step navigation -->
+  <nav id="step-nav">
+    <button class="step-tab active" data-step="1">1. Pixels</button>
+    <button class="step-tab" data-step="2">2. Surveillance</button>
+    <button class="step-tab" data-step="3">3. Break It</button>
+    <button class="step-tab" data-step="4">4. Mirror</button>
+  </nav>
+
+  <!-- Step 1: What the Machine Sees -->
+  <section id="step-1" class="step active">
+    <div class="step-intro">
+      <h2>What the Machine Sees</h2>
+      <p>Your photograph is just a grid of numbers. Upload a photo and watch the machine read it.</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-1">
+      <label for="file-input-1" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Tap to upload or take a photo</span>
+      </label>
+      <input type="file" id="file-input-1" accept="image/*" capture="environment">
+    </div>
+
+    <div id="step1-results" class="results hidden">
+      <div class="canvas-row">
+        <div class="canvas-container">
+          <h3>Your Image</h3>
+          <canvas id="canvas-original-1"></canvas>
+        </div>
+        <div class="canvas-container">
+          <h3>Pixel Grid</h3>
+          <canvas id="canvas-pixels"></canvas>
+          <p class="pixel-info" id="pixel-info">Tap the grid to inspect RGB values</p>
+        </div>
+      </div>
+
+      <div id="heatmap-section">
+        <h3>Attention Heatmap</h3>
+        <p class="description">Where is the model looking? Brighter = more important for classification.</p>
+        <canvas id="canvas-heatmap"></canvas>
+      </div>
+
+      <div id="classification-results">
+        <h3>The Machine Says:</h3>
+        <div id="predictions"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 2: Who Is Watching? -->
+  <section id="step-2" class="step">
+    <div class="step-intro">
+      <h2>Who Is Watching?</h2>
+      <p>A surveillance camera doesn't see a person. It sees data points. Upload a face photo to see what gets extracted.</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-2">
+      <label for="file-input-2" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a photo with a face</span>
+      </label>
+      <input type="file" id="file-input-2" accept="image/*" capture="user">
+    </div>
+
+    <div id="step2-results" class="results hidden">
+      <div class="surveillance-view">
+        <div class="surveillance-header">
+          <span class="rec-dot"></span>
+          <span class="mono">CAM-01 // FACIAL ANALYSIS</span>
+          <span class="mono" id="timestamp"></span>
+        </div>
+        <canvas id="canvas-surveillance"></canvas>
+        <div class="surveillance-overlay" id="surveillance-data">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div class="critical-text">
+        <p>"This is what a surveillance camera sees.<br>No context. No consent. Just data points."</p>
+      </div>
+
+      <div id="face-stats" class="mono">
+        <!-- Face detection stats populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 3: Break the Model -->
+  <section id="step-3" class="step">
+    <div class="step-intro">
+      <h2>Break the Model</h2>
+      <p>Machine vision is fragile. Take a photo designed to confuse it — unusual angles, partial occlusion, dramatic lighting, ambiguous framing. Then compare.</p>
+    </div>
+
+    <div id="step3-upload-row">
+      <div class="upload-area" id="upload-area-3a">
+        <label for="file-input-3a" class="upload-label">
+          <span class="upload-icon">1</span>
+          <span>Upload a normal photo</span>
+        </label>
+        <input type="file" id="file-input-3a" accept="image/*" capture="environment">
+      </div>
+
+      <div class="upload-area" id="upload-area-3b">
+        <label for="file-input-3b" class="upload-label">
+          <span class="upload-icon">2</span>
+          <span>Now try to confuse it</span>
+        </label>
+        <input type="file" id="file-input-3b" accept="image/*" capture="environment">
+      </div>
+    </div>
+
+    <div id="step3-results" class="results hidden">
+      <div class="comparison-row">
+        <div class="comparison-card">
+          <h3>Original</h3>
+          <canvas id="canvas-break-a"></canvas>
+          <div id="predictions-a" class="prediction-list"></div>
+          <div class="confidence-meter">
+            <div class="confidence-label">Model Confidence</div>
+            <div class="meter-track"><div class="meter-fill" id="meter-a"></div></div>
+            <span class="meter-value" id="meter-value-a"></span>
+          </div>
+        </div>
+
+        <div class="vs-divider">VS</div>
+
+        <div class="comparison-card">
+          <h3>Your Trick</h3>
+          <canvas id="canvas-break-b"></canvas>
+          <div id="predictions-b" class="prediction-list"></div>
+          <div class="confidence-meter">
+            <div class="confidence-label">Model Confidence</div>
+            <div class="meter-track"><div class="meter-fill" id="meter-b"></div></div>
+            <span class="meter-value" id="meter-value-b"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="break-verdict" class="critical-text"></div>
+    </div>
+  </section>
+
+  <!-- Step 4: The Algorithmic Mirror -->
+  <section id="step-4" class="step">
+    <div class="step-intro">
+      <h2>The Algorithmic Mirror</h2>
+      <p>Beauty filters are not magic. They are a series of deliberate geometric decisions about what a face should look like. Upload a selfie to see the machine reshape you.</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-4">
+      <label for="file-input-4" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a selfie</span>
+      </label>
+      <input type="file" id="file-input-4" accept="image/*" capture="user">
+    </div>
+
+    <div id="step4-results" class="results hidden">
+      <div class="mirror-row">
+        <div class="mirror-card">
+          <h3>You + Landmarks</h3>
+          <canvas id="canvas-landmarks"></canvas>
+          <p class="description">468 points the machine uses to map your face</p>
+        </div>
+        <div class="mirror-card">
+          <h3>The "Improved" You</h3>
+          <canvas id="canvas-filtered"></canvas>
+          <p class="description">Smoothed, symmetrized, resized — by whose standard?</p>
+        </div>
+      </div>
+
+      <div id="filter-details" class="mono">
+        <!-- Populated by JS: what was changed -->
+      </div>
+
+      <div class="critical-text final-prompt">
+        <p>"Which one is you?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p class="mono">All processing happens on your device. No data leaves your browser.</p>
+    <p>A workshop tool by Artificial Nouveau</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/step1-pixels.js"></script>
+  <script src="js/step2-surveillance.js"></script>
+  <script src="js/step3-break.js"></script>
+  <script src="js/step4-beauty.js"></script>
+</body>
+</html>
