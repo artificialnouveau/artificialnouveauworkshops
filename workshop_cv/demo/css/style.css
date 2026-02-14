@@ -371,6 +371,35 @@ canvas {
   color: var(--text-dim);
 }
 
+/* ===== Step 2: Model Info ===== */
+.model-info {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--green);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+
+.model-info p {
+  margin-bottom: 4px;
+}
+
+.model-info strong {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+.model-info em {
+  color: var(--text);
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
 /* ===== Step 2: Source Select & Toggles ===== */
 #source-select {
   display: grid;

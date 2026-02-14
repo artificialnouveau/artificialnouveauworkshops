@@ -153,6 +153,14 @@
     <div class="step-intro">
       <h2>Who Is Watching?</h2>
       <p>A surveillance camera doesn't see a person. It sees data points. Choose a source and toggle detection layers to see what gets extracted.</p>
+      <div class="model-info">
+        <p><strong>Face Analysis</strong> — <em>BlazeFace</em> detects faces and landmarks; <em>face-api.js</em> (SSD MobileNet v1 + AgeGenderNet + FaceExpressionNet) estimates age, gender, and expression.</p>
+        <p><strong>Pose</strong> — Facial geometry derived from BlazeFace's 6 keypoints (eyes, nose, mouth, ears).</p>
+        <p><strong>Objects</strong> — <em>COCO-SSD</em> identifies 80 everyday object categories (person, car, dog, chair, etc.).</p>
+        <p><strong>Content</strong> — <em>NSFWJS</em> (MobileNet v2) classifies images as Drawing, Neutral, Sexy, Porn, or Hentai.</p>
+        <p><strong>Scene</strong> — <em>MobileNet v2</em> classifies the image against 1,000 ImageNet categories.</p>
+        <p style="margin-top:6px; font-size:0.8rem; color:var(--text-dim)">All models run locally in your browser via TensorFlow.js. No data is sent to any server.</p>
+      </div>
     </div>
 
     <!-- Source selection: upload or webcam -->
