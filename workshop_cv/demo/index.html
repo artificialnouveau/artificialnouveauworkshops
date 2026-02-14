@@ -11,6 +11,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
   <!-- BlazeFace (face detection) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface/dist/blazeface.min.js"></script>
+  <!-- Human library (demographics: age/gender/race/emotion + pose) -->
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.js"></script>
+  <!-- COCO-SSD (object detection) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+  <!-- NSFWJS (nudity/content classification) -->
+  <script src="https://cdn.jsdelivr.net/npm/nsfwjs@4/dist/nsfwjs.min.js"></script>
   <!-- MediaPipe Face Mesh runtime (must load before face-landmarks-detection) -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
   <!-- Face Landmarks Detection -->
@@ -85,37 +91,65 @@
   <section id="step-2" class="step">
     <div class="step-intro">
       <h2>Who Is Watching?</h2>
-      <p>A surveillance camera doesn't see a person. It sees data points. Upload a face photo to see what gets extracted.</p>
+      <p>A surveillance camera doesn't see a person. It sees data points. Choose a source and toggle detection layers to see what gets extracted.</p>
     </div>
 
-    <div class="upload-area" id="upload-area-2">
-      <label for="file-input-2" class="upload-label">
-        <span class="upload-icon">+</span>
-        <span>Upload a photo with a face</span>
-      </label>
-      <input type="file" id="file-input-2" accept="image/*" capture="user">
+    <!-- Source selection: upload or webcam -->
+    <div id="source-select">
+      <div class="upload-area" id="upload-area-2">
+        <label for="file-input-2" class="upload-label">
+          <span class="upload-icon">+</span>
+          <span>Upload a photo</span>
+        </label>
+        <input type="file" id="file-input-2" accept="image/*" capture="user">
+      </div>
+      <button id="webcam-btn" class="webcam-button">
+        <span class="upload-icon">&#9673;</span>
+        <span>Use Webcam</span>
+      </button>
+    </div>
+
+    <!-- Detection layer toggles -->
+    <div id="layer-toggles" class="hidden">
+      <h3 class="mono">Detection Layers</h3>
+      <div class="toggle-row">
+        <label class="toggle-chip active" data-layer="demographics">
+          <input type="checkbox" checked> Demographics
+          <span class="chip-sub">age / gender / race / emotion</span>
+        </label>
+        <label class="toggle-chip" data-layer="pose">
+          <input type="checkbox"> Pose
+          <span class="chip-sub">body skeleton tracking</span>
+        </label>
+        <label class="toggle-chip" data-layer="objects">
+          <input type="checkbox"> Objects
+          <span class="chip-sub">what's in the scene</span>
+        </label>
+        <label class="toggle-chip" data-layer="nsfw">
+          <input type="checkbox"> Content
+          <span class="chip-sub">nudity / content classification</span>
+        </label>
+      </div>
     </div>
 
     <div id="step2-results" class="results hidden">
       <div class="surveillance-view">
         <div class="surveillance-header">
           <span class="rec-dot"></span>
-          <span class="mono">CAM-01 // FACIAL ANALYSIS</span>
+          <span class="mono">CAM-01 // MULTI-LAYER ANALYSIS</span>
           <span class="mono" id="timestamp"></span>
         </div>
         <canvas id="canvas-surveillance"></canvas>
-        <div class="surveillance-overlay" id="surveillance-data">
-          <!-- Populated by JS -->
-        </div>
+        <video id="webcam-video" autoplay playsinline class="hidden"></video>
+        <canvas id="canvas-webcam-overlay" class="hidden"></canvas>
+        <div class="surveillance-overlay" id="surveillance-data"></div>
       </div>
 
       <div class="critical-text">
         <p>"This is what a surveillance camera sees.<br>No context. No consent. Just data points."</p>
       </div>
 
-      <div id="face-stats" class="mono">
-        <!-- Face detection stats populated by JS -->
-      </div>
+      <div id="face-stats" class="mono"></div>
     </div>
   </section>
 
