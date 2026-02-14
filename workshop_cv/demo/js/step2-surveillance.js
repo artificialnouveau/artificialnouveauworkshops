@@ -21,12 +21,15 @@
   let webcamActive = false;
   let webcamLoop = null;
 
-  const models = { cocoSsd: null, faceApiLoaded: false };
+  const models = { cocoSsd: null, nsfw: null, faceApiLoaded: false };
+
+  const NSFW_CLASSES = { 0: 'Drawing', 1: 'Hentai', 2: 'Neutral', 3: 'Porn', 4: 'Sexy' };
 
   const activeLayers = {
     demographics: true,
     pose: false,
     objects: false,
+    nsfw: false,
     scene: false,
   };
 
@@ -118,6 +121,7 @@
     if (activeLayers.demographics) await runFaceDetection(video, octx, allData);
     if (activeLayers.pose) await runPose(video, octx, allData);
     if (activeLayers.objects) await runObjects(video, octx, allData);
+    if (activeLayers.nsfw) await runNSFW(video, allData);
     if (activeLayers.scene) await runScene(video, allData);
     renderData(allData);
 
@@ -134,6 +138,7 @@
     if (activeLayers.demographics) await runFaceDetection(canvas, ctx, allData);
     if (activeLayers.pose) await runPose(canvas, ctx, allData);
     if (activeLayers.objects) await runObjects(canvas, ctx, allData);
+    if (activeLayers.nsfw) await runNSFW(canvas, allData);
     if (activeLayers.scene) await runScene(canvas, allData);
     renderData(allData);
 
@@ -401,6 +406,57 @@
     allData.push({ spacer: true });
   }
 
+  // ── NSFW content classification (self-hosted model, loaded with tf.js) ──
+  async function runNSFW(source, allData) {
+    if (!models.nsfw) {
+      allData.push({ section: 'CONTENT CLASSIFICATION' });
+      allData.push({ key: 'STATUS', value: 'Model loading... toggle off and on to retry' });
+      allData.push({ spacer: true });
+      return;
+    }
+
+    let inputEl = source;
+    if (source instanceof HTMLVideoElement) {
+      const tmp = document.createElement('canvas');
+      tmp.width = source.videoWidth;
+      tmp.height = source.videoHeight;
+      tmp.getContext('2d').drawImage(source, 0, 0);
+      inputEl = tmp;
+    }
+
+    try {
+      // Preprocess: resize to 224x224, normalize to [0, 1]
+      const tensor = tf.tidy(() => {
+        const img = tf.browser.fromPixels(inputEl);
+        const resized = tf.image.resizeBilinear(img, [224, 224]);
+        const normalized = resized.toFloat().div(tf.scalar(255));
+        return normalized.expandDims(0);
+      });
+
+      const predictions = models.nsfw.predict(tensor);
+      const data = await predictions.data();
+      tensor.dispose();
+      predictions.dispose();
+
+      // Sort by probability
+      const results = Object.keys(NSFW_CLASSES).map(i => ({
+        className: NSFW_CLASSES[i],
+        probability: data[i]
+      })).sort((a, b) => b.probability - a.probability);
+
+      allData.push({ section: 'CONTENT CLASSIFICATION' });
+      results.forEach(p => {
+        allData.push({ key: p.className.toUpperCase(), value: `${(p.probability * 100).toFixed(1)}%` });
+      });
+      allData.push({ spacer: true });
+    } catch (err) {
+      console.error('NSFW classification error:', err);
+      allData.push({ section: 'CONTENT CLASSIFICATION' });
+      allData.push({ key: 'ERROR', value: err.message });
+      allData.push({ spacer: true });
+    }
+  }
+
   // ── Scene classification via MobileNet ──
   async function runScene(source, allData) {
     if (!App.models.mobilenet) {
@@ -467,6 +523,21 @@
         console.log('COCO-SSD loaded');
       } catch (err) {
         console.error('COCO-SSD failed:', err);
+      }
+    }
+    if (layer === 'nsfw' && !models.nsfw) {
+      try {
+        console.log('Loading NSFW model (self-hosted)...');
+        models.nsfw = await tf.loadLayersModel('models/nsfw/model.json');
+        // Warm up with a dummy prediction
+        const dummy = tf.zeros([1, 224, 224, 3]);
+        const warmup = models.nsfw.predict(dummy);
+        await warmup.data();
+        dummy.dispose();
+        warmup.dispose();
+        console.log('NSFW model loaded successfully');
+      } catch (err) {
+        console.error('NSFW model failed:', err);
       }
     }
     if (layer === 'scene') {
