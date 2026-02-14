@@ -13,14 +13,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface/dist/blazeface.min.js"></script>
   <!-- COCO-SSD (object detection) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd/dist/coco-ssd.min.js"></script>
-  <!-- NSFWJS (nudity/content classification) -->
-  <script src="https://cdn.jsdelivr.net/npm/nsfwjs/dist/nsfwjs.min.js"></script>
   <!-- MediaPipe Face Mesh runtime (must load before face-landmarks-detection) -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
   <!-- Face Landmarks Detection -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@1.0.6/dist/face-landmarks-detection.min.js"></script>
-  <!-- face-api.js (no-bundle version — uses existing TF.js) for age/gender/expression -->
-  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.nobundle.js"></script>
+  <!-- face-api.js (bundled with TF.js) for age/gender/expression -->
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js"></script>
 </head>
 <body>
   <!-- Loading overlay -->
@@ -188,9 +186,9 @@
           <input type="checkbox"> Objects
           <span class="chip-sub">what's in the scene</span>
         </label>
-        <label class="toggle-chip" data-layer="nsfw">
-          <input type="checkbox"> Content
-          <span class="chip-sub">nudity / content classification</span>
+        <label class="toggle-chip" data-layer="scene">
+          <input type="checkbox"> Scene
+          <span class="chip-sub">scene / content classification</span>
         </label>
       </div>
     </div>

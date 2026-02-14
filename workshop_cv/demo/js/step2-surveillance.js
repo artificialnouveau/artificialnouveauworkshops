@@ -1,7 +1,7 @@
 /**
  * step2-surveillance.js — Full surveillance stack with toggleable layers
- * Uses: BlazeFace (face boxes), face-api.js nobundle (age/gender/expression),
- *       COCO-SSD (objects), NSFWJS (content classification)
+ * Uses: BlazeFace (face boxes), face-api.js bundled (age/gender/expression),
+ *       COCO-SSD (objects), MobileNet (scene classification)
  * Sources: image upload or webcam
  */
 
@@ -21,13 +21,13 @@
   let webcamActive = false;
   let webcamLoop = null;
 
-  const models = { cocoSsd: null, nsfw: null, faceApiLoaded: false };
+  const models = { cocoSsd: null, faceApiLoaded: false };
 
   const activeLayers = {
     demographics: true,
     pose: false,
     objects: false,
-    nsfw: false,
+    scene: false,
   };
 
   // ── Toggle setup ──
@@ -118,7 +118,7 @@
     if (activeLayers.demographics) await runFaceDetection(video, octx, allData);
     if (activeLayers.pose) await runPose(video, octx, allData);
     if (activeLayers.objects) await runObjects(video, octx, allData);
-    if (activeLayers.nsfw) await runNSFW(video, allData);
+    if (activeLayers.scene) await runScene(video, allData);
     renderData(allData);
 
     webcamLoop = setTimeout(() => { if (webcamActive) webcamAnalysisLoop(); }, 300);
@@ -134,7 +134,7 @@
     if (activeLayers.demographics) await runFaceDetection(canvas, ctx, allData);
     if (activeLayers.pose) await runPose(canvas, ctx, allData);
     if (activeLayers.objects) await runObjects(canvas, ctx, allData);
-    if (activeLayers.nsfw) await runNSFW(canvas, allData);
+    if (activeLayers.scene) await runScene(canvas, allData);
     renderData(allData);
 
     const active = Object.entries(activeLayers).filter(([,v]) => v).map(([k]) => k.toUpperCase()).join(', ') || 'NONE';
@@ -171,11 +171,10 @@
       return;
     }
 
-    // Run face-api.js for age/gender/expression if available
+    // Run face-api.js for age/gender/expression if loaded
     let faceApiResults = null;
     if (models.faceApiLoaded && typeof faceapi !== 'undefined') {
       try {
-        // face-api.js needs a canvas or image element
         let inputEl = source;
         if (source instanceof HTMLVideoElement) {
           const tmp = document.createElement('canvas');
@@ -185,9 +184,10 @@
           inputEl = tmp;
         }
         faceApiResults = await faceapi
-          .detectAllFaces(inputEl, new faceapi.TinyFaceDetectorOptions())
+          .detectAllFaces(inputEl, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 }))
           .withAgeAndGender()
           .withFaceExpressions();
+        console.log('face-api.js results:', faceApiResults?.length || 0, 'faces');
       } catch (err) {
         console.error('face-api.js analysis error:', err);
       }
@@ -204,7 +204,7 @@
       const h = y2 - y1;
       const conf = (face.probability[0] * 100).toFixed(0);
 
-      // Try to match this face with a face-api.js result by bounding box overlap
+      // Match with face-api.js result
       let ageGenderResult = null;
       if (faceApiResults && faceApiResults.length > 0) {
         ageGenderResult = matchFaceApiResult(faceApiResults, x1, y1, w, h, idx);
@@ -216,7 +216,7 @@
       ctx.strokeRect(x1, y1, w, h);
       drawBrackets(ctx, x1, y1, w, h, Math.min(w, h) * 0.15);
 
-      // Label — include age/gender if available
+      // Label
       let labelText = `SUBJ-${String(idx + 1).padStart(2, '0')}  CONF:${conf}%`;
       if (ageGenderResult) {
         const age = Math.round(ageGenderResult.age);
@@ -225,11 +225,11 @@
         labelText = `SUBJ-${String(idx + 1).padStart(2, '0')}  AGE:${age}  ${gender}(${genderConf}%)`;
       }
 
+      ctx.font = '11px monospace';
       const labelW = Math.max(ctx.measureText(labelText).width + 10, w);
       ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
       ctx.fillRect(x1, y1 - 18, labelW, 18);
       ctx.fillStyle = '#00ff66';
-      ctx.font = '11px monospace';
       ctx.fillText(labelText, x1 + 4, y1 - 5);
 
       // Draw landmark points
@@ -254,7 +254,6 @@
       allData.push({ key: 'BBOX', value: `${Math.round(w)}x${Math.round(h)}px at (${Math.round(x1)},${Math.round(y1)})` });
       allData.push({ key: 'FACE AREA', value: `${(w * h).toFixed(0)}px²` });
 
-      // Age/Gender/Expression from face-api.js
       if (ageGenderResult) {
         allData.push({ key: 'AGE (estimated)', value: `${Math.round(ageGenderResult.age)} years` });
         allData.push({ key: 'GENDER', value: `${ageGenderResult.gender.toUpperCase()} (${(ageGenderResult.genderProbability * 100).toFixed(0)}%)` });
@@ -263,14 +262,13 @@
           const sorted = Object.entries(ageGenderResult.expressions)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 3);
+          allData.push({ key: 'EXPRESSION', value: '' });
           sorted.forEach(([expr, prob]) => {
             allData.push({ key: `  ${expr.toUpperCase()}`, value: `${(prob * 100).toFixed(1)}%` });
           });
         }
-      } else if (models.faceApiLoaded) {
-        allData.push({ key: 'AGE/GENDER', value: 'Could not match face for analysis' });
-      } else {
-        allData.push({ key: 'AGE/GENDER', value: 'Loading age/gender model...' });
+      } else if (!models.faceApiLoaded) {
+        allData.push({ key: 'AGE/GENDER', value: 'Model loading... toggle Face Analysis off and on to retry' });
       }
 
       if (face.landmarks) {
@@ -289,12 +287,10 @@
     });
   }
 
-  // Match a BlazeFace detection to the closest face-api.js result by center distance
   function matchFaceApiResult(faceApiResults, bx, by, bw, bh, idx) {
     if (idx < faceApiResults.length) {
       return faceApiResults[idx];
     }
-    // Fallback: match by closest center
     const bcx = bx + bw / 2;
     const bcy = by + bh / 2;
     let best = null;
@@ -312,7 +308,7 @@
     return best;
   }
 
-  // ── Pose: BlazeFace landmarks with connections ──
+  // ── Pose ──
   async function runPose(source, ctx, allData) {
     if (!App.models.blazeface) return;
 
@@ -361,7 +357,7 @@
     allData.push({ spacer: true });
   }
 
-  // ── COCO-SSD: object detection ──
+  // ── COCO-SSD ──
   async function runObjects(source, ctx, allData) {
     if (!models.cocoSsd) {
       allData.push({ section: 'OBJECT DETECTION' });
@@ -405,11 +401,11 @@
     allData.push({ spacer: true });
   }
 
-  // ── NSFWJS: content classification ──
-  async function runNSFW(source, allData) {
-    if (!models.nsfw) {
-      allData.push({ section: 'CONTENT CLASSIFICATION' });
-      allData.push({ key: 'STATUS', value: 'Model loading... toggle off and on to retry' });
+  // ── Scene classification via MobileNet ──
+  async function runScene(source, allData) {
+    if (!App.models.mobilenet) {
+      allData.push({ section: 'SCENE CLASSIFICATION' });
+      allData.push({ key: 'STATUS', value: 'MobileNet not loaded — reload the page' });
       allData.push({ spacer: true });
       return;
     }
@@ -425,15 +421,16 @@
 
     let preds;
     try {
-      preds = await models.nsfw.classify(inputEl);
+      preds = await App.models.mobilenet.classify(inputEl, 10);
     } catch (err) {
-      console.error('NSFW error:', err);
+      console.error('Scene classification error:', err);
       return;
     }
 
-    allData.push({ section: 'CONTENT CLASSIFICATION' });
+    allData.push({ section: 'SCENE CLASSIFICATION' });
     preds.forEach(p => {
-      allData.push({ key: p.className, value: `${(p.probability * 100).toFixed(1)}%` });
+      const label = p.className.split(',')[0];
+      allData.push({ key: label.toUpperCase(), value: `${(p.probability * 100).toFixed(1)}%` });
     });
     allData.push({ spacer: true });
   }
@@ -441,19 +438,19 @@
   // ── Model loading ──
   async function ensureModel(layer) {
     if (layer === 'demographics') {
-      // BlazeFace from App.models — loaded at startup
+      // BlazeFace loaded at startup via App.models
       // Also load face-api.js models for age/gender/expression
       if (!models.faceApiLoaded && typeof faceapi !== 'undefined') {
         try {
-          const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
-          console.log('Loading face-api.js models...');
+          const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model';
+          console.log('Loading face-api.js models from:', MODEL_URL);
           await Promise.all([
-            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
             faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
             faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
           ]);
           models.faceApiLoaded = true;
-          console.log('face-api.js models loaded (age/gender/expression)');
+          console.log('face-api.js models loaded successfully (age/gender/expression)');
         } catch (err) {
           console.error('face-api.js model loading failed:', err);
         }
@@ -472,14 +469,9 @@
         console.error('COCO-SSD failed:', err);
       }
     }
-    if (layer === 'nsfw' && !models.nsfw) {
-      try {
-        console.log('Loading NSFWJS...');
-        models.nsfw = await nsfwjs.load();
-        console.log('NSFWJS loaded');
-      } catch (err) {
-        console.error('NSFWJS failed:', err);
-      }
+    if (layer === 'scene') {
+      // Uses App.models.mobilenet — already loaded at startup
+      return;
     }
   }
 
