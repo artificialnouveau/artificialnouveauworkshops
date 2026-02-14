@@ -18,25 +18,40 @@ const App = {
   },
 
   async loadModels() {
-    try {
-      // Load models in parallel
-      const [mnet, bface] = await Promise.all([
-        mobilenet.load({ version: 2, alpha: 1.0 }),
-        blazeface.load(),
-      ]);
-      this.models.mobilenet = mnet;
-      this.models.blazeface = bface;
+    // Load each model independently so one failure doesn't block the others
+    const loadMobileNet = async () => {
+      try {
+        this.models.mobilenet = await mobilenet.load({ version: 2, alpha: 1.0 });
+        console.log('MobileNet loaded');
+      } catch (err) {
+        console.error('MobileNet failed to load:', err);
+      }
+    };
 
-      // Face landmarks model (heavier, load separately)
-      this.models.facemesh = await faceLandmarksDetection.load(
-        faceLandmarksDetection.SupportedPackages.mediapipeFacemesh,
-        { maxFaces: 1 }
-      );
-    } catch (err) {
-      console.error('Model loading error:', err);
-      // Still hide loader — steps that need missing models will show errors
-      this.hideLoader();
-    }
+    const loadBlazeFace = async () => {
+      try {
+        this.models.blazeface = await blazeface.load();
+        console.log('BlazeFace loaded');
+      } catch (err) {
+        console.error('BlazeFace failed to load:', err);
+      }
+    };
+
+    const loadFaceMesh = async () => {
+      try {
+        const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
+        this.models.facemesh = await faceLandmarksDetection.createDetector(model, {
+          runtime: 'mediapipe',
+          solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh',
+          maxFaces: 1,
+        });
+        console.log('FaceMesh loaded');
+      } catch (err) {
+        console.error('FaceMesh failed to load:', err);
+      }
+    };
+
+    await Promise.all([loadMobileNet(), loadBlazeFace(), loadFaceMesh()]);
   },
 
   hideLoader() {
