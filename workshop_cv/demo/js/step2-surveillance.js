@@ -1,6 +1,6 @@
 /**
  * step2-surveillance.js — Full surveillance stack with toggleable layers
- * Layers: demographics (face-api.js), pose (BlazeFace), objects (COCO-SSD), content (NSFWJS)
+ * Uses only models proven to work: BlazeFace, COCO-SSD, NSFWJS
  * Sources: image upload or webcam
  */
 
@@ -16,21 +16,12 @@
   const video = document.getElementById('webcam-video');
   const webcamOverlay = document.getElementById('canvas-webcam-overlay');
 
-  const FACE_API_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
-
-  // State
   let currentImg = null;
   let webcamActive = false;
   let webcamLoop = null;
 
-  // Lazy-loaded model flags
-  const loaded = {
-    faceapi: false,
-    cocoSsd: null,
-    nsfw: null,
-  };
+  const models = { cocoSsd: null, nsfw: null };
 
-  // Active layers
   const activeLayers = {
     demographics: true,
     pose: false,
@@ -42,20 +33,18 @@
   document.querySelectorAll('.toggle-chip').forEach(chip => {
     chip.addEventListener('click', async () => {
       const layer = chip.dataset.layer;
-      const checkbox = chip.querySelector('input');
-      checkbox.checked = !checkbox.checked;
-      activeLayers[layer] = checkbox.checked;
-      chip.classList.toggle('active', checkbox.checked);
+      const cb = chip.querySelector('input');
+      cb.checked = !cb.checked;
+      activeLayers[layer] = cb.checked;
+      chip.classList.toggle('active', cb.checked);
 
-      if (checkbox.checked) {
+      if (cb.checked) {
         chip.classList.add('loading');
         await ensureModel(layer);
         chip.classList.remove('loading');
       }
 
-      if (currentImg && !webcamActive) {
-        await analyzeImage(currentImg);
-      }
+      if (currentImg && !webcamActive) await analyzeImage(currentImg);
     });
   });
 
@@ -63,7 +52,6 @@
   fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     stopWebcam();
     uploadArea.classList.add('has-file');
     layerToggles.classList.remove('hidden');
@@ -80,18 +68,13 @@
 
   // ── Webcam ──
   webcamBtn.addEventListener('click', async () => {
-    if (webcamActive) {
-      stopWebcam();
-      return;
-    }
-
+    if (webcamActive) { stopWebcam(); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
       });
       video.srcObject = stream;
       await video.play();
-
       webcamActive = true;
       webcamBtn.classList.add('active');
       webcamBtn.querySelector('span:last-child').textContent = 'Stop Webcam';
@@ -100,10 +83,8 @@
       canvas.classList.add('hidden');
       video.classList.remove('hidden');
       webcamOverlay.classList.remove('hidden');
-
       webcamOverlay.width = video.videoWidth || 640;
       webcamOverlay.height = video.videoHeight || 480;
-
       await ensureActiveModels();
       webcamAnalysisLoop();
     } catch (err) {
@@ -114,14 +95,8 @@
 
   function stopWebcam() {
     webcamActive = false;
-    if (webcamLoop) {
-      clearTimeout(webcamLoop);
-      webcamLoop = null;
-    }
-    if (video.srcObject) {
-      video.srcObject.getTracks().forEach(t => t.stop());
-      video.srcObject = null;
-    }
+    if (webcamLoop) { clearTimeout(webcamLoop); webcamLoop = null; }
+    if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; }
     webcamBtn.classList.remove('active');
     webcamBtn.querySelector('span:last-child').textContent = 'Use Webcam';
     video.classList.add('hidden');
@@ -130,28 +105,22 @@
 
   async function webcamAnalysisLoop() {
     if (!webcamActive) return;
-
     if (video.videoWidth) {
       webcamOverlay.width = video.videoWidth;
       webcamOverlay.height = video.videoHeight;
     }
-
     const octx = webcamOverlay.getContext('2d');
     octx.clearRect(0, 0, webcamOverlay.width, webcamOverlay.height);
     updateTimestamp();
 
     const allData = [];
-
-    if (activeLayers.demographics) await runDemographics(video, octx, allData);
+    if (activeLayers.demographics) await runFaceDetection(video, octx, allData);
     if (activeLayers.pose) await runPose(video, octx, allData);
-    if (activeLayers.objects) await runObjectDetection(video, octx, allData);
+    if (activeLayers.objects) await runObjects(video, octx, allData);
     if (activeLayers.nsfw) await runNSFW(video, allData);
+    renderData(allData);
 
-    renderDataReadout(allData);
-
-    webcamLoop = setTimeout(() => {
-      if (webcamActive) webcamAnalysisLoop();
-    }, 300);
+    webcamLoop = setTimeout(() => { if (webcamActive) webcamAnalysisLoop(); }, 300);
   }
 
   // ── Analyze static image ──
@@ -161,203 +130,183 @@
     drawScanLines(ctx, canvas.width, canvas.height);
 
     const allData = [];
-
-    if (activeLayers.demographics) await runDemographics(canvas, ctx, allData);
+    if (activeLayers.demographics) await runFaceDetection(canvas, ctx, allData);
     if (activeLayers.pose) await runPose(canvas, ctx, allData);
-    if (activeLayers.objects) await runObjectDetection(canvas, ctx, allData);
+    if (activeLayers.objects) await runObjects(canvas, ctx, allData);
     if (activeLayers.nsfw) await runNSFW(canvas, allData);
+    renderData(allData);
 
-    renderDataReadout(allData);
-
-    const activeList = Object.entries(activeLayers)
-      .filter(([, v]) => v)
-      .map(([k]) => k.toUpperCase())
-      .join(', ') || 'NONE';
-
+    const active = Object.entries(activeLayers).filter(([,v]) => v).map(([k]) => k.toUpperCase()).join(', ') || 'NONE';
     statsDiv.innerHTML =
       `FRAME RESOLUTION: ${canvas.width}x${canvas.height}<br>` +
-      `ACTIVE LAYERS: ${activeList}<br>` +
-      `PROCESSING: CLIENT-SIDE (no data transmitted)<br>` +
-      `MODELS LOADED: faceapi=${loaded.faceapi}, cocoSsd=${!!loaded.cocoSsd}, nsfw=${!!loaded.nsfw}`;
+      `ACTIVE LAYERS: ${active}<br>` +
+      `PROCESSING: CLIENT-SIDE (no data transmitted)`;
   }
 
-  // ── Demographics via face-api.js ──
-  async function runDemographics(source, ctx, allData) {
-    if (!loaded.faceapi) {
-      allData.push({ section: 'DEMOGRAPHICS' });
-      allData.push({ key: 'STATUS', value: 'Model not loaded — check console for errors' });
+  // ── Face Detection via BlazeFace ──
+  async function runFaceDetection(source, ctx, allData) {
+    if (!App.models.blazeface) {
+      allData.push({ section: 'FACE DETECTION' });
+      allData.push({ key: 'ERROR', value: 'BlazeFace model not loaded — reload the page' });
       allData.push({ spacer: true });
       return;
     }
 
-    let detections;
+    let faces;
     try {
-      detections = await faceapi
-        .detectAllFaces(source, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.4 }))
-        .withFaceLandmarks(true)
-        .withAgeAndGender()
-        .withFaceExpressions();
+      faces = await App.models.blazeface.estimateFaces(source, false);
     } catch (err) {
-      console.error('face-api error:', err);
-      allData.push({ section: 'DEMOGRAPHICS' });
+      console.error('BlazeFace error:', err);
+      allData.push({ section: 'FACE DETECTION' });
       allData.push({ key: 'ERROR', value: err.message });
       allData.push({ spacer: true });
       return;
     }
 
-    if (!detections || detections.length === 0) {
-      allData.push({ section: 'DEMOGRAPHICS' });
+    if (!faces || faces.length === 0) {
+      allData.push({ section: 'FACE DETECTION' });
       allData.push({ key: 'STATUS', value: 'No faces detected' });
       allData.push({ spacer: true });
       return;
     }
 
-    detections.forEach((det, idx) => {
-      const box = det.detection.box;
-      const x = box.x, y = box.y, w = box.width, h = box.height;
-      const conf = (det.detection.score * 100).toFixed(0);
+    const landmarkNames = ['right eye', 'left eye', 'nose', 'mouth', 'right ear', 'left ear'];
 
-      // Green bounding box
+    faces.forEach((face, idx) => {
+      const x1 = face.topLeft[0];
+      const y1 = face.topLeft[1];
+      const x2 = face.bottomRight[0];
+      const y2 = face.bottomRight[1];
+      const w = x2 - x1;
+      const h = y2 - y1;
+      const conf = (face.probability[0] * 100).toFixed(0);
+
+      // Green bounding box with brackets
       ctx.strokeStyle = '#00ff66';
       ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, w, h);
-      drawBrackets(ctx, x, y, w, h, Math.min(w, h) * 0.15);
+      ctx.strokeRect(x1, y1, w, h);
+      drawBrackets(ctx, x1, y1, w, h, Math.min(w, h) * 0.15);
 
       // Label
       ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-      ctx.fillRect(x, y - 18, Math.max(w, 140), 18);
+      ctx.fillRect(x1, y1 - 18, Math.max(w, 140), 18);
       ctx.fillStyle = '#00ff66';
       ctx.font = '11px monospace';
-      ctx.fillText(`SUBJ-${String(idx + 1).padStart(2, '0')}  ${conf}%`, x + 4, y - 5);
+      ctx.fillText(`SUBJ-${String(idx + 1).padStart(2, '0')}  CONF:${conf}%`, x1 + 4, y1 - 5);
 
       // Draw landmark points
-      if (det.landmarks) {
-        ctx.fillStyle = 'rgba(255, 74, 74, 0.5)';
-        det.landmarks.positions.forEach(pt => {
+      if (face.landmarks) {
+        face.landmarks.forEach((pt, pi) => {
           ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 1.5, 0, Math.PI * 2);
+          ctx.arc(pt[0], pt[1], 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#ff4a4a';
           ctx.fill();
+
+          // Label each landmark
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(pt[0] + 7, pt[1] - 7, 62, 14);
+          ctx.fillStyle = '#ff4a4a';
+          ctx.font = '10px monospace';
+          ctx.fillText(landmarkNames[pi] || `pt${pi}`, pt[0] + 9, pt[1] + 4);
         });
       }
 
       // Data readout
-      const age = Math.round(det.age);
-      const gender = det.gender;
-      const genderConf = (det.genderProbability * 100).toFixed(0);
+      allData.push({ section: `SUBJECT ${idx + 1} — FACE ANALYSIS` });
+      allData.push({ key: 'CONFIDENCE', value: `${conf}%` });
+      allData.push({ key: 'BBOX', value: `${Math.round(w)}x${Math.round(h)}px at (${Math.round(x1)},${Math.round(y1)})` });
+      allData.push({ key: 'FACE AREA', value: `${(w * h).toFixed(0)}px²` });
 
-      // Top expression
-      const expressions = det.expressions;
-      let topExpr = 'N/A', topExprConf = 0;
-      if (expressions) {
-        for (const [expr, score] of Object.entries(expressions)) {
-          if (score > topExprConf) {
-            topExpr = expr;
-            topExprConf = score;
-          }
+      if (face.landmarks) {
+        allData.push({ key: 'LANDMARKS', value: `${face.landmarks.length} keypoints` });
+        face.landmarks.forEach((pt, pi) => {
+          allData.push({ key: `  ${(landmarkNames[pi] || 'pt' + pi).toUpperCase()}`, value: `(${Math.round(pt[0])}, ${Math.round(pt[1])})` });
+        });
+
+        // Compute inter-eye distance and head tilt
+        if (face.landmarks.length >= 2) {
+          const eyeR = face.landmarks[0];
+          const eyeL = face.landmarks[1];
+          const eyeDist = Math.sqrt(Math.pow(eyeR[0] - eyeL[0], 2) + Math.pow(eyeR[1] - eyeL[1], 2));
+          const tiltDeg = Math.atan2(eyeR[1] - eyeL[1], eyeR[0] - eyeL[0]) * (180 / Math.PI);
+          allData.push({ key: 'INTER-EYE DIST', value: `${eyeDist.toFixed(1)}px` });
+          allData.push({ key: 'HEAD TILT', value: `${tiltDeg.toFixed(1)}°` });
         }
       }
-
-      allData.push({ section: `SUBJECT ${idx + 1} — DEMOGRAPHICS` });
-      allData.push({ key: 'AGE (estimated)', value: `${age} years` });
-      allData.push({ key: 'GENDER', value: `${gender} (${genderConf}%)` });
-      allData.push({ key: 'EXPRESSION', value: `${topExpr} (${(topExprConf * 100).toFixed(0)}%)` });
-      allData.push({ key: 'FACE CONFIDENCE', value: `${conf}%` });
-      allData.push({ key: 'LANDMARKS', value: `${det.landmarks ? det.landmarks.positions.length : 0} points` });
-      allData.push({ key: 'BBOX', value: `${Math.round(w)}x${Math.round(h)}px at (${Math.round(x)},${Math.round(y)})` });
       allData.push({ spacer: true });
     });
   }
 
-  // ── Pose via BlazeFace (face keypoints as lightweight pose proxy) ──
+  // ── Pose: BlazeFace landmarks with connections ──
   async function runPose(source, ctx, allData) {
     if (!App.models.blazeface) return;
 
-    let predictions;
+    let faces;
     try {
-      predictions = await App.models.blazeface.estimateFaces(source, false);
+      faces = await App.models.blazeface.estimateFaces(source, false);
     } catch (err) {
-      console.error('BlazeFace pose error:', err);
       return;
     }
 
-    allData.push({ section: 'POSE / KEYPOINTS' });
-
-    if (!predictions || predictions.length === 0) {
-      allData.push({ key: 'STATUS', value: 'No faces/poses detected' });
+    allData.push({ section: 'POSE / FACIAL GEOMETRY' });
+    if (!faces || faces.length === 0) {
+      allData.push({ key: 'STATUS', value: 'No faces detected for pose' });
       allData.push({ spacer: true });
       return;
     }
 
-    ctx.fillStyle = '#ff4a4a';
-    ctx.strokeStyle = '#ff4a4a';
+    ctx.strokeStyle = '#4a9eff';
     ctx.lineWidth = 2;
 
-    const landmarkNames = ['right eye', 'left eye', 'nose', 'mouth', 'right ear', 'left ear'];
+    faces.forEach((face, idx) => {
+      if (!face.landmarks || face.landmarks.length < 4) return;
 
-    predictions.forEach((face, idx) => {
-      if (face.landmarks) {
-        // Draw keypoints
-        face.landmarks.forEach((point, pi) => {
+      // Draw triangulation between landmarks
+      const pts = face.landmarks;
+      const connections = [[0, 1], [0, 2], [1, 2], [2, 3], [0, 4], [1, 5]];
+
+      for (const [a, b] of connections) {
+        if (pts[a] && pts[b]) {
           ctx.beginPath();
-          ctx.arc(point[0], point[1], 5, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Label
-          ctx.fillStyle = 'rgba(0,0,0,0.7)';
-          ctx.fillRect(point[0] + 7, point[1] - 6, 60, 14);
-          ctx.fillStyle = '#ff4a4a';
-          ctx.font = '10px monospace';
-          ctx.fillText(landmarkNames[pi] || `pt${pi}`, point[0] + 9, point[1] + 5);
-          ctx.fillStyle = '#ff4a4a';
-        });
-
-        // Connect eyes
-        if (face.landmarks.length >= 2) {
-          ctx.beginPath();
-          ctx.moveTo(face.landmarks[0][0], face.landmarks[0][1]);
-          ctx.lineTo(face.landmarks[1][0], face.landmarks[1][1]);
+          ctx.moveTo(pts[a][0], pts[a][1]);
+          ctx.lineTo(pts[b][0], pts[b][1]);
           ctx.stroke();
         }
-        // Connect to nose
-        if (face.landmarks.length >= 3) {
-          ctx.beginPath();
-          ctx.moveTo(face.landmarks[0][0], face.landmarks[0][1]);
-          ctx.lineTo(face.landmarks[2][0], face.landmarks[2][1]);
-          ctx.lineTo(face.landmarks[1][0], face.landmarks[1][1]);
-          ctx.stroke();
-        }
-        // Connect to mouth
-        if (face.landmarks.length >= 4) {
-          ctx.beginPath();
-          ctx.moveTo(face.landmarks[2][0], face.landmarks[2][1]);
-          ctx.lineTo(face.landmarks[3][0], face.landmarks[3][1]);
-          ctx.stroke();
-        }
-
-        allData.push({ key: `FACE ${idx + 1} KEYPOINTS`, value: `${face.landmarks.length} landmarks` });
-        face.landmarks.forEach((pt, pi) => {
-          allData.push({ key: `  ${(landmarkNames[pi] || 'pt' + pi).toUpperCase()}`, value: `(${Math.round(pt[0])}, ${Math.round(pt[1])})` });
-        });
       }
+
+      // Compute face direction from nose position relative to eye midpoint
+      const eyeMidX = (pts[0][0] + pts[1][0]) / 2;
+      const noseX = pts[2][0];
+      const noseOffset = noseX - eyeMidX;
+      let direction = 'FORWARD';
+      if (noseOffset > 5) direction = 'LOOKING LEFT';
+      if (noseOffset < -5) direction = 'LOOKING RIGHT';
+
+      allData.push({ key: `FACE ${idx + 1} DIRECTION`, value: direction });
+      allData.push({ key: 'NOSE OFFSET', value: `${noseOffset.toFixed(1)}px from center` });
     });
     allData.push({ spacer: true });
   }
 
   // ── COCO-SSD: object detection ──
-  async function runObjectDetection(source, ctx, allData) {
-    if (!loaded.cocoSsd) return;
+  async function runObjects(source, ctx, allData) {
+    if (!models.cocoSsd) {
+      allData.push({ section: 'OBJECT DETECTION' });
+      allData.push({ key: 'STATUS', value: 'Model loading... toggle off and on to retry' });
+      allData.push({ spacer: true });
+      return;
+    }
 
-    let predictions;
+    let preds;
     try {
-      predictions = await loaded.cocoSsd.detect(source);
+      preds = await models.cocoSsd.detect(source);
     } catch (err) {
       console.error('COCO-SSD error:', err);
       return;
     }
 
     allData.push({ section: 'OBJECT DETECTION' });
-
-    if (predictions.length === 0) {
+    if (preds.length === 0) {
       allData.push({ key: 'STATUS', value: 'No objects detected' });
       allData.push({ spacer: true });
       return;
@@ -365,16 +314,16 @@
 
     ctx.lineWidth = 2;
     ctx.font = '11px monospace';
-    predictions.forEach(pred => {
+    preds.forEach(pred => {
       const [x, y, w, h] = pred.bbox;
       const label = pred.class;
       const conf = (pred.score * 100).toFixed(0);
 
       ctx.strokeStyle = '#ffd94a';
       ctx.strokeRect(x, y, w, h);
-      const textW = ctx.measureText(`${label} ${conf}%`).width + 10;
+      const tw = ctx.measureText(`${label} ${conf}%`).width + 10;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      ctx.fillRect(x, y - 16, textW, 16);
+      ctx.fillRect(x, y - 16, tw, 16);
       ctx.fillStyle = '#ffd94a';
       ctx.fillText(`${label} ${conf}%`, x + 4, y - 4);
 
@@ -385,7 +334,12 @@
 
   // ── NSFWJS: content classification ──
   async function runNSFW(source, allData) {
-    if (!loaded.nsfw) return;
+    if (!models.nsfw) {
+      allData.push({ section: 'CONTENT CLASSIFICATION' });
+      allData.push({ key: 'STATUS', value: 'Model loading... toggle off and on to retry' });
+      allData.push({ spacer: true });
+      return;
+    }
 
     let inputEl = source;
     if (source instanceof HTMLVideoElement) {
@@ -396,16 +350,16 @@
       inputEl = tmp;
     }
 
-    let predictions;
+    let preds;
     try {
-      predictions = await loaded.nsfw.classify(inputEl);
+      preds = await models.nsfw.classify(inputEl);
     } catch (err) {
       console.error('NSFW error:', err);
       return;
     }
 
     allData.push({ section: 'CONTENT CLASSIFICATION' });
-    predictions.forEach(p => {
+    preds.forEach(p => {
       allData.push({ key: p.className, value: `${(p.probability * 100).toFixed(1)}%` });
     });
     allData.push({ spacer: true });
@@ -413,55 +367,23 @@
 
   // ── Model loading ──
   async function ensureModel(layer) {
-    if (layer === 'demographics' && !loaded.faceapi) {
-      try {
-        console.log('Loading face-api models from:', FACE_API_MODEL_URL);
-        dataDiv.innerHTML = '<div class="data-row">Loading demographics model...</div>';
-
-        // Load models one by one for better error isolation
-        console.log('Loading TinyFaceDetector...');
-        await faceapi.nets.tinyFaceDetector.loadFromUri(FACE_API_MODEL_URL);
-        console.log('TinyFaceDetector loaded');
-
-        console.log('Loading FaceLandmark68TinyNet...');
-        await faceapi.nets.faceLandmark68TinyNet.loadFromUri(FACE_API_MODEL_URL);
-        console.log('FaceLandmark68TinyNet loaded');
-
-        console.log('Loading AgeGenderNet...');
-        await faceapi.nets.ageGenderNet.loadFromUri(FACE_API_MODEL_URL);
-        console.log('AgeGenderNet loaded');
-
-        console.log('Loading FaceExpressionNet...');
-        await faceapi.nets.faceExpressionNet.loadFromUri(FACE_API_MODEL_URL);
-        console.log('FaceExpressionNet loaded');
-
-        loaded.faceapi = true;
-        console.log('All face-api.js models loaded successfully');
-      } catch (err) {
-        console.error('face-api.js failed to load:', err);
-        dataDiv.innerHTML = `<div class="data-row" style="color:var(--red)">Demographics model failed: ${err.message}</div>`;
-      }
+    if (layer === 'demographics' || layer === 'pose') {
+      // Uses BlazeFace from App.models — loaded at startup
+      return;
     }
-
-    if (layer === 'pose') {
-      // Uses BlazeFace from App.models (already loaded at startup)
-      if (!App.models.blazeface) {
-        console.warn('BlazeFace not available for pose');
-      }
-    }
-
-    if (layer === 'objects' && !loaded.cocoSsd) {
+    if (layer === 'objects' && !models.cocoSsd) {
       try {
-        loaded.cocoSsd = await cocoSsd.load();
+        console.log('Loading COCO-SSD...');
+        models.cocoSsd = await cocoSsd.load();
         console.log('COCO-SSD loaded');
       } catch (err) {
         console.error('COCO-SSD failed:', err);
       }
     }
-
-    if (layer === 'nsfw' && !loaded.nsfw) {
+    if (layer === 'nsfw' && !models.nsfw) {
       try {
-        loaded.nsfw = await nsfwjs.load();
+        console.log('Loading NSFWJS...');
+        models.nsfw = await nsfwjs.load();
         console.log('NSFWJS loaded');
       } catch (err) {
         console.error('NSFWJS failed:', err);
@@ -477,8 +399,8 @@
     await Promise.all(promises);
   }
 
-  // ── Rendering ──
-  function renderDataReadout(allData) {
+  // ── Render ──
+  function renderData(allData) {
     let html = '';
     for (const item of allData) {
       if (item.section) {
@@ -490,18 +412,16 @@
       }
     }
     if (allData.length === 0) {
-      html = '<div class="data-row">NO DETECTIONS — Upload a photo or enable layers above.</div>';
+      html = '<div class="data-row">Enable a detection layer above, then upload a photo.</div>';
     }
     dataDiv.innerHTML = html;
   }
 
   function updateTimestamp() {
-    const now = new Date();
     const el = document.getElementById('timestamp');
-    if (el) el.textContent = now.toISOString().replace('T', ' ').slice(0, 19);
+    if (el) el.textContent = new Date().toISOString().replace('T', ' ').slice(0, 19);
   }
 
-  // ── Drawing helpers ──
   function drawBrackets(ctx, x, y, w, h, len) {
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#00ff66';
@@ -515,10 +435,7 @@
     ctx.strokeStyle = 'rgba(0, 255, 102, 0.03)';
     ctx.lineWidth = 1;
     for (let y = 0; y < h; y += 3) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(w, y);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
     }
   }
 })();

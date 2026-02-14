@@ -11,8 +11,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
   <!-- BlazeFace (face detection) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface/dist/blazeface.min.js"></script>
-  <!-- Face-API.js (demographics: age/gender/expression) -->
-  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
   <!-- COCO-SSD (object detection) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd/dist/coco-ssd.min.js"></script>
   <!-- NSFWJS (nudity/content classification) -->
@@ -135,8 +133,8 @@
       <h3 class="mono">Detection Layers</h3>
       <div class="toggle-row">
         <label class="toggle-chip active" data-layer="demographics">
-          <input type="checkbox" checked> Demographics
-          <span class="chip-sub">age / gender / expression</span>
+          <input type="checkbox" checked> Face Detection
+          <span class="chip-sub">face / landmarks / bounding box</span>
         </label>
         <label class="toggle-chip" data-layer="pose">
           <input type="checkbox"> Pose
