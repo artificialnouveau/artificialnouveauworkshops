@@ -50,7 +50,8 @@
   <section id="step-1" class="step active">
     <div class="step-intro">
       <h2>What the Machine Sees</h2>
-      <p>Your photograph is just a grid of numbers. Upload a photo and watch the machine read it.</p>
+      <p>When you look at a photograph, you see a face, a landscape, a moment. A machine sees none of that. It sees a grid of numbers — millions of tiny colored squares called <strong>pixels</strong>, each defined by three values: Red, Green, and Blue (RGB).</p>
+      <p style="color:var(--text-dim); margin-top:8px">Computer vision is the process of turning that grid of numbers into meaning: "this is a dog," "this person looks happy," "this is a stop sign." Upload a photo to see how.</p>
     </div>
 
     <div class="upload-area" id="upload-area-1">
@@ -62,28 +63,48 @@
     </div>
 
     <div id="step1-results" class="results hidden">
+
+      <!-- Section: Pixel Grid -->
+      <div class="explainer-block">
+        <h3>Step 1: The Image as Numbers</h3>
+        <p>Every digital image is a grid of pixels. Each pixel is a single colored dot, defined by three numbers between 0 and 255 — one for Red, one for Green, one for Blue. A value of (255, 0, 0) is pure red. (0, 0, 0) is black. (255, 255, 255) is white. Your entire photo is just a spreadsheet of these triplets.</p>
+      </div>
+
       <div class="canvas-row">
         <div class="canvas-container">
           <h3>Your Image</h3>
           <canvas id="canvas-original-1"></canvas>
         </div>
         <div class="canvas-container">
-          <h3>Pixel Grid</h3>
+          <h3>Pixel Grid (your entire image, downsampled)</h3>
           <canvas id="canvas-pixels"></canvas>
-          <p class="pixel-info" id="pixel-info">Tap the grid to inspect RGB values</p>
+          <p class="pixel-info" id="pixel-info">Tap any square to see its RGB values</p>
         </div>
+      </div>
+
+      <!-- Section: Classification -->
+      <div class="explainer-block">
+        <h3>Step 2: Pattern Matching</h3>
+        <p>A neural network called <strong>MobileNet</strong> has been trained on millions of labelled images. It learned to associate patterns of pixels with labels. It doesn't "understand" your photo — it matches patterns it has seen before and outputs its best guesses with a confidence percentage. These guesses are called <strong>classifications</strong>.</p>
+      </div>
+
+      <div id="classification-results">
+        <h3>The Machine's Top 5 Guesses:</h3>
+        <div id="predictions"></div>
+      </div>
+
+      <!-- Section: Heatmap -->
+      <div class="explainer-block">
+        <h3>Step 3: Where Is It Looking?</h3>
+        <p>Not every pixel matters equally. The <strong>attention heatmap</strong> below shows which regions of your image most influenced the classification. It works by systematically blocking out parts of the image and measuring how much the model's confidence drops — if blocking a region causes a big drop, that region was important. Orange/red areas are where the model is "paying attention." This may not be where <em>you</em> would look.</p>
       </div>
 
       <div id="heatmap-section">
         <h3>Attention Heatmap</h3>
-        <p class="description">Where is the model looking? Brighter = more important for classification.</p>
         <canvas id="canvas-heatmap"></canvas>
+        <p class="description" style="margin-top:8px" id="heatmap-status"></p>
       </div>
 
-      <div id="classification-results">
-        <h3>The Machine Says:</h3>
-        <div id="predictions"></div>
-      </div>
     </div>
   </section>
 
