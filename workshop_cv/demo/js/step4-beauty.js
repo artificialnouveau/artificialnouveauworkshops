@@ -46,10 +46,10 @@
       return;
     }
 
-    // Detect face landmarks
+    // Detect face landmarks (new API: estimateFaces takes the element directly)
     let faces;
     try {
-      faces = await App.models.facemesh.estimateFaces({ input: landmarkCanvas });
+      faces = await App.models.facemesh.estimateFaces(landmarkCanvas);
     } catch (err) {
       console.error('Face mesh error:', err);
       detailsDiv.innerHTML = 'Face mesh detection failed. Showing basic filter.';
@@ -63,7 +63,11 @@
       return;
     }
 
-    const keypoints = faces[0].scaledMesh || faces[0].mesh;
+    // New API returns keypoints as [{x, y, z, name?}, ...] — convert to [x,y,z] arrays
+    const rawKeypoints = faces[0].keypoints || faces[0].scaledMesh || faces[0].mesh;
+    const keypoints = rawKeypoints.map(kp =>
+      Array.isArray(kp) ? kp : [kp.x, kp.y, kp.z || 0]
+    );
 
     // Draw landmarks on original
     drawLandmarks(lCtx, keypoints, w, h);
