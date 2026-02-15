@@ -27,7 +27,14 @@
   const loadingPercent = document.getElementById('loading-percent');
   const loadingSteps = document.getElementById('loading-steps');
 
-  const NSFW_CLASSES = { 0: 'Drawing', 1: 'Hentai', 2: 'Neutral', 3: 'Porn', 4: 'Sexy' };
+  const NUDENET_LABELS = [
+    'exposed anus', 'exposed armpits', 'belly', 'exposed belly',
+    'buttocks', 'exposed buttocks', 'female face', 'male face',
+    'feet', 'exposed feet', 'breast', 'exposed breast',
+    'vagina', 'exposed vagina', 'male breast', 'exposed penis',
+  ];
+  // Indices that should be censored (black boxes)
+  const NSFW_INDICES = new Set([0, 3, 5, 11, 13, 15]); // exposed: anus, belly, buttocks, breast, vagina, penis
 
   function showLoading(stepText, percent) {
     loadingBar.classList.add('visible');
@@ -141,7 +148,7 @@
     if (activeLayers.demographics) await runFaceDetection(video, octx, allData);
     if (activeLayers.pose) await runPose(video, octx, allData);
     if (activeLayers.objects) await runObjects(video, octx, allData);
-    if (activeLayers.nsfw) await runNSFW(video, allData);
+    if (activeLayers.nsfw) await runNSFW(video, octx, allData);
     if (activeLayers.scene) await runScene(video, allData);
     renderData(allData);
 
@@ -158,7 +165,7 @@
     if (activeLayers.demographics) await runFaceDetection(canvas, ctx, allData);
     if (activeLayers.pose) await runPose(canvas, ctx, allData);
     if (activeLayers.objects) await runObjects(canvas, ctx, allData);
-    if (activeLayers.nsfw) await runNSFW(canvas, allData);
+    if (activeLayers.nsfw) await runNSFW(canvas, ctx, allData);
     if (activeLayers.scene) await runScene(canvas, allData);
     renderData(allData);
 
@@ -426,10 +433,10 @@
     allData.push({ spacer: true });
   }
 
-  // ── NSFW content classification (self-hosted model, loaded with tf.js) ──
-  async function runNSFW(source, allData) {
+  // ── NSFW object detection via NudeNet (self-hosted TFJS graph model) ──
+  async function runNSFW(source, ctx, allData) {
     if (!models.nsfw) {
-      allData.push({ section: 'CONTENT CLASSIFICATION' });
+      allData.push({ section: 'CONTENT DETECTION' });
       allData.push({ key: 'STATUS', value: 'Model loading... toggle off and on to retry' });
       allData.push({ spacer: true });
       return;
@@ -444,37 +451,117 @@
       inputEl = tmp;
     }
 
+    const sourceW = inputEl.width || inputEl.videoWidth;
+    const sourceH = inputEl.height || inputEl.videoHeight;
+
     try {
-      // Preprocess: resize to 224x224, normalize to [0, 1]
-      const tensor = tf.tidy(() => {
+      // Preprocess: resize, normalize to [0, 1], expand batch dim
+      const inputTensor = tf.tidy(() => {
         const img = tf.browser.fromPixels(inputEl);
-        const resized = tf.image.resizeBilinear(img, [224, 224]);
-        const normalized = resized.toFloat().div(tf.scalar(255));
-        return normalized.expandDims(0);
+        const resized = tf.image.resizeBilinear(img, [320, 320]);
+        return resized.toFloat().div(255).expandDims(0);
       });
 
-      const predictions = models.nsfw.predict(tensor);
-      const data = await predictions.data();
-      tensor.dispose();
-      predictions.dispose();
+      // Run model — outputs: boxes [1,300,4], scores [1,300], classes [1,300]
+      const output = await models.nsfw.executeAsync(inputTensor, ['output1', 'output2', 'output3']);
+      const boxes = await output[0].array();   // [1, 300, 4] — [y1, x1, y2, x2] normalized
+      const scores = await output[1].data();   // [300]
+      const classes = await output[2].data();  // [300] int
 
-      // Sort by probability
-      const results = Object.keys(NSFW_CLASSES).map(i => ({
-        className: NSFW_CLASSES[i],
-        probability: data[i]
-      })).sort((a, b) => b.probability - a.probability);
+      inputTensor.dispose();
+      output.forEach(t => t.dispose());
 
-      allData.push({ section: 'CONTENT CLASSIFICATION' });
-      results.forEach(p => {
-        allData.push({ key: p.className.toUpperCase(), value: `${(p.probability * 100).toFixed(1)}%` });
-      });
+      const minScore = 0.3;
+      const detections = [];
+      for (let i = 0; i < scores.length; i++) {
+        if (scores[i] < minScore) continue;
+        const classIdx = classes[i];
+        const label = NUDENET_LABELS[classIdx] || `class-${classIdx}`;
+        const [y1, x1, y2, x2] = boxes[0][i];
+        detections.push({
+          label, classIdx,
+          score: scores[i],
+          x: x1 * sourceW, y: y1 * sourceH,
+          w: (x2 - x1) * sourceW, h: (y2 - y1) * sourceH,
+        });
+      }
+
+      // NMS: remove overlapping boxes for same class
+      const filtered = simpleNMS(detections, 0.4);
+
+      allData.push({ section: 'CONTENT DETECTION (NudeNet)' });
+      if (filtered.length === 0) {
+        allData.push({ key: 'STATUS', value: 'No exposed body parts detected' });
+      }
+
+      // Scale factor if canvas is smaller than source
+      const scaleX = (ctx.canvas.width || sourceW) / sourceW;
+      const scaleY = (ctx.canvas.height || sourceH) / sourceH;
+
+      for (const det of filtered) {
+        const dx = det.x * scaleX;
+        const dy = det.y * scaleY;
+        const dw = det.w * scaleX;
+        const dh = det.h * scaleY;
+        const conf = (det.score * 100).toFixed(0);
+
+        if (NSFW_INDICES.has(det.classIdx)) {
+          // Black box over exposed region
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(dx, dy, dw, dh);
+
+          // Label on black box
+          ctx.font = '11px monospace';
+          ctx.fillStyle = '#ff4a4a';
+          const labelText = `CENSORED: ${det.label} (${conf}%)`;
+          ctx.fillText(labelText, dx + 4, dy + 14);
+        } else {
+          // Non-exposed: just outline
+          ctx.strokeStyle = 'rgba(255, 217, 74, 0.6)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(dx, dy, dw, dh);
+          ctx.font = '10px monospace';
+          ctx.fillStyle = '#ffd94a';
+          ctx.fillText(`${det.label} ${conf}%`, dx + 2, dy - 3);
+        }
+
+        allData.push({ key: det.label.toUpperCase(), value: `${conf}% — ${Math.round(det.w)}x${Math.round(det.h)}px` });
+      }
       allData.push({ spacer: true });
     } catch (err) {
-      console.error('NSFW classification error:', err);
-      allData.push({ section: 'CONTENT CLASSIFICATION' });
+      console.error('NudeNet detection error:', err);
+      allData.push({ section: 'CONTENT DETECTION' });
       allData.push({ key: 'ERROR', value: err.message });
       allData.push({ spacer: true });
     }
+  }
+
+  // Simple NMS: suppress overlapping boxes of same class
+  function simpleNMS(detections, iouThresh) {
+    detections.sort((a, b) => b.score - a.score);
+    const keep = [];
+    const used = new Set();
+    for (let i = 0; i < detections.length; i++) {
+      if (used.has(i)) continue;
+      keep.push(detections[i]);
+      for (let j = i + 1; j < detections.length; j++) {
+        if (used.has(j)) continue;
+        if (detections[i].classIdx === detections[j].classIdx && iou(detections[i], detections[j]) > iouThresh) {
+          used.add(j);
+        }
+      }
+    }
+    return keep;
+  }
+
+  function iou(a, b) {
+    const x1 = Math.max(a.x, b.x);
+    const y1 = Math.max(a.y, b.y);
+    const x2 = Math.min(a.x + a.w, b.x + b.w);
+    const y2 = Math.min(a.y + a.h, b.y + b.h);
+    const inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+    const union = a.w * a.h + b.w * b.h - inter;
+    return union > 0 ? inter / union : 0;
   }
 
   // ── Scene classification via MobileNet ──
@@ -555,18 +642,17 @@
     }
     if (layer === 'nsfw' && !models.nsfw) {
       try {
-        showLoading('Loading content classification model...', 30);
-        console.log('Loading NSFW model (self-hosted)...');
-        models.nsfw = await tf.loadLayersModel('models/nsfw/model.json');
-        showLoading('Warming up content model...', 70);
-        const dummy = tf.zeros([1, 224, 224, 3]);
-        const warmup = models.nsfw.predict(dummy);
-        await warmup.data();
+        showLoading('Loading NudeNet detection model...', 30);
+        console.log('Loading NudeNet (self-hosted graph model)...');
+        models.nsfw = await tf.loadGraphModel('models/nudenet/model.json');
+        showLoading('Warming up NudeNet...', 70);
+        const dummy = tf.zeros([1, 320, 320, 3]);
+        const warmup = await models.nsfw.executeAsync(dummy, ['output1', 'output2', 'output3']);
+        warmup.forEach(t => t.dispose());
         dummy.dispose();
-        warmup.dispose();
-        console.log('NSFW model loaded successfully');
+        console.log('NudeNet loaded successfully');
       } catch (err) {
-        console.error('NSFW model failed:', err);
+        console.error('NudeNet failed:', err);
       }
     }
     if (layer === 'scene') {
