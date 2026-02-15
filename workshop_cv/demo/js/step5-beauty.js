@@ -1,11 +1,11 @@
 /**
- * step4-beauty.js — Face mesh landmarks + beauty filter deconstruction
+ * step5-beauty.js — Face mesh landmarks + beauty filter deconstruction
  */
 
 (function () {
-  const fileInput = document.getElementById('file-input-4');
-  const results = document.getElementById('step4-results');
-  const uploadArea = document.getElementById('upload-area-4');
+  const fileInput = document.getElementById('file-input-5');
+  const results = document.getElementById('step5-results');
+  const uploadArea = document.getElementById('upload-area-5');
 
   fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
