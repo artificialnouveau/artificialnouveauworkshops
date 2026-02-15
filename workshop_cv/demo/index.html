@@ -39,9 +39,10 @@
   <!-- Step navigation -->
   <nav id="step-nav">
     <button class="step-tab active" data-step="1">1. Pixels</button>
-    <button class="step-tab" data-step="2">2. Surveillance</button>
-    <button class="step-tab" data-step="3">3. Break It</button>
-    <button class="step-tab" data-step="4">4. Mirror</button>
+    <button class="step-tab" data-step="2">2. Speaks</button>
+    <button class="step-tab" data-step="3">3. Surveillance</button>
+    <button class="step-tab" data-step="4">4. Break It</button>
+    <button class="step-tab" data-step="5">5. Mirror</button>
   </nav>
 
   <!-- Step 1: What the Machine Sees -->
@@ -148,8 +149,71 @@
     </div>
   </section>
 
-  <!-- Step 2: Who Is Watching? -->
+  <!-- Step 2: The Machine Speaks -->
   <section id="step-2" class="step">
+    <div class="step-intro">
+      <h2>The Machine Speaks</h2>
+      <p>AI models don't just see — they describe. But their words reveal more about their training data than about your photo. Upload an image to hear the machine narrate what it "sees."</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-2">
+      <label for="file-input-2" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a photo</span>
+      </label>
+      <input type="file" id="file-input-2" accept="image/*" capture="environment">
+    </div>
+
+    <!-- Loading bar for Transformers.js models -->
+    <div id="speaks-loading-bar">
+      <div class="loading-label">
+        <span>Loading models<span class="loading-dots"></span></span>
+        <span id="speaks-loading-percent">0%</span>
+      </div>
+      <div class="loading-track"><div class="loading-fill" id="speaks-loading-fill"></div></div>
+      <div class="loading-steps" id="speaks-loading-steps"></div>
+    </div>
+
+    <div id="step2-results" class="results hidden">
+      <!-- Original image -->
+      <canvas id="canvas-speaks"></canvas>
+
+      <!-- Part A: Image Captioning -->
+      <div class="explainer-block">
+        <h3>The Machine's Description</h3>
+        <p>A neural network (ViT-GPT2) generates a text caption for your photo. It was trained on millions of image-caption pairs scraped from the internet. Notice what it gets right — and what it misses, assumes, or invents.</p>
+      </div>
+      <div id="caption-output" class="mono">...</div>
+
+      <!-- Part B: Zero-Shot Classification -->
+      <div class="explainer-block" style="border-left-color:var(--yellow)">
+        <h3>You Choose the Categories</h3>
+        <p>Type any labels you want and the model (CLIP) will score how well your photo matches each one. The categories you choose shape what the machine "sees." Try labels that expose assumptions: gendered terms, cultural categories, emotional states, or absurd options.</p>
+      </div>
+      <div id="zeroshot-input">
+        <input type="text" id="zeroshot-labels" placeholder="e.g. happy, sad, professional, threatening, beautiful">
+        <button id="zeroshot-run">Classify</button>
+        <!-- Preset suggestion chips -->
+        <div id="zeroshot-presets">
+          <button class="preset-chip" data-labels="happy, sad, angry, surprised, neutral">Emotions</button>
+          <button class="preset-chip" data-labels="professional, casual, threatening, trustworthy">Character</button>
+          <button class="preset-chip" data-labels="beautiful, ugly, average, photogenic">Beauty</button>
+          <button class="preset-chip" data-labels="male, female, non-binary">Gender</button>
+          <button class="preset-chip" data-labels="young, middle-aged, old">Age</button>
+          <button class="preset-chip" data-labels="art, document, selfie, meme, surveillance">Photo type</button>
+        </div>
+      </div>
+      <div id="zeroshot-results"></div>
+
+      <!-- Critical reflection -->
+      <div class="critical-text">
+        <p>"The machine doesn't understand your photo. It pattern-matches against millions of captions written by strangers on the internet. Their biases become its vocabulary."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 3: Who Is Watching? -->
+  <section id="step-3" class="step">
     <div class="step-intro">
       <h2>Who Is Watching?</h2>
       <p>A surveillance camera doesn't see a person. It sees data points. Choose a source and toggle detection layers to see what gets extracted.</p>
@@ -165,12 +229,12 @@
 
     <!-- Source selection: upload or webcam -->
     <div id="source-select">
-      <div class="upload-area" id="upload-area-2">
-        <label for="file-input-2" class="upload-label">
+      <div class="upload-area" id="upload-area-3">
+        <label for="file-input-3" class="upload-label">
           <span class="upload-icon">+</span>
           <span>Upload a photo</span>
         </label>
-        <input type="file" id="file-input-2" accept="image/*" capture="user">
+        <input type="file" id="file-input-3" accept="image/*" capture="user">
       </div>
       <button id="webcam-btn" class="webcam-button">
         <span class="upload-icon">&#9673;</span>
@@ -214,7 +278,7 @@
       <div class="loading-steps" id="loading-steps"></div>
     </div>
 
-    <div id="step2-results" class="results hidden">
+    <div id="step3-results" class="results hidden">
       <div class="surveillance-view">
         <div class="surveillance-header">
           <span class="rec-dot"></span>
@@ -231,23 +295,23 @@
     </div>
   </section>
 
-  <!-- Step 3: Break the Model -->
-  <section id="step-3" class="step">
+  <!-- Step 4: Break the Model -->
+  <section id="step-4" class="step">
     <div class="step-intro">
       <h2>Break the Model</h2>
       <p>Machine vision is fragile. Upload any photo and see what the model thinks. Then try to fool it.</p>
     </div>
 
-    <div class="upload-area" id="upload-area-3">
-      <label for="file-input-3" class="upload-label">
+    <div class="upload-area" id="upload-area-4">
+      <label for="file-input-4" class="upload-label">
         <span class="upload-icon">+</span>
         <span>Upload a photo</span>
       </label>
-      <input type="file" id="file-input-3" accept="image/*" capture="environment">
+      <input type="file" id="file-input-4" accept="image/*" capture="environment">
     </div>
 
     <!-- Phase 1: Initial classification -->
-    <div id="step3-phase1" class="results hidden">
+    <div id="step4-phase1" class="results hidden">
       <div class="comparison-card" style="margin-bottom:20px">
         <h3>The model thinks this is:</h3>
         <canvas id="canvas-break-a"></canvas>
@@ -272,17 +336,17 @@
         </ul>
       </div>
 
-      <div class="upload-area" id="upload-area-3b">
-        <label for="file-input-3b" class="upload-label">
+      <div class="upload-area" id="upload-area-4b">
+        <label for="file-input-4b" class="upload-label">
           <span class="upload-icon">VS</span>
           <span>Upload your trick photo</span>
         </label>
-        <input type="file" id="file-input-3b" accept="image/*" capture="environment">
+        <input type="file" id="file-input-4b" accept="image/*" capture="environment">
       </div>
     </div>
 
     <!-- Phase 2: Comparison -->
-    <div id="step3-phase2" class="results hidden">
+    <div id="step4-phase2" class="results hidden">
       <div class="comparison-row">
         <div class="comparison-card">
           <h3>Original</h3>
@@ -311,32 +375,32 @@
 
       <div id="break-verdict" class="explainer-block"></div>
 
-      <div class="upload-area" id="upload-area-3-retry" style="margin-top:16px">
-        <label for="file-input-3-retry" class="upload-label">
+      <div class="upload-area" id="upload-area-4-retry" style="margin-top:16px">
+        <label for="file-input-4-retry" class="upload-label">
           <span class="upload-icon">+</span>
           <span>Try again with a new photo</span>
         </label>
-        <input type="file" id="file-input-3-retry" accept="image/*" capture="environment">
+        <input type="file" id="file-input-4-retry" accept="image/*" capture="environment">
       </div>
     </div>
   </section>
 
-  <!-- Step 4: The Algorithmic Mirror -->
-  <section id="step-4" class="step">
+  <!-- Step 5: The Algorithmic Mirror -->
+  <section id="step-5" class="step">
     <div class="step-intro">
       <h2>The Algorithmic Mirror</h2>
       <p>Beauty filters are not magic. They are a series of deliberate geometric decisions about what a face should look like. Upload a selfie to see the machine reshape you.</p>
     </div>
 
-    <div class="upload-area" id="upload-area-4">
-      <label for="file-input-4" class="upload-label">
+    <div class="upload-area" id="upload-area-5">
+      <label for="file-input-5" class="upload-label">
         <span class="upload-icon">+</span>
         <span>Upload a selfie</span>
       </label>
-      <input type="file" id="file-input-4" accept="image/*" capture="user">
+      <input type="file" id="file-input-5" accept="image/*" capture="user">
     </div>
 
-    <div id="step4-results" class="results hidden">
+    <div id="step5-results" class="results hidden">
       <div class="mirror-row">
         <div class="mirror-card">
           <h3>You + Landmarks</h3>
@@ -369,8 +433,9 @@
   <!-- Scripts -->
   <script src="js/app.js"></script>
   <script src="js/step1-pixels.js"></script>
-  <script src="js/step2-surveillance.js"></script>
-  <script src="js/step3-break.js"></script>
-  <script src="js/step4-beauty.js"></script>
+  <script type="module" src="js/step2-machine-speaks.js"></script>
+  <script src="js/step3-surveillance.js"></script>
+  <script src="js/step4-break.js"></script>
+  <script src="js/step5-beauty.js"></script>
 </body>
 </html>

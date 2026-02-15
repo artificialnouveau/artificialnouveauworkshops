@@ -371,7 +371,142 @@ canvas {
   color: var(--text-dim);
 }
 
-/* ===== Step 2: Model Info ===== */
+/* ===== Step 2: The Machine Speaks ===== */
+#speaks-loading-bar {
+  margin-bottom: 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--yellow);
+  display: none;
+}
+
+#speaks-loading-bar.visible {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+#speaks-loading-bar .loading-label {
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#speaks-loading-bar .loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+#speaks-loading-bar .loading-track {
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+#speaks-loading-bar .loading-fill {
+  height: 100%;
+  background: var(--yellow);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+#speaks-loading-bar .loading-steps {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+#caption-output {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  padding: 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  margin-bottom: 24px;
+  min-height: 3em;
+  color: var(--text);
+  border-left: 3px solid var(--green);
+}
+
+#zeroshot-input {
+  margin-bottom: 16px;
+}
+
+#zeroshot-input input[type="text"] {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid #333;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+#zeroshot-input input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+#zeroshot-run {
+  padding: 8px 20px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  color: #000;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+#zeroshot-run:hover {
+  opacity: 0.85;
+}
+
+#zeroshot-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.preset-chip {
+  padding: 5px 12px;
+  background: var(--bg-card);
+  border: 1px solid #333;
+  border-radius: 20px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preset-chip:hover {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+#zeroshot-results {
+  margin-bottom: 24px;
+}
+
+#canvas-speaks {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 24px;
+}
+
+/* ===== Step 3: Model Info ===== */
 .model-info {
   margin-top: 14px;
   padding: 14px 16px;

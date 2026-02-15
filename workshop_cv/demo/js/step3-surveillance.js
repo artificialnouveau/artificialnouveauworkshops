@@ -1,15 +1,15 @@
 /**
- * step2-surveillance.js — Full surveillance stack with toggleable layers
+ * step3-surveillance.js — Full surveillance stack with toggleable layers
  * Uses: BlazeFace (face boxes), face-api.js bundled (age/gender/expression),
  *       COCO-SSD (objects), MobileNet (scene classification)
  * Sources: image upload or webcam
  */
 
 (function () {
-  const fileInput = document.getElementById('file-input-2');
-  const uploadArea = document.getElementById('upload-area-2');
+  const fileInput = document.getElementById('file-input-3');
+  const uploadArea = document.getElementById('upload-area-3');
   const webcamBtn = document.getElementById('webcam-btn');
-  const results = document.getElementById('step2-results');
+  const results = document.getElementById('step3-results');
   const layerToggles = document.getElementById('layer-toggles');
   const dataDiv = document.getElementById('surveillance-data');
   const statsDiv = document.getElementById('face-stats');

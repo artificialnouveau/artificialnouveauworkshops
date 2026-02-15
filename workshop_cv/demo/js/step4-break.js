@@ -1,15 +1,15 @@
 /**
- * step3-break.js — Single upload → classify → challenge → compare
+ * step4-break.js — Single upload → classify → challenge → compare
  */
 
 (function () {
-  const fileInput = document.getElementById('file-input-3');
-  const fileInputB = document.getElementById('file-input-3b');
-  const fileInputRetry = document.getElementById('file-input-3-retry');
-  const uploadArea = document.getElementById('upload-area-3');
-  const uploadAreaB = document.getElementById('upload-area-3b');
-  const phase1 = document.getElementById('step3-phase1');
-  const phase2 = document.getElementById('step3-phase2');
+  const fileInput = document.getElementById('file-input-4');
+  const fileInputB = document.getElementById('file-input-4b');
+  const fileInputRetry = document.getElementById('file-input-4-retry');
+  const uploadArea = document.getElementById('upload-area-4');
+  const uploadAreaB = document.getElementById('upload-area-4b');
+  const phase1 = document.getElementById('step4-phase1');
+  const phase2 = document.getElementById('step4-phase2');
 
   let imgA = null;
   let predsA = null;
