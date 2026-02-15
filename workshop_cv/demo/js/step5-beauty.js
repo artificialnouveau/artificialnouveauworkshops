@@ -132,77 +132,38 @@
   function applyBeautyFilter(ctx, keypoints, w, h, img) {
     const changes = [];
 
-    // 1. Skin smoothing — edge-preserving blur on face only, blended lightly
+    // 1. Wrinkle removal — only target visible wrinkle/crease pixels in the face region
     const faceRegion = getFaceBounds(keypoints);
     if (faceRegion) {
       const { x, y, fw, fh } = faceRegion;
-      const smoothRadius = Math.max(1, Math.floor(fw / 80));
 
-      // Get original face pixels for edge-preserving blend
-      const origData = ctx.getImageData(x, y, fw, fh);
-      const origCopy = new Uint8ClampedArray(origData.data);
-
-      // Light single-pass blur
-      boxBlur(origData, smoothRadius);
-
-      // Edge-preserving blend: only smooth where color difference is small (skin texture),
-      // preserve edges where difference is large (eyes, nostrils, hairline)
-      const threshold = 30;
-      const blendStrength = 0.4; // 40% smoothed, 60% original
-      for (let i = 0; i < origData.data.length; i += 4) {
-        const diffR = Math.abs(origData.data[i] - origCopy[i]);
-        const diffG = Math.abs(origData.data[i + 1] - origCopy[i + 1]);
-        const diffB = Math.abs(origData.data[i + 2] - origCopy[i + 2]);
-        const maxDiff = Math.max(diffR, diffG, diffB);
-
-        // If the blur changed this pixel a lot, it's an edge — keep original
-        const t = maxDiff < threshold ? blendStrength : 0;
-        origData.data[i]     = origCopy[i]     + (origData.data[i]     - origCopy[i])     * t;
-        origData.data[i + 1] = origCopy[i + 1] + (origData.data[i + 1] - origCopy[i + 1]) * t;
-        origData.data[i + 2] = origCopy[i + 2] + (origData.data[i + 2] - origCopy[i + 2]) * t;
-      }
-      ctx.putImageData(origData, x, y);
-
-      changes.push({ label: 'Skin smoothing', value: `${smoothRadius}px edge-preserving blur` });
-
-      // 1b. Wrinkle removal — detect fine dark lines via high-pass and blend them away
+      // Create a blurred reference to compare against
       const faceData = ctx.getImageData(x, y, fw, fh);
-      const blurred = ctx.getImageData(x, y, fw, fh);
-      boxBlur(blurred, Math.max(2, Math.floor(fw / 50)));
+      const blurRef = ctx.getImageData(x, y, fw, fh);
+      boxBlur(blurRef, Math.max(2, Math.floor(fw / 50)));
 
       let wrinkleCount = 0;
       for (let i = 0; i < faceData.data.length; i += 4) {
-        // High-pass: difference between original and blurred reveals fine detail
         const luma = faceData.data[i] * 0.299 + faceData.data[i + 1] * 0.587 + faceData.data[i + 2] * 0.114;
-        const lumaBlur = blurred.data[i] * 0.299 + blurred.data[i + 1] * 0.587 + blurred.data[i + 2] * 0.114;
+        const lumaBlur = blurRef.data[i] * 0.299 + blurRef.data[i + 1] * 0.587 + blurRef.data[i + 2] * 0.114;
         const highPass = luma - lumaBlur;
 
-        // Wrinkles are thin dark lines: negative high-pass values (darker than surroundings)
+        // Only touch pixels that are thin dark lines (wrinkles/creases)
+        // Negative high-pass = darker than surroundings
         if (highPass < -6) {
-          // Blend toward the blurred (smoother) version to fill in the wrinkle
           const strength = Math.min(0.7, Math.abs(highPass) / 40);
-          faceData.data[i]     = faceData.data[i]     + (blurred.data[i]     - faceData.data[i])     * strength;
-          faceData.data[i + 1] = faceData.data[i + 1] + (blurred.data[i + 1] - faceData.data[i + 1]) * strength;
-          faceData.data[i + 2] = faceData.data[i + 2] + (blurred.data[i + 2] - faceData.data[i + 2]) * strength;
+          faceData.data[i]     = faceData.data[i]     + (blurRef.data[i]     - faceData.data[i])     * strength;
+          faceData.data[i + 1] = faceData.data[i + 1] + (blurRef.data[i + 1] - faceData.data[i + 1]) * strength;
+          faceData.data[i + 2] = faceData.data[i + 2] + (blurRef.data[i + 2] - faceData.data[i + 2]) * strength;
           wrinkleCount++;
         }
       }
       ctx.putImageData(faceData, x, y);
       const wrinklePct = (wrinkleCount / (fw * fh) * 100).toFixed(1);
-      changes.push({ label: 'Wrinkle removal', value: `${wrinklePct}% of face area smoothed` });
+      changes.push({ label: 'Wrinkle removal', value: `${wrinklePct}% of face pixels targeted` });
     }
 
-    // 2. Brighten / even skin tone — curve-based lift (raises shadows, leaves highlights alone)
-    const brightenData = ctx.getImageData(0, 0, w, h);
-    for (let i = 0; i < brightenData.data.length; i += 4) {
-      brightenData.data[i]     = curveLift(brightenData.data[i]);
-      brightenData.data[i + 1] = curveLift(brightenData.data[i + 1]);
-      brightenData.data[i + 2] = curveLift(brightenData.data[i + 2]);
-    }
-    ctx.putImageData(brightenData, 0, 0);
-    changes.push({ label: 'Skin brightening', value: 'shadow lift curve' });
-
-    // 3. Eye enlargement (draw eyes slightly larger)
+    // 2. Eye enlargement (draw eyes slightly larger)
     const leftEyeCenter = getCenter(keypoints, [33, 133]);
     const rightEyeCenter = getCenter(keypoints, [362, 263]);
     if (leftEyeCenter && rightEyeCenter) {
@@ -212,7 +173,7 @@
       changes.push({ label: 'Eye enlargement', value: `${((eyeScale - 1) * 100).toFixed(0)}% larger` });
     }
 
-    // 4. Symmetry nudge — measure asymmetry
+    // 3. Symmetry nudge — measure asymmetry
     const noseTip = keypoints[1];
     const leftCheek = keypoints[234];
     const rightCheek = keypoints[454];
@@ -223,43 +184,11 @@
       changes.push({ label: 'Facial symmetry', value: `${asymmetry}px asymmetry detected` });
     }
 
-    // 5. Subtle contrast boost
-    const contrastData = ctx.getImageData(0, 0, w, h);
-    const factor = 1.08;
-    for (let i = 0; i < contrastData.data.length; i += 4) {
-      contrastData.data[i] = clamp(factor * (contrastData.data[i] - 128) + 128);
-      contrastData.data[i + 1] = clamp(factor * (contrastData.data[i + 1] - 128) + 128);
-      contrastData.data[i + 2] = clamp(factor * (contrastData.data[i + 2] - 128) + 128);
-    }
-    ctx.putImageData(contrastData, 0, 0);
-    changes.push({ label: 'Contrast boost', value: `${((factor - 1) * 100).toFixed(0)}% increase` });
-
     return changes;
   }
 
-  // Curve-based shadow lift: raises dark values gently, leaves bright values mostly alone
-  function curveLift(v) {
-    const n = v / 255;
-    // Quadratic lift: pushes shadows up, tapers off toward highlights
-    const lifted = n + 0.06 * (1 - n) * (1 - n);
-    return clamp(lifted * 255);
-  }
-
   function applyBasicFilter(ctx, w, h) {
-    // Fallback: light smoothing + curve brightening without face mesh
-    const origData = ctx.getImageData(0, 0, w, h);
-    const origCopy = new Uint8ClampedArray(origData.data);
-    boxBlur(origData, 1);
-    // Gentle blend: 30% blur, 70% original
-    for (let i = 0; i < origData.data.length; i += 4) {
-      origData.data[i]     = origCopy[i]     * 0.7 + origData.data[i]     * 0.3;
-      origData.data[i + 1] = origCopy[i + 1] * 0.7 + origData.data[i + 1] * 0.3;
-      origData.data[i + 2] = origCopy[i + 2] * 0.7 + origData.data[i + 2] * 0.3;
-      origData.data[i]     = curveLift(origData.data[i]);
-      origData.data[i + 1] = curveLift(origData.data[i + 1]);
-      origData.data[i + 2] = curveLift(origData.data[i + 2]);
-    }
-    ctx.putImageData(origData, 0, 0);
+    // Fallback without face mesh: no-op, image stays as-is
   }
 
   function getFaceBounds(keypoints) {
