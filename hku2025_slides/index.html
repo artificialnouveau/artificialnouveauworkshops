@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Introduction to Computer Vision &amp; AI — HKU 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #141414;
+      --text: #e8e8e8;
+      --dim: #777;
+      --accent: #4a9eff;
+      --green: #00ff66;
+      --red: #ff4a4a;
+      --yellow: #ffd94a;
+      --pink: #ff6ec7;
+      --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow: hidden;
+      height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .slide {
+      display: none;
+      position: absolute;
+      inset: 0;
+      padding: 40px 80px;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+    }
+
+    .slide::before, .slide::after { content: ''; flex: 1 0 0px; }
+
+    .slide > *:first-child { margin-top: 0; }
+
+    .slide.active { display: flex; animation: fadeIn 0.35s ease; }
+    .slide.fade-out { display: flex; animation: fadeOut 0.25s ease forwards; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    /* Fragment: hidden until revealed by click */
+    .fragment { opacity: 0; transition: opacity 0.4s ease; }
+    .fragment.visible { opacity: 1; }
+
+    .slide h1 { font-size: 3.2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 16px; }
+    .slide h2 { font-size: 2.4rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 20px; }
+    .slide h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
+    .slide p, .slide li { font-size: 1.15rem; line-height: 1.7; color: var(--dim); }
+    .slide ul { list-style: none; padding: 0; text-align: left; }
+    .slide ul li { padding: 6px 0; padding-left: 24px; position: relative; }
+    .slide ul li::before { content: '\2192'; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); }
+    .slide strong { color: var(--text); font-weight: 600; }
+    .slide em { color: var(--accent); font-style: normal; }
+
+    .accent { color: var(--accent); }
+    .green { color: var(--green); }
+    .red { color: var(--red); }
+    .yellow { color: var(--yellow); }
+    .pink { color: var(--pink); }
+
+    .title-slide { align-items: center; text-align: center; justify-content: center; }
+    .title-slide h1 { font-size: 3.8rem; }
+    .title-slide .subtitle { font-size: 1.2rem; color: var(--dim); font-family: var(--mono); margin-top: 12px; }
+
+    .section-title { align-items: center; text-align: center; justify-content: center; }
+    .section-title h2 { font-size: 3rem; color: var(--accent); }
+    .section-title .divider { width: 80px; height: 3px; background: var(--accent); margin: 20px auto; border-radius: 2px; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; width: 100%; text-align: left; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; width: 100%; text-align: left; }
+
+    .img-row { display: flex; gap: 16px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+    .img-row img { max-height: 350px; border-radius: 8px; }
+
+    .card { background: var(--bg-card); border-radius: 12px; padding: 24px; border-left: 3px solid var(--accent); text-align: left; }
+    .card.green-border { border-left-color: var(--green); }
+    .card.red-border { border-left-color: var(--red); }
+    .card.yellow-border { border-left-color: var(--yellow); }
+    .card.pink-border { border-left-color: var(--pink); }
+
+    .slide img { max-width: 100%; max-height: 65vh; border-radius: 8px; object-fit: contain; }
+    .slide img.full { max-height: 80vh; margin: 0 auto; display: block; }
+    .slide img.small { max-height: 200px; }
+    .slide img.medium { max-height: 350px; }
+    .slide video { border-radius: 8px; }
+
+    .caption { font-size: 0.85rem; color: var(--dim); font-family: var(--mono); text-align: center; margin-top: 8px; }
+
+    .quote { font-size: 1.6rem; font-style: italic; line-height: 1.6; color: var(--text); border-left: 4px solid var(--accent); padding: 20px 30px; background: var(--bg-card); border-radius: 0 12px 12px 0; max-width: 700px; text-align: left; }
+
+    #nav { position: fixed; bottom: 24px; right: 30px; display: flex; gap: 8px; z-index: 100; }
+    #nav button { width: 40px; height: 40px; border: 1px solid #333; background: var(--bg-card); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all 0.2s; }
+    #nav button:hover { border-color: var(--accent); color: var(--accent); }
+    #slide-counter { position: fixed; bottom: 30px; left: 30px; font-family: var(--mono); font-size: 0.8rem; color: var(--dim); z-index: 100; }
+    #progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); transition: width 0.3s ease; z-index: 100; }
+
+    @media (max-width: 900px) {
+      .slide { padding: 30px 24px; }
+      .slide h1 { font-size: 2.2rem; }
+      .title-slide h1 { font-size: 2.6rem; }
+      .slide h2 { font-size: 1.8rem; }
+      .two-col, .three-col { grid-template-columns: 1fr; gap: 20px; }
+      .quote { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress"></div>
+
+  <!-- 1: Title -->
+  <div class="slide title-slide active" data-notes="Welcome everyone to the Introduction to Computer Vision & AI workshop. I'm Ahnjili ZhuParris.">
+    <h1>Introduction to<br><span class="accent">Computer Vision &amp; AI</span></h1>
+    <p class="subtitle">HKU 2026 Workshop</p>
+    <p class="subtitle">Ahnjili ZhuParris</p>
+  </div>
+
+  <!-- 2: Parts overview -->
+  <div class="slide section-title" data-notes="Today we cover Part 1: Computer Vision. Tomorrow Part 2: Generative AI & Deepfakes.">
+    <div>
+      <h2><span class="accent">Part 1:</span> Intro to Computer Vision</h2>
+      <div class="divider"></div>
+      <h2 style="color:#555">Part 2: Intro to Generative AI &amp; Deepfakes</h2>
+    </div>
+  </div>
+
+  <!-- 3: Outline -->
+  <div class="slide">
+    <h2>Outline</h2>
+    <div class="two-col" style="font-size:1.35rem; max-width:700px; gap:20px">
+      <ul>
+        <li>Who Am I</li>
+        <li>What is AI</li>
+        <li>Introduction to CV</li>
+        <li>The Role of Language in CV</li>
+        <li>Politics of Datasets</li>
+      </ul>
+      <ul>
+        <li>Surveillance &amp; Imagination</li>
+        <li>Self-Surveillance</li>
+        <li>When Machines Fail</li>
+        <li>Creative Responses</li>
+        <li>Conclusion</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 4: Who Am I -->
+  <div class="slide section-title">
+    <h2>Who Am I</h2>
+    <div class="divider"></div>
+  </div>
+
+  <!-- 5 -->
+  <div class="slide">
+    <h3>Ex-Academic</h3>
+    <p style="margin-bottom:20px">Focusing on Medical Surveillance</p>
+    <div class="img-row">
+      <img src="img/image1.png" class="medium">
+      <img src="img/image2.png" class="medium">
+      <img src="img/image3.png" class="medium">
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="slide">
+    <h3>AI Engineer <span style="color:var(--dim)">(Computer Vision)</span></h3>
+    <div class="img-row">
+      <img src="img/image4.jpg" class="medium">
+      <img src="img/image5.jpeg" class="medium">
+      <img src="img/image6.jpeg" class="medium">
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="slide">
+    <h3>AI Engineer <span style="color:var(--dim)">(Media Researcher)</span></h3>
+    <div class="img-row">
+      <img src="img/image7.jpeg" class="small">
+      <img src="img/image8.jpeg" class="small">
+      <img src="img/image9.jpeg" class="small">
+      <img src="img/image10.jpeg" class="small">
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="slide">
+    <h3>Computational Artist</h3>
+    <div class="img-row">
+      <img src="img/image11.gif" class="medium">
+      <img src="img/image12.gif" class="medium">
+    </div>
+  </div>
+
+  <!-- 9: What is AI -->
+  <div class="slide section-title">
+    <h2>What is AI</h2>
+    <div class="divider"></div>
+  </div>
+
+  <!-- 10 -->
+  <div class="slide" data-notes="AI is a broad field. Key point: mimicking human intelligence — not replacing it. Ask students: what do they think AI is?">
+    <h2>What is AI</h2>
+    <div class="card" style="max-width:700px">
+      <p style="font-size:1.3rem; color:var(--text); line-height:1.8">
+        <em>Artificial intelligence</em> is the name of a whole knowledge field in which machines perform tasks that <strong>mimic human intelligence</strong>.
+      </p>
+    </div>
+  </div>
+
+  <!-- 11: Why AI -->
+  <div class="slide section-title">
+    <h2>Why AI</h2>
+    <div class="divider"></div>
+  </div>
+
+  <!-- 12 -->
+  <div class="slide">
+    <h2>Why AI</h2>
+    <div class="two-col" style="grid-template-columns:1fr auto; max-width:800px">
+      <ul>
+        <li>Easily <strong>identify trends and patterns</strong> within multi-dimensional and multi-variety data</li>
+        <li>Limited human <strong>intervention</strong> needed</li>
+        <li><strong>Continuous improvement</strong></li>
+      </ul>
+      <img src="img/image13.png" class="medium">
+    </div>
+  </div>
+
+  <!-- 13: Why AI Now -->
+  <div class="slide section-title">
+    <h2>Why AI <span class="yellow">Now</span></h2>
+    <div class="divider" style="background:var(--yellow)"></div>
+  </div>
+
+  <!-- 14 -->
+  <div class="slide">
+    <h2>Why AI Now</h2>
+    <div class="two-col" style="grid-template-columns:1fr auto; max-width:800px; gap:40px">
+      <ul>
+        <li>Easily identify trends and patterns within <strong>multi-dimensional</strong> data</li>
+        <li>Limited human intervention needed</li>
+        <li>Continuous improvement</li>
+      </ul>
+      <div>
+        <img src="img/image14.png" class="medium" style="margin-bottom:12px">
+        <img src="img/image15.jpeg" class="medium">
+      </div>
+    </div>
+  </div>
+
+  <!-- 15: Intro to CV -->
+  <div class="slide section-title">
+    <h2>Introduction to <span class="accent">CV</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <!-- 16 -->
+  <div class="slide" data-notes="Walk through the two stages: first we acquire and clean the image, then the model extracts features like edges and textures. Show the example images.">
+    <h2>Computer Vision Prep</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3>Image Acquisition &amp; Preprocessing</h3>
+        <ul>
+          <li><strong>Capture</strong> an image or video</li>
+          <li><strong>Adjust</strong> image size, lighting, or cropping</li>
+        </ul>
+      </div>
+      <div class="card green-border fragment">
+        <h3 style="color:var(--green)">Feature Extraction</h3>
+        <p>CV extracts information such as <strong>edges</strong>, <strong>textures</strong>, <strong>colors</strong>, etc.</p>
+      </div>
+    </div>
+    <div class="img-row fragment" style="margin-top:24px">
+      <img src="img/image16.png" class="small">
+      <img src="img/image17.png" class="small">
+    </div>
+  </div>
+
+  <!-- 17 -->
+  <div class="slide">
+    <h2>Training the AI</h2>
+    <div style="text-align:center">
+      <img src="img/image18.png" class="medium" style="margin-bottom:12px">
+      <img src="img/image19.png" class="medium">
+    </div>
+    <p class="caption">Model &rarr; Predictions &rarr; Mario Probability / Luigi Probability</p>
+  </div>
+
+  <!-- 18 -->
+  <div class="slide">
+    <h2>Computer Vision Applications</h2>
+    <div class="three-col" style="margin-top:20px">
+      <div class="card"><h3>Object Recognition</h3><img src="img/image20.png"></div>
+      <div class="card green-border fragment"><h3 style="color:var(--green)">Segmentation</h3><img src="img/image21.gif"></div>
+      <div class="card pink-border fragment"><h3 style="color:var(--pink)">3D Rendering</h3><img src="img/image22.jpg"></div>
+    </div>
+  </div>
+
+  <!-- The Role of Language in CV — section -->
+  <div class="slide section-title">
+    <h2>The Role of <span class="yellow">Language</span> in CV</h2>
+    <div class="divider" style="background:var(--yellow)"></div>
+  </div>
+
+  <!-- When Machines Name Things -->
+  <div class="slide" data-notes="Key point: models describe, not just detect. Their vocabulary comes from internet captions — biased, Western-centric, gendered. The lab-woman example is real.">
+    <h2>When Machines <span class="yellow">Name</span> Things</h2>
+    <div class="two-col" style="align-items:stretch">
+      <div class="card yellow-border">
+        <h3 style="color:var(--yellow)">But whose language?</h3>
+        <p style="margin-bottom:12px">Modern CV models don't just <em>detect</em> — they <strong>describe</strong>. Models like CLIP and ViT-GPT2 generate captions and classify images using language.</p>
+        <p>Their vocabulary is inherited from <strong>millions of image-caption pairs</strong> scraped from the internet. The biases, assumptions, and blind spots of those captions become the model's worldview.</p>
+      </div>
+      <div class="card fragment">
+        <h3>Example</h3>
+        <p style="margin-bottom:12px">An image captioning model describes a photo of a woman in a lab:</p>
+        <p style="font-family:var(--mono); color:var(--pink); font-size:1.1rem">"A woman posing for a picture"</p>
+        <p style="margin-top:12px; color:var(--dim)">The machine saw <em>woman</em> and <em>posing</em>. It missed <em>scientist</em>, <em>researcher</em>, <em>laboratory</em>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Labels Are Not Neutral -->
+  <div class="slide" data-notes="ImageNet had 2,832 person subcategories including slurs. The act of labeling is political — who decides the categories? This connects directly to the workshop demo.">
+    <h2>Labels Are <span class="red">Not Neutral</span></h2>
+    <div class="two-col">
+      <div>
+        <div class="card red-border" style="margin-bottom:16px">
+          <h3 style="color:var(--red)">ImageNet's "Person" Categories</h3>
+          <p>ImageNet — the dataset that powered the deep learning revolution — contained <strong>2,832 subcategories</strong> under "person." Many were racial slurs, sexual orientations, and derogatory terms.</p>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <h3>The act of labeling is an act of power</h3>
+          <ul>
+            <li>Who decides the categories?</li>
+            <li>What gets <strong>collapsed</strong> into a single label?</li>
+            <li>What is made <strong class="red">invisible</strong> by the taxonomy?</li>
+          </ul>
+        </div>
+        <p style="color:var(--dim); font-size:0.95rem; line-height:1.7">Every label is a <strong style="color:var(--text)">simplification</strong>. When a model classifies your face as "happy" or "threatening," it is mapping your pixels onto a category that someone, somewhere, decided was meaningful.</p>
+      </div>
+      <img src="img/imagenet_labels.png" class="fragment">
+    </div>
+  </div>
+
+  <!-- 19: Politics of Datasets -->
+  <div class="slide section-title">
+    <h2>Politics of <span class="red">Datasets</span></h2>
+    <div class="divider" style="background:var(--red)"></div>
+  </div>
+
+  <!-- 20 -->
+  <div class="slide" data-notes="Three forms of control: representation, language, and outcomes. Large datasets lack opacity — too big to audit. Ask: who benefits from this?">
+    <h2>Those who control the data control the narrative</h2>
+    <div class="two-col">
+      <div>
+        <div class="card red-border" style="margin-bottom:16px">
+          <h3 style="color:var(--red)">They control Representation</h3>
+          <p>What gets collected and what is ignored?</p>
+        </div>
+        <div class="card yellow-border" style="margin-bottom:16px">
+          <h3 style="color:var(--yellow)">They control The Language</h3>
+          <p>Define the labels, categories, and the taxonomies</p>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <h3>They control The Outcome</h3>
+          <p>They control what gets optimized. Who and what gets to use the data.</p>
+        </div>
+      </div>
+      <div class="card pink-border fragment">
+        <p style="font-size:1.2rem; color:var(--text); line-height:1.8">A meaningful data is a <strong>big</strong> dataset. Once datasets meet a certain scale, they become harder to audit, and therefore have <strong class="red">no opacity</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 21: Surveillance & Imagination -->
+  <div class="slide section-title">
+    <h2>Surveillance &amp; <span class="red">Imagination</span></h2>
+    <div class="divider" style="background:var(--red)"></div>
+  </div>
+
+  <!-- 22 -->
+  <div class="slide">
+    <h2>Surveillance as World Building</h2>
+    <p style="margin-bottom:16px">Data Collection</p>
+    <div class="img-row">
+      <img src="img/image23.png" class="medium">
+      <img src="img/image24.jpeg" class="medium">
+      <img src="img/image25.jpeg" class="medium">
+    </div>
+    <p class="caption">Czech artist <em>Jakub Geltner</em></p>
+  </div>
+
+  <!-- 23 -->
+  <div class="slide">
+    <h2>Machine Vision as <span class="red">Frozen Imagination</span></h2>
+    <h3 style="color:var(--red)">Violence</h3>
+    <div style="text-align:center">
+      <img src="img/image26.png" class="full">
+    </div>
+  </div>
+
+  <!-- 24 -->
+  <div class="slide" data-notes="1.5 million Uyghurs surveilled using CV. Predictive policing in US/Europe. Profit comes from state contracts, software, and cheap labor for annotation.">
+    <h2>Frozen Imagination is <span class="yellow">Profitable</span></h2>
+    <div class="two-col" style="max-width:900px">
+      <div>
+        <ul>
+          <li><strong class="red">1.5 million</strong> Uyghurs and Turkic Muslims</li>
+          <li>European &amp; American <strong>Predictive Policing</strong> Software</li>
+        </ul>
+        <div class="card yellow-border" style="margin-top:16px">
+          <h3 style="color:var(--yellow)">Profit in 3 ways:</h3>
+          <ul>
+            <li>State contracts</li>
+            <li>Advanced Software</li>
+            <li>Cheap Labour</li>
+          </ul>
+        </div>
+      </div>
+      <img src="img/image27.jpeg" class="fragment">
+    </div>
+  </div>
+
+  <!-- 25 -->
+  <div class="slide">
+    <h2>Frozen Imagination: <span class="pink">Expression</span></h2>
+    <div class="img-row">
+      <img src="img/image28.png" class="medium">
+      <img src="img/image29.jpeg" class="medium">
+    </div>
+  </div>
+
+  <!-- 26 -->
+  <div class="slide">
+    <h2>Frozen Imagination: <span class="pink">Expression</span></h2>
+    <div class="img-row">
+      <img src="img/image30.jpeg" class="medium">
+      <img src="img/image31.png" class="medium">
+    </div>
+  </div>
+
+  <!-- 27 -->
+  <div class="slide">
+    <h2>Frozen Imagination: <span class="green">Health</span></h2>
+    <div class="img-row">
+      <img src="img/image32.jpeg" class="medium">
+      <img src="img/image33.jpeg" class="medium">
+    </div>
+  </div>
+
+  <!-- 28 -->
+  <div class="slide" data-notes="Transition to positive framing: what if tech was built from care instead of control? Three strategies: refusal, redirection, re-imagining.">
+    <h2>Imagination as <span class="green">Abolitionist Counter-Tech</span></h2>
+    <div class="quote">
+      <p>What would tech look like if it were built from an imagination of <strong>care</strong> rather than <strong>control</strong>?</p>
+    </div>
+    <ul style="margin-top:24px" class="fragment">
+      <li><strong>Refusal</strong></li>
+      <li><strong>Redirection</strong></li>
+      <li><strong>Re-imaging</strong> sensing itself</li>
+    </ul>
+  </div>
+
+  <!-- 29 -->
+  <div class="slide">
+    <h2>Abolitionist Counter-Tech</h2>
+    <div class="card red-border" style="max-width:700px">
+      <p style="color:var(--text); margin-bottom:16px">Not enough to ask, <em>"Is the dataset biased?"</em></p>
+      <p style="color:var(--dim); margin-bottom:8px">One must also ask:</p>
+      <ul>
+        <li>Who is presumed <strong class="red">dangerous</strong>, border-crossing, or fraudulent?</li>
+        <li>Who is allowed <strong class="green">opacity</strong>, privacy and anonymity?</li>
+        <li>What non-machine vision methods of sensing were <strong>ruled out</strong> before the project began?</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 30: Self-Surveillance -->
+  <div class="slide section-title">
+    <h2>Self-Surveillance &amp; <span class="pink">Beauty</span></h2>
+    <div class="divider" style="background:var(--pink)"></div>
+  </div>
+
+  <!-- 31 -->
+  <div class="slide" data-notes="Beauty AI is trained on celebrity photos and surgery before/afters. The criteria reveal whose beauty standards are encoded. Ask students: what's missing from this list?">
+    <h2>Training a Cosmetic AI: <span class="pink">World Building</span></h2>
+    <div class="two-col">
+      <div class="card pink-border">
+        <h3 style="color:var(--pink)">Criteria</h3>
+        <ul>
+          <li>No Textured Skin</li>
+          <li>Lighter Skin</li>
+          <li>Smaller nose</li>
+          <li>Bigger Eyes</li>
+          <li>Slimmer or Wider Chin</li>
+          <li>Fuller Lips</li>
+        </ul>
+      </div>
+      <div class="card fragment">
+        <h3>Training Photos</h3>
+        <ul>
+          <li>Celebrities</li>
+          <li>Pre/Post Surgeries</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 32 -->
+  <div class="slide">
+    <h2>Training a Cosmetic AI</h2>
+    <div class="img-row">
+      <img src="img/image34.png" class="medium">
+      <img src="img/image35.png" class="medium">
+    </div>
+  </div>
+
+  <!-- 33 -->
+  <div class="slide">
+    <h2>Frozen Imagination: <span class="pink">The Algorithmic Ideal Face</span></h2>
+    <div class="img-row">
+      <img src="img/image36.png" class="medium">
+      <img src="img/image37.png" class="medium">
+    </div>
+  </div>
+
+  <!-- 34 -->
+  <div class="slide">
+    <h2>Living in the <span class="accent">Mirror World</span></h2>
+    <div style="text-align:center; margin-top:16px">
+      <video src="img/media1.mp4" controls style="width:90%; max-height:80vh"></video>
+    </div>
+  </div>
+
+  <!-- 35: When Computers Fail -->
+  <div class="slide section-title">
+    <h2>When Computers <span class="red">Fail</span></h2>
+    <div class="divider" style="background:var(--red)"></div>
+  </div>
+
+  <!-- 36 -->
+  <div class="slide">
+    <h2>Is AI better than <span class="yellow">pigeons</span>?</h2>
+    <div class="img-row">
+      <img src="img/image39.png" class="medium">
+      <img src="img/image40.jpg" class="medium">
+      <img src="img/image41.png" class="medium">
+    </div>
+  </div>
+
+  <!-- 37 -->
+  <div class="slide">
+    <h2>Is AI better than pigeons?</h2>
+    <div class="img-row">
+      <img src="img/image42.png" class="medium">
+      <img src="img/image43.png" class="medium">
+    </div>
+  </div>
+
+  <!-- 38 -->
+  <div class="slide">
+    <h2>When Computer Vision <span class="red">Fails</span></h2>
+    <div class="img-row">
+      <img src="img/image45.jpg" class="medium">
+      <img src="img/image44.png" class="medium">
+    </div>
+  </div>
+
+  <!-- 39 -->
+  <div class="slide">
+    <h2>When Computer Vision <span class="red">Fails</span></h2>
+    <div class="img-row">
+      <img src="img/image46.png" class="medium">
+      <img src="img/image47.png" class="medium">
+    </div>
+  </div>
+
+
+
+  <!-- 41: Creative Responses -->
+  <div class="slide section-title">
+    <h2>Creative <span class="green">Responses</span></h2>
+    <div class="divider" style="background:var(--green)"></div>
+  </div>
+
+  <!-- 42 -->
+  <div class="slide">
+    <h2><span class="accent">CV Dazzle</span></h2>
+    <div style="text-align:center">
+      <img src="img/image50.png" class="full">
+    </div>
+  </div>
+
+  <!-- 43 -->
+  <div class="slide">
+    <h2>CV Dazzle</h2>
+    <div class="img-row">
+      <img src="img/image51.png" class="medium">
+      <img src="img/image52.png" class="medium">
+    </div>
+  </div>
+
+  <!-- 44 -->
+  <div class="slide">
+    <h2>Toko Kihara</h2>
+    <p style="margin-bottom:16px"><em>How Not to Get Hit By A Self-Driving Car</em></p>
+    <div style="text-align:center">
+      <iframe src="https://player.vimeo.com/video/850915149" style="width:80%; max-width:800px; aspect-ratio:16/9; border:none; border-radius:8px" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+      <p class="caption"><a href="https://vimeo.com/850915149" target="_blank" style="color:var(--accent)">Watch on Vimeo</a> if embed is unavailable</p>
+    </div>
+  </div>
+
+  <!-- 45 -->
+  <div class="slide">
+    <h2>Toko Kihara — <span class="pink">Is this Violence? Am I too sexy?</span></h2>
+    <div style="text-align:center">
+      <img src="img/image54.png">
+    </div>
+  </div>
+
+  <!-- 46 -->
+  <div class="slide">
+    <h2>Dries Depoorter</h2>
+    <p style="margin-bottom:16px"><em>The Follower</em>, 2023–2026</p>
+    <div style="text-align:center">
+      <img src="img/image55.gif" class="full">
+    </div>
+  </div>
+
+  <!-- 47 -->
+  <div class="slide">
+    <h2>Capture</h2>
+    <p style="margin-bottom:16px"><em>Paolo Cirio</em></p>
+    <div style="text-align:center">
+      <iframe src="https://www.youtube.com/embed/6UTgBKLd8uM?list=PLJHWosFmMRqrFXnQO1tWTQYFIkQQ2JVaR" style="width:80%; max-width:800px; aspect-ratio:16/9; border:none; border-radius:8px" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- ImageNet Roulette -->
+  <div class="slide" data-notes="ImageNet Roulette went viral in 2019. By making the system visible, it forced ImageNet to remove 600k+ images. Art as activism — making the invisible visible.">
+    <h2>Trevor Paglen &amp; Kate Crawford</h2>
+    <p style="margin-bottom:16px"><em>ImageNet Roulette</em>, 2019</p>
+    <div class="two-col">
+      <div>
+        <div class="card red-border">
+          <p style="color:var(--text); line-height:1.8">A web app that classified visitors' faces using ImageNet's "person" categories — exposing labels like <strong class="red">"rape suspect"</strong>, <strong class="red">"alcoholic"</strong>, and racial slurs that the dataset had quietly been using for a decade.</p>
+        </div>
+        <ul style="margin-top:16px">
+          <li>Went viral — <strong>millions</strong> of people classified themselves</li>
+          <li>Forced ImageNet to <strong>remove 600,000+ images</strong> from the "person" subtree</li>
+          <li>Proved that making the system <strong class="green">visible</strong> is itself a form of resistance</li>
+        </ul>
+      </div>
+      <div class="card fragment">
+        <p style="color:var(--text); font-size:1.15rem; line-height:1.8; margin-bottom:16px">"Classification systems are political, and they have consequences."</p>
+        <p style="color:var(--dim)">— Kate Crawford, <em>Atlas of AI</em></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conclusion -->
+  <div class="slide section-title">
+    <h2><span class="accent">Conclusion</span></h2>
+    <div class="divider"></div>
+    <p style="color:var(--dim); font-family:var(--mono); font-size:1rem; margin-top:12px">data → labels → distribution → norms → policy</p>
+  </div>
+
+  <!-- Conclusion: all points -->
+  <div class="slide" data-notes="Five ways photographers can influence AI: what you shoot, how you label it, how it enters the pipeline, what norms you reinforce, and direct participation in system design.">
+    <h2><span class="accent">Conclusion</span></h2>
+    <div class="three-col" style="grid-template-columns:1fr 1fr; gap:12px; width:100%">
+      <div class="card fragment" style="padding:16px">
+        <h3>Data Control</h3>
+        <p>What you shoot (and what you <strong>choose not to shoot</strong>) shapes class balance and representation.</p>
+      </div>
+      <div class="card yellow-border fragment" style="padding:16px">
+        <h3 style="color:var(--yellow)">Label / Metadata Control</h3>
+        <p>CV models and retrieval systems are deeply influenced by text. Your captions, keywords, and metadata shape how machines interpret images.</p>
+      </div>
+      <div class="card green-border fragment" style="padding:16px">
+        <h3 style="color:var(--green)">Pipeline Influence</h3>
+        <p>Photographers influence what enters the pipeline — and how it gets compressed, cropped, and filtered before a model ever sees it.</p>
+      </div>
+      <div class="card pink-border fragment" style="padding:16px">
+        <h3 style="color:var(--pink)">Norm-Setting</h3>
+        <p>What is considered a "correct" detection, a "beautiful" image, or a "faithful" reproduction reflects photographic conventions — conventions <strong>you</strong> help define.</p>
+      </div>
+      <div class="card red-border fragment" style="padding:16px; grid-column:1 / -1">
+        <h3 style="color:var(--red)">Direct Technical Participation</h3>
+        <p>If you're working with a lab, company, or museum digitization effort, you can influence system design directly — from dataset curation to annotation guidelines to what counts as ground truth.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Questions -->
+  <div class="slide title-slide">
+    <h1>Questions<span class="accent">?</span></h1>
+  </div>
+
+  <!-- 50: Workshop -->
+  <div class="slide section-title">
+    <h2><span class="green">Workshop</span></h2>
+    <div class="divider" style="background:var(--green)"></div>
+  </div>
+
+  <!-- 51 -->
+  <div class="slide" data-notes="Hand-off to the workshop. Today: explore PimEyes and the demo app. Tomorrow: we build our own surveillance system together.">
+    <h2>DIY Surveillance State</h2>
+    <div class="two-col" style="align-items:start">
+      <div class="card green-border">
+        <h3 style="color:var(--green)">Today</h3>
+        <ul>
+          <li><a href="http://pimeyes.com/" style="color:var(--accent)" target="_blank">pimeyes.com</a></li>
+          <li><a href="https://tinyurl.com/hku2026demo" style="color:var(--accent)" target="_blank">tinyurl.com/hku2026demo</a></li>
+        </ul>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">Tomorrow</h3>
+        <p style="color:var(--text)">Let's build a Surveillance State!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 52: Parts overview (repeat) -->
+  <div class="slide section-title">
+    <div>
+      <h2 style="color:#555">Part 1: Intro to Computer Vision</h2>
+      <div class="divider"></div>
+      <h2><span class="accent">Part 2:</span> Intro to Generative AI &amp; Deepfakes</h2>
+    </div>
+  </div>
+
+  <!-- 53 -->
+  <div class="slide">
+    <h2>DEEPFAKE — A Video Essay</h2>
+    <p class="red" style="margin-bottom:16px; font-family:var(--mono)">* All of the media content here are deepfakes</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
+      <video src="img/media2.mp4" controls style="width:100%"></video>
+      <video src="img/media3.mp4" controls style="width:100%"></video>
+    </div>
+    <div class="img-row">
+      <img src="img/image57.png" class="small">
+      <img src="img/image58.png" class="small">
+      <img src="img/image59.jpeg" class="small">
+      <img src="img/image60.jpeg" class="small">
+    </div>
+  </div>
+
+  <!-- 54 -->
+  <div class="slide">
+    <h2>DEEPFAKE — A Video Essay</h2>
+    <div style="text-align:center">
+      <img src="img/image62.jpeg" class="full">
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div id="slide-counter"></div>
+  <div id="nav">
+    <button onclick="prev()" title="Previous">&#8592;</button>
+    <button onclick="next()" title="Next">&#8594;</button>
+    <button onclick="toggleFullscreen()" title="Fullscreen (F)" style="font-size:0.8rem">&#x26F6;</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+
+    let transitioning = false;
+
+    function show(n) {
+      n = Math.max(0, Math.min(n, total - 1));
+      if (n === current || transitioning) return;
+
+      transitioning = true;
+      const prev = slides[current];
+      const next = slides[n];
+
+      // Fade out current slide
+      prev.classList.add('fade-out');
+      prev.addEventListener('animationend', function handler() {
+        prev.removeEventListener('animationend', handler);
+        prev.classList.remove('active', 'fade-out');
+
+        // Fade in new slide
+        current = n;
+        // Reset fragments: if going forward, hide all; if going back, show all
+        var nextFrags = next.querySelectorAll('.fragment');
+        nextFrags.forEach(function(f) {
+          if (n < prevIndex) f.classList.add('visible');
+          else f.classList.remove('visible');
+        });
+        next.classList.add('active');
+        document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+        document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+        transitioning = false;
+      }, { once: true });
+
+      var prevIndex = current;
+
+      // Safety timeout in case animationend doesn't fire
+      setTimeout(function() {
+        if (transitioning) {
+          prev.classList.remove('active', 'fade-out');
+          current = n;
+          var nextFrags = next.querySelectorAll('.fragment');
+          nextFrags.forEach(function(f) {
+            if (n < prevIndex) f.classList.add('visible');
+            else f.classList.remove('visible');
+          });
+          next.classList.add('active');
+          document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+          document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+          transitioning = false;
+        }
+      }, 400);
+    }
+
+    function next() {
+      // Reveal next fragment on current slide before advancing
+      var frags = slides[current].querySelectorAll('.fragment:not(.visible)');
+      if (frags.length > 0) {
+        frags[0].classList.add('visible');
+        return;
+      }
+      show(current + 1);
+    }
+
+    function prev() {
+      // Hide last visible fragment before going back
+      var frags = slides[current].querySelectorAll('.fragment.visible');
+      if (frags.length > 0) {
+        frags[frags.length - 1].classList.remove('visible');
+        return;
+      }
+      show(current - 1);
+    }
+
+    // --- Fullscreen ---
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(function(){});
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // --- Presenter popup window ---
+    var presenterWin = null;
+    var presenterStartTime = null;
+    var presenterTimerInterval = null;
+
+    function updatePresenter() {
+      if (!presenterWin || presenterWin.closed) return;
+      var doc = presenterWin.document;
+      var notes = slides[current].getAttribute('data-notes') || '(no notes for this slide)';
+      var title = slides[current].querySelector('h1, h2');
+      var titleText = title ? title.textContent : 'Slide ' + (current + 1);
+      var nextTitle = '(end)';
+      if (current + 1 < total) {
+        var nt = slides[current + 1].querySelector('h1, h2');
+        nextTitle = nt ? nt.textContent : 'Slide ' + (current + 2);
+      }
+      var el = doc.getElementById('p-slide-num');
+      if (el) el.textContent = 'Slide ' + (current + 1) + ' / ' + total;
+      el = doc.getElementById('p-title');
+      if (el) el.textContent = titleText;
+      el = doc.getElementById('p-notes');
+      if (el) el.textContent = notes;
+      el = doc.getElementById('p-next');
+      if (el) el.textContent = nextTitle;
+    }
+
+    function formatTime(ms) {
+      var s = Math.floor(ms / 1000);
+      var m = Math.floor(s / 60);
+      var h = Math.floor(m / 60);
+      s = s % 60; m = m % 60;
+      return (h > 0 ? h + ':' : '') + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function openPresenter() {
+      if (presenterWin && !presenterWin.closed) { presenterWin.focus(); return; }
+      presenterWin = window.open('', 'presenter', 'width=500,height=400,toolbar=no,menubar=no');
+      var doc = presenterWin.document;
+      doc.open();
+      doc.write('<!DOCTYPE html><html><head><title>Presenter Notes</title><style>' +
+        'body{background:#111;color:#e8e8e8;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px;margin:0}' +
+        '.timer{font-size:3rem;font-family:monospace;color:#4a9eff;margin-bottom:8px}' +
+        '.slide-num{font-size:0.85rem;color:#777;margin-bottom:16px}' +
+        '.title{font-size:1.3rem;color:#fff;margin-bottom:16px;border-bottom:1px solid #333;padding-bottom:12px}' +
+        '.notes{font-size:1.1rem;line-height:1.8;color:#ccc;margin-bottom:24px;min-height:80px}' +
+        '.next-label{font-size:0.75rem;color:#777;margin-bottom:4px}' +
+        '.next-title{font-size:1rem;color:#999}' +
+        'button{padding:6px 16px;border:1px solid #444;background:transparent;color:#999;border-radius:4px;cursor:pointer;font-size:0.8rem;margin-right:8px}' +
+        'button:hover{border-color:#4a9eff;color:#4a9eff}' +
+        '.controls{margin-bottom:16px}' +
+        '</style></head><body>' +
+        '<div class="timer" id="p-timer">00:00</div>' +
+        '<div class="controls"><button id="p-reset">Reset Timer</button><button id="p-prev">&#8592; Prev</button><button id="p-next-btn">Next &#8594;</button></div>' +
+        '<div class="slide-num" id="p-slide-num"></div>' +
+        '<div class="title" id="p-title"></div>' +
+        '<div class="notes" id="p-notes"></div>' +
+        '<div class="next-label">NEXT SLIDE</div>' +
+        '<div class="next-title" id="p-next"></div>' +
+        '</body></html>');
+      doc.close();
+
+      // Navigation from presenter window
+      doc.getElementById('p-prev').addEventListener('click', function() { prev(); });
+      doc.getElementById('p-next-btn').addEventListener('click', function() { next(); });
+      doc.getElementById('p-reset').addEventListener('click', function() {
+        presenterStartTime = Date.now();
+      });
+
+      // Keyboard in presenter window too
+      doc.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+      });
+
+      // Start timer
+      presenterStartTime = presenterStartTime || Date.now();
+      clearInterval(presenterTimerInterval);
+      presenterTimerInterval = setInterval(function() {
+        if (presenterWin && !presenterWin.closed) {
+          var el = presenterWin.document.getElementById('p-timer');
+          if (el) el.textContent = formatTime(Date.now() - presenterStartTime);
+        } else {
+          clearInterval(presenterTimerInterval);
+        }
+      }, 1000);
+
+      updatePresenter();
+    }
+
+    // Patch show/next/prev to update presenter
+    var _origShow = show;
+    show = function(n) { _origShow(n); setTimeout(updatePresenter, 50); };
+    var _origNext = next;
+    next = function() { _origNext(); setTimeout(updatePresenter, 50); };
+    var _origPrev = prev;
+    prev = function() { _origPrev(); setTimeout(updatePresenter, 50); };
+    // Re-bind nav buttons
+    document.querySelector('#nav button:nth-child(1)').onclick = function() { prev(); };
+    document.querySelector('#nav button:nth-child(2)').onclick = function() { next(); };
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prev(); }
+      if (e.key === 'Home') { e.preventDefault(); show(0); }
+      if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+      if (e.key === 'p' || e.key === 'P') { openPresenter(); }
+      if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); }
+    });
+
+    var touchStartX = 0;
+    document.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', function(e) {
+      var diff = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(diff) > 50) { diff < 0 ? next() : prev(); }
+    });
+
+    show(0);
+  </script>
+
+</body>
+</html>
