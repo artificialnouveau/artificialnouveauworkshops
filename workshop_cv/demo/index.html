@@ -221,7 +221,7 @@
         <p><strong>Face Analysis</strong> — <em>BlazeFace</em> detects faces and landmarks; <em>face-api.js</em> (SSD MobileNet v1 + AgeGenderNet + FaceExpressionNet) estimates age, gender, and expression.</p>
         <p><strong>Pose</strong> — Facial geometry derived from BlazeFace's 6 keypoints (eyes, nose, mouth, ears).</p>
         <p><strong>Objects</strong> — <em>COCO-SSD</em> identifies 80 everyday object categories (person, car, dog, chair, etc.).</p>
-        <p><strong>Content</strong> — <em>NSFWJS</em> (MobileNet v2) classifies images as Drawing, Neutral, Sexy, Porn, or Hentai.</p>
+        <p><strong>Content</strong> — <em>NudeNet</em> detects and censors exposed body parts (16 categories). Black boxes are drawn over NSFW regions.</p>
         <p><strong>Scene</strong> — <em>MobileNet v2</em> classifies the image against 1,000 ImageNet categories.</p>
         <p style="margin-top:6px; font-size:0.8rem; color:var(--text-dim)">All models run locally in your browser via TensorFlow.js. No data is sent to any server.</p>
       </div>
@@ -260,7 +260,7 @@
         </label>
         <label class="toggle-chip" data-layer="nsfw">
           <input type="checkbox"> Content
-          <span class="chip-sub">nudity / content classification</span>
+          <span class="chip-sub">nudity detection / censoring</span>
         </label>
         <label class="toggle-chip" data-layer="scene">
           <input type="checkbox"> Scene
