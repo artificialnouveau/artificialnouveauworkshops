@@ -31,10 +31,10 @@
     'exposed anus', 'exposed armpits', 'belly', 'exposed belly',
     'buttocks', 'exposed buttocks', 'female face', 'male face',
     'feet', 'exposed feet', 'breast', 'exposed breast',
-    'vagina', 'exposed vagina', 'male breast', 'exposed penis',
+    'vagina', 'exposed vagina', 'male breast', 'exposed male breast',
   ];
   // Indices that should be censored (black boxes)
-  const NSFW_INDICES = new Set([0, 3, 5, 11, 13, 15]); // exposed: anus, belly, buttocks, breast, vagina, penis
+  const NSFW_INDICES = new Set([0, 3, 5, 11, 13, 15]); // exposed: anus, belly, buttocks, breast, vagina, male breast
 
   function showLoading(stepText, percent) {
     loadingBar.classList.add('visible');
@@ -455,16 +455,16 @@
     const sourceH = inputEl.height || inputEl.videoHeight;
 
     try {
-      // Preprocess: resize, normalize to [0, 1], expand batch dim
+      // Preprocess: resize to 320x320, cast to float32 (keep 0-255 range, do NOT normalize)
       const inputTensor = tf.tidy(() => {
         const img = tf.browser.fromPixels(inputEl);
         const resized = tf.image.resizeBilinear(img, [320, 320]);
-        return resized.toFloat().div(255).expandDims(0);
+        return resized.toFloat().expandDims(0);
       });
 
       // Run model — outputs: boxes [1,300,4], scores [1,300], classes [1,300]
       const output = await models.nsfw.executeAsync(inputTensor, ['output1', 'output2', 'output3']);
-      const boxes = await output[0].array();   // [1, 300, 4] — [y1, x1, y2, x2] normalized
+      const boxes = await output[0].array();   // [1, 300, 4] — [y0, x0, y1, x1] in 320x320 pixel coords
       const scores = await output[1].data();   // [300]
       const classes = await output[2].data();  // [300] int
 
@@ -477,17 +477,22 @@
         if (scores[i] < minScore) continue;
         const classIdx = classes[i];
         const label = NUDENET_LABELS[classIdx] || `class-${classIdx}`;
-        const [y1, x1, y2, x2] = boxes[0][i];
+        // Box format: [y0, x0, y1, x1] in 320x320 pixel space
+        const [y0, x0, y1, x1] = boxes[0][i];
+        // Scale from 320x320 to source image dimensions
         detections.push({
           label, classIdx,
           score: scores[i],
-          x: x1 * sourceW, y: y1 * sourceH,
-          w: (x2 - x1) * sourceW, h: (y2 - y1) * sourceH,
+          x: (x0 / 320) * sourceW, y: (y0 / 320) * sourceH,
+          w: ((x1 - x0) / 320) * sourceW, h: ((y1 - y0) / 320) * sourceH,
         });
       }
 
+      console.log('NudeNet raw detections:', detections.length, detections.slice(0, 5));
+
       // NMS: remove overlapping boxes for same class
       const filtered = simpleNMS(detections, 0.4);
+      console.log('NudeNet after NMS:', filtered.length, filtered);
 
       allData.push({ section: 'CONTENT DETECTION (NudeNet)' });
       if (filtered.length === 0) {
@@ -646,7 +651,7 @@
         console.log('Loading NudeNet (self-hosted graph model)...');
         models.nsfw = await tf.loadGraphModel('models/nudenet/model.json');
         showLoading('Warming up NudeNet...', 70);
-        const dummy = tf.zeros([1, 320, 320, 3]);
+        const dummy = tf.zeros([1, 320, 320, 3], 'float32');
         const warmup = await models.nsfw.executeAsync(dummy, ['output1', 'output2', 'output3']);
         warmup.forEach(t => t.dispose());
         dummy.dispose();
