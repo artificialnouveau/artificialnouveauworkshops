@@ -85,6 +85,10 @@
         <span class="change-value">${c.value}</span>
       </div>`
     ).join('');
+
+    // Run symmetry & proportionality analysis
+    analyzeSymmetry(keypoints);
+    analyzeProportions(keypoints);
   }
 
   function drawLandmarks(ctx, keypoints, w, h, color = 'rgba(74, 158, 255, 0.5)') {
@@ -287,5 +291,200 @@
 
   function clamp(v) {
     return Math.max(0, Math.min(255, Math.round(v)));
+  }
+
+  function dist(a, b) {
+    return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
+  }
+
+  // ── Symmetry Analysis ──
+  // Compares left/right landmark pairs relative to the nose midline
+  function analyzeSymmetry(kp) {
+    const div = document.getElementById('symmetry-analysis');
+    if (!div) return;
+
+    // Landmark pairs: [leftIndex, rightIndex, label]
+    const pairs = [
+      [33, 263, 'Eye (outer corner)'],
+      [133, 362, 'Eye (inner corner)'],
+      [70, 300, 'Eyebrow (inner)'],
+      [105, 334, 'Eyebrow (peak)'],
+      [234, 454, 'Cheekbone'],
+      [58, 288, 'Jaw (mid)'],
+      [132, 361, 'Jaw (lower)'],
+      [61, 291, 'Mouth corner'],
+    ];
+
+    // Nose midline reference point
+    const noseBridge = kp[6];   // bridge of nose
+    const noseTip = kp[1];     // tip of nose
+    if (!noseBridge || !noseTip) {
+      div.innerHTML = 'Could not determine facial midline.';
+      return;
+    }
+    const midX = (noseBridge[0] + noseTip[0]) / 2;
+
+    let totalDeviation = 0;
+    let count = 0;
+    const rows = [];
+
+    for (const [li, ri, label] of pairs) {
+      const left = kp[li];
+      const right = kp[ri];
+      if (!left || !right) continue;
+
+      const leftDist = Math.abs(left[0] - midX);
+      const rightDist = Math.abs(right[0] - midX);
+      const diff = Math.abs(leftDist - rightDist);
+      const avgDist = (leftDist + rightDist) / 2;
+      const pctDiff = avgDist > 0 ? (diff / avgDist * 100) : 0;
+
+      totalDeviation += pctDiff;
+      count++;
+
+      let cls = 'good';
+      if (pctDiff > 15) cls = 'off';
+      else if (pctDiff > 7) cls = 'mid';
+
+      rows.push(`<div class="analysis-row">
+        <span class="label">${label}</span>
+        <span class="value ${cls}">${pctDiff.toFixed(1)}% offset</span>
+      </div>`);
+    }
+
+    const avgDeviation = count > 0 ? totalDeviation / count : 0;
+    const symmetryScore = Math.max(0, 100 - avgDeviation * 3);
+    let scoreColor = 'var(--green)';
+    if (symmetryScore < 60) scoreColor = 'var(--red)';
+    else if (symmetryScore < 80) scoreColor = 'var(--yellow)';
+
+    div.innerHTML = `
+      <div class="analysis-title">Bilateral Symmetry</div>
+      ${rows.join('')}
+      <div class="score-bar">
+        <div class="score-label">
+          <span>Symmetry Score</span>
+          <span style="color:${scoreColor}">${symmetryScore.toFixed(0)}%</span>
+        </div>
+        <div class="score-track">
+          <div class="score-fill" style="width:${symmetryScore}%; background:${scoreColor}"></div>
+        </div>
+        <div class="score-note">100% = perfectly mirrored. No real human face is perfectly symmetric.</div>
+      </div>
+    `;
+  }
+
+  // ── Proportionality Analysis ──
+  // Checks ratios against classical facial proportion ideals
+  function analyzeProportions(kp) {
+    const div = document.getElementById('proportion-analysis');
+    if (!div) return;
+
+    // Key landmarks
+    const forehead = kp[10];   // top of forehead
+    const browMid = kp[9];    // between brows
+    const noseBase = kp[2];   // base of nose
+    const chin = kp[152];     // bottom of chin
+    const leftEyeOuter = kp[33];
+    const rightEyeOuter = kp[263];
+    const leftEyeInner = kp[133];
+    const rightEyeInner = kp[362];
+    const noseWidth_L = kp[48];  // left nostril
+    const noseWidth_R = kp[278]; // right nostril
+    const mouthLeft = kp[61];
+    const mouthRight = kp[291];
+    const upperLip = kp[0];
+    const lowerLip = kp[17];
+
+    if (!forehead || !chin || !browMid || !noseBase) {
+      div.innerHTML = 'Could not measure facial proportions.';
+      return;
+    }
+
+    const rows = [];
+    let totalDev = 0;
+    let ratioCount = 0;
+
+    function addRatio(label, actual, ideal, unit) {
+      const pctOff = Math.abs((actual - ideal) / ideal * 100);
+      totalDev += pctOff;
+      ratioCount++;
+      let cls = 'good';
+      if (pctOff > 20) cls = 'off';
+      else if (pctOff > 10) cls = 'mid';
+      rows.push(`<div class="analysis-row">
+        <span class="label">${label}</span>
+        <span class="value ${cls}">${actual.toFixed(2)} ${unit} (ideal: ${ideal.toFixed(2)})</span>
+      </div>`);
+    }
+
+    // 1. Rule of thirds: forehead-to-brow, brow-to-nose-base, nose-base-to-chin should be equal
+    const thirdTop = dist(forehead, browMid);
+    const thirdMid = dist(browMid, noseBase);
+    const thirdBot = dist(noseBase, chin);
+    const avgThird = (thirdTop + thirdMid + thirdBot) / 3;
+
+    if (avgThird > 0) {
+      addRatio('Upper third (forehead)', thirdTop / avgThird, 1.0, 'ratio');
+      addRatio('Middle third (nose)', thirdMid / avgThird, 1.0, 'ratio');
+      addRatio('Lower third (chin)', thirdBot / avgThird, 1.0, 'ratio');
+    }
+
+    // 2. Eye spacing: distance between inner eyes should ~ equal eye width
+    if (leftEyeOuter && leftEyeInner && rightEyeOuter && rightEyeInner) {
+      const leftEyeWidth = dist(leftEyeOuter, leftEyeInner);
+      const rightEyeWidth = dist(rightEyeInner, rightEyeOuter);
+      const eyeGap = dist(leftEyeInner, rightEyeInner);
+      const avgEyeWidth = (leftEyeWidth + rightEyeWidth) / 2;
+      if (avgEyeWidth > 0) {
+        addRatio('Eye spacing / eye width', eyeGap / avgEyeWidth, 1.0, 'ratio');
+      }
+    }
+
+    // 3. Nose width should ~ equal eye gap (inter-canthal distance)
+    if (noseWidth_L && noseWidth_R && leftEyeInner && rightEyeInner) {
+      const noseW = dist(noseWidth_L, noseWidth_R);
+      const eyeGap = dist(leftEyeInner, rightEyeInner);
+      if (eyeGap > 0) {
+        addRatio('Nose width / eye gap', noseW / eyeGap, 1.0, 'ratio');
+      }
+    }
+
+    // 4. Mouth width should ~ 1.5x nose width
+    if (mouthLeft && mouthRight && noseWidth_L && noseWidth_R) {
+      const mouthW = dist(mouthLeft, mouthRight);
+      const noseW = dist(noseWidth_L, noseWidth_R);
+      if (noseW > 0) {
+        addRatio('Mouth width / nose width', mouthW / noseW, 1.5, 'ratio');
+      }
+    }
+
+    // 5. Face width-to-height ratio (ideal ~1.6 golden ratio)
+    const faceWidth = leftEyeOuter && rightEyeOuter ? dist(leftEyeOuter, rightEyeOuter) : 0;
+    const faceHeight = dist(forehead, chin);
+    if (faceWidth > 0 && faceHeight > 0) {
+      addRatio('Face height / width', faceHeight / faceWidth, 1.6, 'ratio');
+    }
+
+    const avgDev = ratioCount > 0 ? totalDev / ratioCount : 0;
+    const proportionScore = Math.max(0, 100 - avgDev * 2.5);
+    let scoreColor = 'var(--green)';
+    if (proportionScore < 60) scoreColor = 'var(--red)';
+    else if (proportionScore < 80) scoreColor = 'var(--yellow)';
+
+    div.innerHTML = `
+      <div class="analysis-title">Facial Proportions</div>
+      ${rows.join('')}
+      <div class="score-bar">
+        <div class="score-label">
+          <span>Proportion Score</span>
+          <span style="color:${scoreColor}">${proportionScore.toFixed(0)}%</span>
+        </div>
+        <div class="score-track">
+          <div class="score-fill" style="width:${proportionScore}%; background:${scoreColor}"></div>
+        </div>
+        <div class="score-note">Based on classical "ideal" ratios (rule of thirds, golden ratio). These are cultural constructs, not objective truths.</div>
+      </div>
+    `;
   }
 })();
