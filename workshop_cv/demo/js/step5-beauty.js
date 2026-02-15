@@ -132,7 +132,7 @@
   function applyBeautyFilter(ctx, keypoints, w, h, img) {
     const changes = [];
 
-    // 1. Wrinkle removal — only target visible wrinkle/crease pixels in the face region
+    // 1. Wrinkle detection — highlight detected wrinkles/creases on the filtered canvas
     const faceRegion = getFaceBounds(keypoints);
     if (faceRegion) {
       const { x, y, fw, fh } = faceRegion;
@@ -142,25 +142,62 @@
       const blurRef = ctx.getImageData(x, y, fw, fh);
       boxBlur(blurRef, Math.max(2, Math.floor(fw / 50)));
 
+      // Build a wrinkle mask
+      const wrinkleMask = new Uint8Array(fw * fh);
       let wrinkleCount = 0;
-      for (let i = 0; i < faceData.data.length; i += 4) {
-        const luma = faceData.data[i] * 0.299 + faceData.data[i + 1] * 0.587 + faceData.data[i + 2] * 0.114;
-        const lumaBlur = blurRef.data[i] * 0.299 + blurRef.data[i + 1] * 0.587 + blurRef.data[i + 2] * 0.114;
-        const highPass = luma - lumaBlur;
+      for (let py = 0; py < fh; py++) {
+        for (let px = 0; px < fw; px++) {
+          const i = (py * fw + px) * 4;
+          const luma = faceData.data[i] * 0.299 + faceData.data[i + 1] * 0.587 + faceData.data[i + 2] * 0.114;
+          const lumaBlur = blurRef.data[i] * 0.299 + blurRef.data[i + 1] * 0.587 + blurRef.data[i + 2] * 0.114;
+          const highPass = luma - lumaBlur;
 
-        // Only touch pixels that are thin dark lines (wrinkles/creases)
-        // Negative high-pass = darker than surroundings
-        if (highPass < -6) {
-          const strength = Math.min(0.7, Math.abs(highPass) / 40);
-          faceData.data[i]     = faceData.data[i]     + (blurRef.data[i]     - faceData.data[i])     * strength;
-          faceData.data[i + 1] = faceData.data[i + 1] + (blurRef.data[i + 1] - faceData.data[i + 1]) * strength;
-          faceData.data[i + 2] = faceData.data[i + 2] + (blurRef.data[i + 2] - faceData.data[i + 2]) * strength;
-          wrinkleCount++;
+          if (highPass < -6) {
+            wrinkleMask[py * fw + px] = 1;
+            wrinkleCount++;
+          }
         }
       }
-      ctx.putImageData(faceData, x, y);
+
+      // Draw wrinkle pixels as colored overlay lines on the canvas
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 74, 74, 0.7)';
+      ctx.lineWidth = 1.5;
+
+      // Trace connected wrinkle pixels as short line segments
+      for (let py = 0; py < fh; py++) {
+        for (let px = 0; px < fw; px++) {
+          if (!wrinkleMask[py * fw + px]) continue;
+
+          // Check right and bottom neighbours to draw connecting lines
+          const absX = x + px;
+          const absY = y + py;
+
+          if (px + 1 < fw && wrinkleMask[py * fw + px + 1]) {
+            ctx.beginPath();
+            ctx.moveTo(absX, absY);
+            ctx.lineTo(absX + 1, absY);
+            ctx.stroke();
+          }
+          if (py + 1 < fh && wrinkleMask[(py + 1) * fw + px]) {
+            ctx.beginPath();
+            ctx.moveTo(absX, absY);
+            ctx.lineTo(absX, absY + 1);
+            ctx.stroke();
+          }
+          // Diagonal
+          if (px + 1 < fw && py + 1 < fh && wrinkleMask[(py + 1) * fw + px + 1]) {
+            ctx.beginPath();
+            ctx.moveTo(absX, absY);
+            ctx.lineTo(absX + 1, absY + 1);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.restore();
+
       const wrinklePct = (wrinkleCount / (fw * fh) * 100).toFixed(1);
-      changes.push({ label: 'Wrinkle removal', value: `${wrinklePct}% of face pixels targeted` });
+      changes.push({ label: 'Wrinkles detected', value: `${wrinklePct}% of face area` });
     }
 
     // 2. Eye enlargement (draw eyes slightly larger)
