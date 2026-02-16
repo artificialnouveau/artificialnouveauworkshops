@@ -132,12 +132,12 @@
   function applyBeautyFilter(ctx, keypoints, w, h, img) {
     const changes = [];
 
-    // 1. Wrinkle detection — only forehead, frown lines (glabella), and smoker lines
+    // 1. Wrinkle detection — targeted regions with red overlay on landmarks canvas
     const kp = keypoints;
-    // Define target regions using face mesh landmarks
+    const lCtx = document.getElementById('canvas-landmarks').getContext('2d');
     const wrinkleRegions = [];
 
-    // Forehead: between top of head (10) and brow line (107/336), spanning temples (71/301)
+    // Forehead lines: between top of head (10) and brow line (107/336), spanning temples
     const foreheadTop = kp[10];
     const browLeft = kp[107];
     const browRight = kp[336];
@@ -153,12 +153,10 @@
       });
     }
 
-    // Frown lines (glabella): between the eyebrows around kp[9]
+    // Frown lines (glabella): between the eyebrows
     const glabella = kp[9];
-    const browInnerL = kp[107];
-    const browInnerR = kp[336];
-    if (glabella && browInnerL && browInnerR) {
-      const gw = Math.abs(browInnerR[0] - browInnerL[0]) * 1.1;
+    if (glabella && browLeft && browRight) {
+      const gw = Math.abs(browRight[0] - browLeft[0]) * 1.1;
       const gh = gw * 1.2;
       wrinkleRegions.push({
         label: 'Frown lines',
@@ -169,11 +167,105 @@
       });
     }
 
-    // Smoker lines: around the mouth, above upper lip and to the sides
-    const upperLip = kp[0];
+    // Crow's feet: outer eye corners, small region lateral to each eye
+    const leftEyeOuter = kp[33];
+    const rightEyeOuter = kp[263];
+    const leftTemple = kp[127];
+    const rightTemple = kp[356];
+    if (leftEyeOuter && leftTemple) {
+      const cw = Math.abs(leftTemple[0] - leftEyeOuter[0]) * 1.3;
+      const ch = cw * 1.4;
+      wrinkleRegions.push({
+        label: "Crow's feet (L)",
+        x: Math.floor(leftTemple[0]),
+        y: Math.floor(leftEyeOuter[1] - ch / 2),
+        w: Math.ceil(cw),
+        h: Math.ceil(ch),
+      });
+    }
+    if (rightEyeOuter && rightTemple) {
+      const cw = Math.abs(rightTemple[0] - rightEyeOuter[0]) * 1.3;
+      const ch = cw * 1.4;
+      wrinkleRegions.push({
+        label: "Crow's feet (R)",
+        x: Math.floor(rightEyeOuter[0]),
+        y: Math.floor(rightEyeOuter[1] - ch / 2),
+        w: Math.ceil(cw),
+        h: Math.ceil(ch),
+      });
+    }
+
+    // Bunny lines: sides of the nose bridge
+    const noseBridge = kp[6];
+    const noseLeft = kp[48];
+    const noseRight = kp[278];
+    if (noseBridge && noseLeft && noseRight) {
+      const nw = Math.abs(noseRight[0] - noseLeft[0]) * 1.3;
+      const nh = nw * 0.8;
+      wrinkleRegions.push({
+        label: 'Bunny lines',
+        x: Math.floor(noseBridge[0] - nw / 2),
+        y: Math.floor(noseBridge[1] - nh / 3),
+        w: Math.ceil(nw),
+        h: Math.ceil(nh),
+      });
+    }
+
+    // Nasolabial folds: from nose wings down to mouth corners
+    const noseBase = kp[2];
     const mouthLeft = kp[61];
     const mouthRight = kp[291];
-    const noseBase = kp[2];
+    if (noseLeft && mouthLeft) {
+      const nlW = Math.abs(mouthLeft[0] - noseLeft[0]) * 1.6;
+      const nlH = Math.abs(mouthLeft[1] - noseLeft[1]) * 1.2;
+      wrinkleRegions.push({
+        label: 'Nasolabial fold (L)',
+        x: Math.floor(Math.min(noseLeft[0], mouthLeft[0]) - nlW * 0.15),
+        y: Math.floor(noseLeft[1]),
+        w: Math.ceil(nlW),
+        h: Math.ceil(nlH),
+      });
+    }
+    if (noseRight && mouthRight) {
+      const nlW = Math.abs(mouthRight[0] - noseRight[0]) * 1.6;
+      const nlH = Math.abs(mouthRight[1] - noseRight[1]) * 1.2;
+      wrinkleRegions.push({
+        label: 'Nasolabial fold (R)',
+        x: Math.floor(Math.min(noseRight[0], mouthRight[0]) - nlW * 0.15),
+        y: Math.floor(noseRight[1]),
+        w: Math.ceil(nlW),
+        h: Math.ceil(nlH),
+      });
+    }
+
+    // Marionette lines: from mouth corners down toward jaw
+    const jawLeft = kp[58];
+    const jawRight = kp[288];
+    if (mouthLeft && jawLeft) {
+      const mlW = Math.abs(jawLeft[0] - mouthLeft[0]) * 2.0;
+      const mlH = Math.abs(jawLeft[1] - mouthLeft[1]) * 1.2;
+      wrinkleRegions.push({
+        label: 'Marionette line (L)',
+        x: Math.floor(mouthLeft[0] - mlW * 0.3),
+        y: Math.floor(mouthLeft[1]),
+        w: Math.ceil(mlW),
+        h: Math.ceil(mlH),
+      });
+    }
+    if (mouthRight && jawRight) {
+      const mlW = Math.abs(jawRight[0] - mouthRight[0]) * 2.0;
+      const mlH = Math.abs(jawRight[1] - mouthRight[1]) * 1.2;
+      wrinkleRegions.push({
+        label: 'Marionette line (R)',
+        x: Math.floor(mouthRight[0] - mlW * 0.3),
+        y: Math.floor(mouthRight[1]),
+        w: Math.ceil(mlW),
+        h: Math.ceil(mlH),
+      });
+    }
+
+    // Smoker lines: tight region around the lips
+    const upperLip = kp[0];
     if (upperLip && mouthLeft && mouthRight && noseBase) {
       const mw = Math.abs(mouthRight[0] - mouthLeft[0]) * 1.2;
       const mh = Math.abs(upperLip[1] - noseBase[1]) * 1.6;
@@ -188,6 +280,7 @@
 
     let totalWrinklePixels = 0;
     let totalRegionPixels = 0;
+    const regionResults = [];
 
     for (const region of wrinkleRegions) {
       // Clamp to canvas bounds
@@ -201,18 +294,47 @@
       const blurRef = ctx.getImageData(rx, ry, rw, rh);
       boxBlur(blurRef, Math.max(2, Math.floor(rw / 30)));
 
+      // Build wrinkle mask for this region
+      const mask = new Uint8Array(rw * rh);
       let regionCount = 0;
       for (let py = 0; py < rh; py++) {
         for (let px = 0; px < rw; px++) {
           const i = (py * rw + px) * 4;
           const luma = regionData.data[i] * 0.299 + regionData.data[i + 1] * 0.587 + regionData.data[i + 2] * 0.114;
           const lumaBlur = blurRef.data[i] * 0.299 + blurRef.data[i + 1] * 0.587 + blurRef.data[i + 2] * 0.114;
-          if (luma - lumaBlur < -6) regionCount++;
+          if (luma - lumaBlur < -6) {
+            mask[py * rw + px] = 1;
+            regionCount++;
+          }
         }
       }
 
       totalWrinklePixels += regionCount;
       totalRegionPixels += rw * rh;
+
+      // Draw red overlay on landmarks canvas for detected wrinkle pixels
+      lCtx.save();
+      lCtx.strokeStyle = 'rgba(255, 74, 74, 0.7)';
+      lCtx.lineWidth = 1.5;
+      for (let py = 0; py < rh; py++) {
+        for (let px = 0; px < rw; px++) {
+          if (!mask[py * rw + px]) continue;
+          const absX = rx + px;
+          const absY = ry + py;
+          if (px + 1 < rw && mask[py * rw + px + 1]) {
+            lCtx.beginPath(); lCtx.moveTo(absX, absY); lCtx.lineTo(absX + 1, absY); lCtx.stroke();
+          }
+          if (py + 1 < rh && mask[(py + 1) * rw + px]) {
+            lCtx.beginPath(); lCtx.moveTo(absX, absY); lCtx.lineTo(absX, absY + 1); lCtx.stroke();
+          }
+        }
+      }
+      lCtx.restore();
+
+      const pct = rw * rh > 0 ? (regionCount / (rw * rh) * 100) : 0;
+      if (pct >= 2.0) {
+        regionResults.push({ label: region.label, pct });
+      }
     }
 
     if (totalRegionPixels > 0) {
@@ -220,7 +342,9 @@
       if (wrinklePct < 2.0) {
         changes.push({ label: 'Wrinkles detected', value: 'Minimal — below threshold' });
       } else {
-        changes.push({ label: 'Wrinkles detected', value: `${wrinklePct.toFixed(1)}% (forehead, frown, smoker lines)` });
+        const areas = regionResults.map(r => `${r.label}: ${r.pct.toFixed(1)}%`).join(', ');
+        changes.push({ label: 'Wrinkles detected', value: `${wrinklePct.toFixed(1)}% overall` });
+        if (areas) changes.push({ label: 'Wrinkle areas', value: areas });
       }
     }
 
