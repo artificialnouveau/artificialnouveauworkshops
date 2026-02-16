@@ -318,7 +318,7 @@
 
       // BMI estimation from face width-to-height ratio
       const faceWHR = w / h;
-      const estimatedBMI = 12.0 + (faceWHR * 22.0);
+      const estimatedBMI = 13.0 + (faceWHR * 15.0);
       let bmiCategory = 'Normal';
       if (estimatedBMI < 18.5) bmiCategory = 'Underweight';
       else if (estimatedBMI < 25) bmiCategory = 'Normal';
