@@ -131,7 +131,7 @@ function updateSteps() {
   $("btnConvert").disabled = !(hasContentVec && hasAudio && (hasGenerator || hasTrainedIndex || hasIndex));
 
   $("dlAudio").disabled = !hasOutput;
-  $("dlBundle").disabled = !state.sessions.generator;
+  $("dlBundle").disabled = !(state.modelBuffers.contentvec || state.modelBuffers.f0 || state.modelBuffers.generator || hasTrainedIndex || hasIndex);
   $("dlVoiceProfile").disabled = !(hasTrainedIndex || hasIndex);
 
   // Train button: need ContentVec + at least one sample
@@ -1385,10 +1385,18 @@ async function downloadBundle() {
   log("Preparing voice model bundle...");
   const downloads = [];
 
-  // Only include the user's voice model and index (not the universal models)
+  // Include auto-downloaded base models (.onnx)
+  if (state.modelBuffers.contentvec) {
+    downloads.push({ name: state.modelNames.contentvec || "contentvec.onnx", buffer: state.modelBuffers.contentvec });
+  }
+  if (state.modelBuffers.f0) {
+    downloads.push({ name: state.modelNames.f0 || "rmvpe.onnx", buffer: state.modelBuffers.f0 });
+  }
+  // Include user's voice generator model if loaded
   if (state.modelBuffers.generator) {
     downloads.push({ name: state.modelNames.generator || "generator.onnx", buffer: state.modelBuffers.generator });
   }
+  // Include voice index
   const activeIndex = state.index || state.trainedIndex;
   if (activeIndex) {
     const json = JSON.stringify(activeIndex.map(v => Array.from(v)));
