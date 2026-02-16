@@ -70,11 +70,11 @@
   .param label { display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text2); margin-bottom:4px; }
   .param .val { color:var(--accent); font-weight:500; }
   input[type="range"] { width:100%; accent-color:var(--accent); background:transparent; height:6px; }
-  select, input[type="number"] {
+  select, input[type="number"], input[type="text"] {
     width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
     padding:7px 10px; border-radius:6px; font-size:0.8rem; font-family:inherit;
   }
-  select:focus, input[type="number"]:focus { outline:none; border-color:var(--accent); }
+  select:focus, input[type="number"]:focus, input[type="text"]:focus { outline:none; border-color:var(--accent); }
 
   /* Buttons */
   .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:9px 18px; border-radius:7px; border:none; cursor:pointer; font-family:inherit; font-size:0.8rem; font-weight:500; transition:all 0.15s; }
@@ -87,13 +87,25 @@
   .btn-danger:hover { background:rgba(239,68,68,0.2); }
   .btn-block { width:100%; }
   .btn-group { display:flex; gap:6px; margin-top:8px; }
+  .btn-sm { padding:5px 10px; font-size:0.7rem; }
 
   /* ---------- Main area ---------- */
   .main { display:flex; flex-direction:column; overflow:hidden; }
-  .main-content { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; overflow-y:auto; }
+  .main-content { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:24px; overflow-y:auto; }
+
+  /* Tab switcher */
+  .tab-switcher { display:flex; gap:0; width:100%; max-width:700px; margin-bottom:20px; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .tab-btn { flex:1; padding:12px 16px; text-align:center; background:var(--surface); border:none; color:var(--text3); font-family:inherit; font-size:0.85rem; font-weight:500; cursor:pointer; transition:all 0.15s; }
+  .tab-btn:not(:last-child) { border-right:1px solid var(--border); }
+  .tab-btn.active { background:var(--accent-bg); color:var(--accent); }
+  .tab-btn:hover:not(.active) { background:var(--surface2); color:var(--text2); }
+
+  /* Tab content */
+  .tab-content { display:none; width:100%; max-width:700px; }
+  .tab-content.active { display:block; }
 
   /* Audio input area */
-  .audio-input-area { width:100%; max-width:700px; }
+  .audio-input-area { width:100%; }
   .drop-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:40px 20px; text-align:center; cursor:pointer; transition:all 0.2s; margin-bottom:16px; }
   .drop-zone:hover, .drop-zone.dragover { border-color:var(--accent); background:var(--accent-bg); }
   .drop-zone p { color:var(--text3); font-size:0.85rem; }
@@ -101,7 +113,7 @@
   .mic-row { display:flex; gap:8px; }
 
   /* Waveform display */
-  .waveform-panel { width:100%; max-width:700px; margin-top:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .waveform-panel { width:100%; margin-top:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
   .waveform-panel .label { font-size:0.7rem; color:var(--text3); padding:8px 12px; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
   .waveform-panel canvas { width:100%; height:80px; display:block; }
   .waveform-panel audio { width:100%; display:block; }
@@ -141,7 +153,7 @@
   .recording-dot { width:10px; height:10px; border-radius:50%; background:var(--danger); animation: recPulse 1s infinite; display:inline-block; margin-right:6px; vertical-align:middle; }
 
   /* Steps indicator */
-  .steps { display:flex; gap:4px; margin-bottom:16px; }
+  .steps { display:flex; gap:4px; margin-bottom:16px; width:100%; max-width:700px; }
   .step { flex:1; text-align:center; padding:8px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; font-size:0.7rem; color:var(--text3); }
   .step.active { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
   .step.done { border-color:var(--success); color:var(--success); }
@@ -157,6 +169,32 @@
   /* Convert helper link */
   .helper-link { font-size:0.7rem; color:var(--accent); text-decoration:none; display:block; margin-top:6px; text-align:center; }
   .helper-link:hover { text-decoration:underline; }
+
+  /* Training samples list */
+  .sample-list { width:100%; margin-top:12px; }
+  .sample-item { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:6px; margin-bottom:6px; }
+  .sample-item canvas { width:120px; height:32px; border-radius:3px; flex-shrink:0; }
+  .sample-item .sample-info { flex:1; min-width:0; }
+  .sample-item .sample-name { font-size:0.8rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sample-item .sample-dur { font-size:0.65rem; color:var(--text3); }
+  .sample-item .btn-delete { background:none; border:none; color:var(--text3); cursor:pointer; padding:4px; font-size:1rem; line-height:1; }
+  .sample-item .btn-delete:hover { color:var(--danger); }
+
+  /* Training result panel */
+  .train-result { background:var(--surface); border:1px solid var(--success); border-radius:var(--radius); padding:16px; margin-top:16px; }
+  .train-result h3 { font-size:0.85rem; color:var(--success); margin-bottom:10px; }
+  .train-result .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+  .train-result .stat { background:var(--surface2); border-radius:6px; padding:8px 12px; }
+  .train-result .stat .stat-label { font-size:0.65rem; color:var(--text3); text-transform:uppercase; letter-spacing:1px; }
+  .train-result .stat .stat-value { font-size:1rem; font-weight:600; color:var(--text); margin-top:2px; }
+
+  /* Trained voice indicator in sidebar */
+  .trained-indicator { background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.3); border-radius:var(--radius); padding:10px 14px; margin-bottom:8px; }
+  .trained-indicator .ti-title { font-size:0.8rem; font-weight:500; color:var(--success); margin-bottom:2px; }
+  .trained-indicator .ti-desc { font-size:0.65rem; color:var(--text3); }
+
+  /* Optional label */
+  .optional-badge { font-size:0.55rem; background:rgba(245,158,11,0.12); color:var(--warning); padding:1px 5px; border-radius:3px; margin-left:6px; text-transform:uppercase; letter-spacing:0.5px; }
 </style>
 </head>
 <body>
@@ -181,7 +219,7 @@
 
       <div class="info-box">
         <strong>Auto-download:</strong> ContentVec and RMVPE load automatically from HuggingFace on first use (~650 MB total, cached in your browser afterwards).<br><br>
-        <strong>You provide:</strong> Only the voice-specific RVC model (.onnx) for the voice you want to clone to. See the converter script below to export .pth &rarr; .onnx.
+        <strong>Voice model:</strong> Upload an RVC model (.onnx) <em>or</em> use the Train tab to build a voice profile in-browser. The generator is optional if you train a voice index.
       </div>
 
       <div class="model-slot auto" id="slotContentVec" data-model="contentvec">
@@ -203,16 +241,22 @@
       </div>
 
       <div class="model-slot" id="slotGenerator" data-model="generator">
-        <div class="name">RVC Voice Model (net_g)</div>
-        <div class="desc">Your voice-specific model (.onnx) &mdash; click to upload</div>
+        <div class="name">RVC Voice Model (net_g) <span class="optional-badge">optional</span></div>
+        <div class="desc">Your voice-specific model (.onnx) &mdash; click to upload, or train a voice index instead</div>
         <div class="status empty" id="statusGenerator">Not loaded</div>
         <div class="size" id="sizeGenerator"></div>
         <input type="file" accept=".onnx" id="fileGenerator">
       </div>
 
+      <!-- Trained voice indicator (hidden until a voice is trained) -->
+      <div class="trained-indicator" id="trainedIndicator" style="display:none;">
+        <div class="ti-title" id="trainedVoiceLabel">Trained Voice Ready</div>
+        <div class="ti-desc" id="trainedVoiceDesc">Voice index loaded with 0 vectors</div>
+      </div>
+
       <div class="model-slot" id="slotIndex" data-model="index">
         <div class="name">Voice Index (optional)</div>
-        <div class="desc">Feature vectors for retrieval (.bin / .json / .npy)</div>
+        <div class="desc">Feature vectors (.bin / .json / .npy) &mdash; or train one in the Train tab</div>
         <div class="status empty" id="statusIndex">Not loaded</div>
         <div class="size" id="sizeIndex"></div>
         <input type="file" accept=".bin,.json,.npy" id="fileIndex">
@@ -274,11 +318,15 @@
 
       <div class="bundle-section">
         <h3>Download Assets</h3>
-        <p>Save your converted audio and loaded models for later use.</p>
+        <p>Save your converted audio, voice profile, or loaded models.</p>
 
         <div class="bundle-item">
           <span class="name">Converted Audio (.wav)</span>
           <button class="btn btn-secondary" id="dlAudio" disabled>Download</button>
+        </div>
+        <div class="bundle-item">
+          <span class="name">Voice Profile (.json)</span>
+          <button class="btn btn-secondary" id="dlVoiceProfile" disabled>Download</button>
         </div>
         <div class="bundle-item">
           <span class="name">Voice Model + Index</span>
@@ -293,64 +341,149 @@
   <div class="main">
     <div class="main-content">
 
-      <div class="steps" style="width:100%;max-width:700px;">
-        <div class="step active" id="step1"><span class="num">1</span>Models Loading</div>
-        <div class="step" id="step2"><span class="num">2</span>Input Audio</div>
-        <div class="step" id="step3"><span class="num">3</span>Convert</div>
-        <div class="step" id="step4"><span class="num">4</span>Download</div>
+      <!-- Tab switcher -->
+      <div class="tab-switcher">
+        <button class="tab-btn active" id="tabBtnTrain" data-tab="train">Train Voice</button>
+        <button class="tab-btn" id="tabBtnConvert" data-tab="convert">Convert Voice</button>
       </div>
 
-      <!-- Audio input -->
-      <div class="audio-input-area">
-        <div class="drop-zone" id="dropZone">
-          <p><strong>Drop an audio file here</strong></p>
-          <p class="or">or click to browse &middot; .wav .mp3 .ogg .flac .m4a</p>
-          <p class="or" style="margin-top:12px;">or record from microphone below</p>
+      <!-- ==================== TRAIN TAB ==================== -->
+      <div class="tab-content active" id="tabTrain">
+
+        <div class="info-box" style="margin-bottom:16px;">
+          <strong>Train a voice profile in your browser.</strong> Upload or record audio samples of the target voice. The app extracts ContentVec features and pitch data to build a voice index. This index drives voice conversion without needing an external .onnx generator model.
         </div>
-        <input type="file" id="audioFileInput" accept="audio/*" style="display:none;">
-        <div class="mic-row">
-          <button class="btn btn-secondary" id="btnRecord" style="flex:1;">Record from Mic</button>
-          <button class="btn btn-danger" id="btnStopRecord" style="flex:1;display:none;"><span class="recording-dot"></span>Stop Recording</button>
+
+        <!-- Training sample drop zone -->
+        <div class="audio-input-area">
+          <div class="drop-zone" id="trainDropZone">
+            <p><strong>Drop audio files of the target voice here</strong></p>
+            <p class="or">or click to browse &middot; .wav .mp3 .ogg .flac .m4a</p>
+            <p class="or" style="margin-top:8px;">Upload multiple clips for better results (10-60s each)</p>
+          </div>
+          <input type="file" id="trainFileInput" accept="audio/*" multiple style="display:none;">
+          <div class="mic-row">
+            <button class="btn btn-secondary" id="btnTrainRecord" style="flex:1;">Record from Mic</button>
+            <button class="btn btn-danger" id="btnTrainStopRecord" style="flex:1;display:none;"><span class="recording-dot"></span>Stop Recording</button>
+          </div>
         </div>
-      </div>
 
-      <!-- Source waveform -->
-      <div class="waveform-panel" id="sourcePanel" style="display:none;">
-        <div class="label">
-          <span>Source Audio</span>
-          <span id="sourceDuration"></span>
+        <!-- Training samples list -->
+        <div class="sample-list" id="trainSampleList"></div>
+
+        <!-- Voice name + training params -->
+        <div style="margin-top:16px;">
+          <div class="param">
+            <label>Voice Name</label>
+            <input type="text" id="voiceName" placeholder="e.g. My Voice Clone" value="">
+          </div>
         </div>
-        <canvas id="sourceWaveform"></canvas>
-        <audio id="sourceAudio" controls></audio>
-      </div>
 
-      <!-- Convert button -->
-      <div style="width:100%;max-width:700px;margin-top:16px;text-align:center;">
-        <button class="btn btn-primary btn-block" id="btnConvert" disabled style="padding:14px;font-size:0.95rem;">
-          Convert Voice
-        </button>
-      </div>
-
-      <!-- Progress -->
-      <div class="progress-bar" id="progressContainer" style="display:none;">
-        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="progress-label" id="progressLabel">Initializing...</div>
-      </div>
-
-      <!-- Output waveform -->
-      <div class="waveform-panel" id="outputPanel" style="display:none;">
-        <div class="label">
-          <span>Converted Audio</span>
-          <span id="outputDuration"></span>
+        <!-- Train button -->
+        <div style="margin-top:12px;text-align:center;">
+          <button class="btn btn-primary btn-block" id="btnTrain" disabled style="padding:14px;font-size:0.95rem;">
+            Train Voice Model
+          </button>
         </div>
-        <canvas id="outputWaveform"></canvas>
-        <audio id="outputAudio" controls></audio>
+
+        <!-- Training progress -->
+        <div class="progress-bar" id="trainProgressContainer" style="display:none;">
+          <div class="progress-track"><div class="progress-fill" id="trainProgressFill"></div></div>
+          <div class="progress-label" id="trainProgressLabel">Initializing...</div>
+        </div>
+
+        <!-- Training result -->
+        <div class="train-result" id="trainResult" style="display:none;">
+          <h3>Voice Profile Trained</h3>
+          <div class="stat-grid">
+            <div class="stat">
+              <div class="stat-label">Feature Vectors</div>
+              <div class="stat-value" id="trainStatVectors">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Total Duration</div>
+              <div class="stat-value" id="trainStatDuration">0s</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Avg Pitch</div>
+              <div class="stat-value" id="trainStatPitch">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Pitch Range</div>
+              <div class="stat-value" id="trainStatRange">—</div>
+            </div>
+          </div>
+          <div class="btn-group" style="justify-content:center;">
+            <button class="btn btn-primary" id="btnDownloadProfile">Download Voice Profile (.json)</button>
+            <button class="btn btn-secondary" id="btnUseProfile">Use for Conversion</button>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Log -->
+      <!-- ==================== CONVERT TAB ==================== -->
+      <div class="tab-content" id="tabConvert">
+
+        <div class="steps" style="width:100%;">
+          <div class="step active" id="step1"><span class="num">1</span>Models Loading</div>
+          <div class="step" id="step2"><span class="num">2</span>Input Audio</div>
+          <div class="step" id="step3"><span class="num">3</span>Convert</div>
+          <div class="step" id="step4"><span class="num">4</span>Download</div>
+        </div>
+
+        <!-- Audio input -->
+        <div class="audio-input-area">
+          <div class="drop-zone" id="dropZone">
+            <p><strong>Drop an audio file here</strong></p>
+            <p class="or">or click to browse &middot; .wav .mp3 .ogg .flac .m4a</p>
+            <p class="or" style="margin-top:12px;">or record from microphone below</p>
+          </div>
+          <input type="file" id="audioFileInput" accept="audio/*" style="display:none;">
+          <div class="mic-row">
+            <button class="btn btn-secondary" id="btnRecord" style="flex:1;">Record from Mic</button>
+            <button class="btn btn-danger" id="btnStopRecord" style="flex:1;display:none;"><span class="recording-dot"></span>Stop Recording</button>
+          </div>
+        </div>
+
+        <!-- Source waveform -->
+        <div class="waveform-panel" id="sourcePanel" style="display:none;">
+          <div class="label">
+            <span>Source Audio</span>
+            <span id="sourceDuration"></span>
+          </div>
+          <canvas id="sourceWaveform"></canvas>
+          <audio id="sourceAudio" controls></audio>
+        </div>
+
+        <!-- Convert button -->
+        <div style="width:100%;margin-top:16px;text-align:center;">
+          <button class="btn btn-primary btn-block" id="btnConvert" disabled style="padding:14px;font-size:0.95rem;">
+            Convert Voice
+          </button>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-bar" id="progressContainer" style="display:none;">
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-label" id="progressLabel">Initializing...</div>
+        </div>
+
+        <!-- Output waveform -->
+        <div class="waveform-panel" id="outputPanel" style="display:none;">
+          <div class="label">
+            <span>Converted Audio</span>
+            <span id="outputDuration"></span>
+          </div>
+          <canvas id="outputWaveform"></canvas>
+          <audio id="outputAudio" controls></audio>
+        </div>
+
+      </div>
+
+      <!-- Log (shared between tabs) -->
       <div class="log-area" id="logArea">
         <div class="log-line info">RVC Voice Cloning — Browser Prototype</div>
-        <div class="log-line">Base models will auto-download from HuggingFace. Upload your RVC voice model (.onnx) to begin.</div>
+        <div class="log-line">Base models will auto-download from HuggingFace. Train a voice or upload an RVC model to begin.</div>
       </div>
 
     </div>

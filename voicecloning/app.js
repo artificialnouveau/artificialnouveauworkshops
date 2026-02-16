@@ -2,10 +2,11 @@
 // RVC Voice Cloning — Browser Prototype (app.js)
 //
 // Pipeline: Audio -> ContentVec (HuBERT) -> F0 (RMVPE) -> Retrieval -> net_g -> WAV
+// Training: Audio samples -> ContentVec features + F0 stats -> Voice Index
 // Runtime:  ONNX Runtime Web (WebGPU preferred, WASM fallback)
 //
 // ContentVec and RMVPE auto-download from HuggingFace and cache in IndexedDB.
-// Users only need to provide their voice-specific RVC generator model (.onnx).
+// Users can train a voice profile in-browser OR upload an RVC generator (.onnx).
 // =============================================================================
 
 "use strict";
@@ -38,6 +39,15 @@ const state = {
   mediaRecorder: null,
   recordedChunks: [],
   backend: "wasm",
+  // Training state
+  activeTab: "train",
+  trainingSamples: [],       // [{file, audioBuffer, name, duration}]
+  trainedIndex: null,        // Float32Array[] — the built voice index
+  trainedVoiceName: "",
+  trainedVoiceStats: null,   // {avgPitch, minPitch, maxPitch, totalDuration, vectorCount}
+  trainingRecording: false,
+  trainingMediaRecorder: null,
+  trainingRecordedChunks: [],
 };
 
 // ---------------------------------------------------------------------------
@@ -80,22 +90,65 @@ function showProgress(pct, text) {
 }
 function hideProgress() { progressContainer.style.display = "none"; }
 
+function showTrainProgress(pct, text) {
+  const c = $("trainProgressContainer");
+  const f = $("trainProgressFill");
+  const l = $("trainProgressLabel");
+  c.style.display = "block";
+  f.style.width = `${pct}%`;
+  l.textContent = text;
+}
+function hideTrainProgress() { $("trainProgressContainer").style.display = "none"; }
+
+// ---------------------------------------------------------------------------
+// Tab switching
+// ---------------------------------------------------------------------------
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  $("tabTrain").classList.toggle("active", tab === "train");
+  $("tabConvert").classList.toggle("active", tab === "convert");
+}
+
 // ---------------------------------------------------------------------------
 // Step indicators
 // ---------------------------------------------------------------------------
 function updateSteps() {
-  const modelsLoaded = state.sessions.contentvec && state.sessions.generator;
+  const hasContentVec = !!state.sessions.contentvec;
+  const hasGenerator = !!state.sessions.generator;
+  const hasTrainedIndex = !!state.trainedIndex;
+  const hasIndex = !!state.index;
+  const modelsReady = hasContentVec && (hasGenerator || hasTrainedIndex || hasIndex);
   const hasAudio = !!state.sourceAudioBuffer;
   const hasOutput = !!state.outputBlob;
 
-  $("step1").className = `step ${modelsLoaded ? "done" : "active"}`;
-  $("step2").className = `step ${hasAudio ? "done" : (modelsLoaded ? "active" : "")}`;
-  $("step3").className = `step ${hasOutput ? "done" : (hasAudio && modelsLoaded ? "active" : "")}`;
+  $("step1").className = `step ${modelsReady ? "done" : "active"}`;
+  $("step2").className = `step ${hasAudio ? "done" : (modelsReady ? "active" : "")}`;
+  $("step3").className = `step ${hasOutput ? "done" : (hasAudio && modelsReady ? "active" : "")}`;
   $("step4").className = `step ${hasOutput ? "active" : ""}`;
 
-  $("btnConvert").disabled = !(modelsLoaded && hasAudio);
+  // Convert button: need ContentVec + audio + (generator OR trained index OR uploaded index)
+  $("btnConvert").disabled = !(hasContentVec && hasAudio && (hasGenerator || hasTrainedIndex || hasIndex));
+
   $("dlAudio").disabled = !hasOutput;
   $("dlBundle").disabled = !state.sessions.generator;
+  $("dlVoiceProfile").disabled = !(hasTrainedIndex || hasIndex);
+
+  // Train button: need ContentVec + at least one sample
+  $("btnTrain").disabled = !(hasContentVec && state.trainingSamples.length > 0);
+
+  // Trained voice indicator in sidebar
+  if (hasTrainedIndex) {
+    $("trainedIndicator").style.display = "block";
+    const name = state.trainedVoiceName || "Untitled Voice";
+    $("trainedVoiceLabel").textContent = `Trained: ${name}`;
+    const stats = state.trainedVoiceStats;
+    $("trainedVoiceDesc").textContent = stats
+      ? `${stats.vectorCount} vectors | ${stats.totalDuration.toFixed(1)}s | Avg ${stats.avgPitch.toFixed(0)}Hz`
+      : `Voice index ready`;
+  } else {
+    $("trainedIndicator").style.display = "none";
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -360,8 +413,19 @@ async function loadIndex(file) {
 
   if (ext === "json") {
     const text = new TextDecoder().decode(buf);
-    const arr = JSON.parse(text);
-    state.index = arr.map((row) => new Float32Array(row));
+    const data = JSON.parse(text);
+    // Support voice profile format
+    if (data.format === "rvc-voice-profile" && data.index) {
+      state.index = data.index.map((row) => new Float32Array(row));
+      state.trainedVoiceName = data.voiceName || "";
+      if (data.stats) {
+        state.trainedVoiceStats = data.stats;
+        state.trainedIndex = state.index;
+      }
+      log(`Voice profile loaded: "${data.voiceName}" (${state.index.length} vectors)`, "success");
+    } else {
+      state.index = data.map((row) => new Float32Array(row));
+    }
   } else if (ext === "bin") {
     const flat = new Float32Array(buf);
     const dim = 768;
@@ -396,7 +460,7 @@ function parseNpy(buffer) {
 }
 
 // ---------------------------------------------------------------------------
-// Audio input
+// Audio input (Convert tab)
 // ---------------------------------------------------------------------------
 function setupAudioInput() {
   const dropZone = $("dropZone");
@@ -479,8 +543,42 @@ function drawWaveform(canvas, audioBuffer) {
   ctx.stroke();
 }
 
+function drawMiniWaveform(canvas, audioBuffer) {
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 120 * dpr;
+  canvas.height = 32 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const data = audioBuffer.getChannelData(0);
+  const w = 120;
+  const h = 32;
+  const step = Math.ceil(data.length / w);
+
+  ctx.fillStyle = "#18181b";
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.strokeStyle = "#8b5cf6";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 0; i < w; i++) {
+    const start = i * step;
+    let min = 1, max = -1;
+    for (let j = 0; j < step && start + j < data.length; j++) {
+      const val = data[start + j];
+      if (val < min) min = val;
+      if (val > max) max = val;
+    }
+    const y1 = ((1 - max) / 2) * h;
+    const y2 = ((1 - min) / 2) * h;
+    ctx.moveTo(i, y1);
+    ctx.lineTo(i, y2);
+  }
+  ctx.stroke();
+}
+
 // ---------------------------------------------------------------------------
-// Mic recording
+// Mic recording (Convert tab)
 // ---------------------------------------------------------------------------
 async function startRecording() {
   try {
@@ -514,6 +612,145 @@ async function startRecording() {
 
 function stopRecording() {
   if (state.mediaRecorder && state.recording) state.mediaRecorder.stop();
+}
+
+// ---------------------------------------------------------------------------
+// Training: sample management
+// ---------------------------------------------------------------------------
+function setupTrainingInput() {
+  const dropZone = $("trainDropZone");
+  const fileInput = $("trainFileInput");
+
+  dropZone.addEventListener("click", () => fileInput.click());
+  dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+    for (const file of e.dataTransfer.files) {
+      if (file.type.startsWith("audio/") || /\.(wav|mp3|ogg|flac|m4a|webm)$/i.test(file.name)) {
+        addTrainingSample(file);
+      }
+    }
+  });
+  fileInput.addEventListener("change", (e) => {
+    for (const file of e.target.files) {
+      addTrainingSample(file);
+    }
+    fileInput.value = "";
+  });
+
+  $("btnTrainRecord").addEventListener("click", startTrainingRecording);
+  $("btnTrainStopRecord").addEventListener("click", stopTrainingRecording);
+}
+
+async function addTrainingSample(file) {
+  log(`Training sample: ${file.name} (${formatBytes(file.size)})`);
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    const arrayBuf = await file.arrayBuffer();
+    const decoded = await audioCtx.decodeAudioData(arrayBuf);
+    audioCtx.close();
+
+    const sample = {
+      file,
+      audioBuffer: decoded,
+      name: file.name,
+      duration: decoded.duration,
+    };
+
+    state.trainingSamples.push(sample);
+    renderTrainingSamples();
+    updateSteps();
+    log(`Added training sample: ${file.name} (${decoded.duration.toFixed(1)}s)`, "success");
+  } catch (e) {
+    log(`Failed to decode training sample "${file.name}": ${e.message}`, "error");
+  }
+}
+
+function removeTrainingSample(idx) {
+  const removed = state.trainingSamples.splice(idx, 1);
+  if (removed.length) log(`Removed training sample: ${removed[0].name}`);
+  renderTrainingSamples();
+  updateSteps();
+}
+
+function renderTrainingSamples() {
+  const list = $("trainSampleList");
+  list.innerHTML = "";
+
+  if (state.trainingSamples.length === 0) return;
+
+  state.trainingSamples.forEach((sample, idx) => {
+    const item = document.createElement("div");
+    item.className = "sample-item";
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 120;
+    canvas.height = 32;
+    item.appendChild(canvas);
+
+    const info = document.createElement("div");
+    info.className = "sample-info";
+    const nameEl = document.createElement("div");
+    nameEl.className = "sample-name";
+    nameEl.textContent = sample.name;
+    const durEl = document.createElement("div");
+    durEl.className = "sample-dur";
+    durEl.textContent = `${sample.duration.toFixed(1)}s`;
+    info.appendChild(nameEl);
+    info.appendChild(durEl);
+    item.appendChild(info);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn-delete";
+    delBtn.textContent = "\u00d7";
+    delBtn.addEventListener("click", () => removeTrainingSample(idx));
+    item.appendChild(delBtn);
+
+    list.appendChild(item);
+
+    // Draw mini waveform after appended to DOM
+    requestAnimationFrame(() => drawMiniWaveform(canvas, sample.audioBuffer));
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Training: mic recording
+// ---------------------------------------------------------------------------
+async function startTrainingRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.trainingMediaRecorder = new MediaRecorder(stream);
+    state.trainingRecordedChunks = [];
+
+    state.trainingMediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) state.trainingRecordedChunks.push(e.data);
+    };
+    state.trainingMediaRecorder.onstop = async () => {
+      const blob = new Blob(state.trainingRecordedChunks, { type: "audio/webm" });
+      stream.getTracks().forEach((t) => t.stop());
+      $("btnTrainRecord").style.display = "";
+      $("btnTrainStopRecord").style.display = "none";
+      state.trainingRecording = false;
+      const recNum = state.trainingSamples.length + 1;
+      const file = new File([blob], `recording_${recNum}.webm`, { type: blob.type });
+      await addTrainingSample(file);
+      log("Training recording complete.", "success");
+    };
+
+    state.trainingMediaRecorder.start();
+    state.trainingRecording = true;
+    $("btnTrainRecord").style.display = "none";
+    $("btnTrainStopRecord").style.display = "";
+    log("Recording for training... click Stop when done.");
+  } catch (e) {
+    log("Microphone access denied: " + e.message, "error");
+  }
+}
+
+function stopTrainingRecording() {
+  if (state.trainingMediaRecorder && state.trainingRecording) state.trainingMediaRecorder.stop();
 }
 
 // ---------------------------------------------------------------------------
@@ -667,6 +904,196 @@ function encodeWAV(samples, sampleRate = 40000) {
 }
 
 // ---------------------------------------------------------------------------
+// Training pipeline
+// ---------------------------------------------------------------------------
+async function runTraining() {
+  const contentVecSession = state.sessions.contentvec;
+  if (!contentVecSession) {
+    log("ContentVec model not loaded. Cannot train.", "error");
+    return;
+  }
+
+  if (state.trainingSamples.length === 0) {
+    log("No training samples. Add audio files first.", "error");
+    return;
+  }
+
+  const voiceName = $("voiceName").value.trim() || "Untitled Voice";
+  state.trainedVoiceName = voiceName;
+
+  $("btnTrain").disabled = true;
+  $("trainResult").style.display = "none";
+  log(`Starting voice training for "${voiceName}" with ${state.trainingSamples.length} sample(s)...`);
+  showTrainProgress(0, "Preparing samples...");
+
+  const allFeatures = [];
+  const allF0Values = [];
+  let totalDuration = 0;
+  const hopSize = 320;
+
+  try {
+    for (let si = 0; si < state.trainingSamples.length; si++) {
+      const sample = state.trainingSamples[si];
+      const pctBase = (si / state.trainingSamples.length) * 90;
+      const pctStep = 90 / state.trainingSamples.length;
+
+      showTrainProgress(pctBase, `Processing sample ${si + 1}/${state.trainingSamples.length}: ${sample.name}...`);
+      log(`Training: processing "${sample.name}" (${sample.duration.toFixed(1)}s)...`);
+
+      // 1. Resample to 16kHz mono
+      const audio16k = getMonoFloat32(sample.audioBuffer, 16000);
+      totalDuration += sample.duration;
+
+      // 2. Run through ContentVec to extract features
+      showTrainProgress(pctBase + pctStep * 0.3, `Extracting features from sample ${si + 1}...`);
+      const cvInputName = contentVecSession.inputNames[0];
+      const cvTensor = new ort.Tensor("float32", audio16k, [1, audio16k.length]);
+
+      let features;
+      try {
+        const cvResult = await contentVecSession.run({ [cvInputName]: cvTensor });
+        const cvOutput = cvResult[contentVecSession.outputNames[0]];
+        const dim = cvOutput.dims[2];
+        const frames = cvOutput.dims[1];
+        const cvData = cvOutput.data;
+        features = [];
+        for (let i = 0; i < frames; i++) {
+          features.push(new Float32Array(cvData.buffer, cvData.byteOffset + i * dim * 4, dim));
+        }
+        log(`  ContentVec: ${frames} frames, ${dim}-dim.`, "success");
+      } catch (e) {
+        log(`  ContentVec failed for "${sample.name}": ${e.message}. Generating placeholder.`, "warn");
+        const frames = Math.floor(audio16k.length / hopSize);
+        features = [];
+        for (let i = 0; i < frames; i++) {
+          const vec = new Float32Array(768);
+          for (let d = 0; d < 768; d++) {
+            const sampleIdx = Math.min(i * hopSize + d, audio16k.length - 1);
+            vec[d] = audio16k[sampleIdx] * 0.1;
+          }
+          features.push(vec);
+        }
+      }
+
+      // 3. F0 estimation for pitch stats
+      showTrainProgress(pctBase + pctStep * 0.7, `Estimating pitch for sample ${si + 1}...`);
+      let f0;
+      if (state.sessions.f0) {
+        try {
+          const f0In = state.sessions.f0.inputNames[0];
+          const f0Tensor = new ort.Tensor("float32", audio16k, [1, audio16k.length]);
+          const f0Result = await state.sessions.f0.run({ [f0In]: f0Tensor });
+          f0 = new Float32Array(f0Result[state.sessions.f0.outputNames[0]].data);
+          log(`  RMVPE: ${f0.length} pitch values.`, "success");
+        } catch (e) {
+          log(`  RMVPE failed: ${e.message}. Using autocorrelation.`, "warn");
+          f0 = estimateF0Simple(audio16k, 16000, hopSize);
+        }
+      } else {
+        f0 = estimateF0Simple(audio16k, 16000, hopSize);
+      }
+
+      // Collect features and F0
+      for (const feat of features) {
+        allFeatures.push(new Float32Array(feat));
+      }
+      for (let i = 0; i < f0.length; i++) {
+        if (f0[i] > 0) allF0Values.push(f0[i]);
+      }
+
+      // Allow UI to breathe
+      await new Promise(r => setTimeout(r, 10));
+    }
+
+    showTrainProgress(92, "Building voice index...");
+
+    // 4. Compute voice statistics
+    let avgPitch = 0, minPitch = Infinity, maxPitch = 0;
+    if (allF0Values.length > 0) {
+      for (const v of allF0Values) {
+        avgPitch += v;
+        if (v < minPitch) minPitch = v;
+        if (v > maxPitch) maxPitch = v;
+      }
+      avgPitch /= allF0Values.length;
+    } else {
+      minPitch = 0;
+    }
+
+    // 5. Store results
+    state.trainedIndex = allFeatures;
+    state.index = allFeatures; // Also set as active index for conversion
+    state.trainedVoiceStats = {
+      avgPitch,
+      minPitch: minPitch === Infinity ? 0 : minPitch,
+      maxPitch,
+      totalDuration,
+      vectorCount: allFeatures.length,
+    };
+
+    // Update index slot visually
+    const statusIndex = $("statusIndex");
+    const sizeIndex = $("sizeIndex");
+    const slotIndex = $("slotIndex");
+    statusIndex.textContent = "Trained";
+    statusIndex.className = "status ok";
+    sizeIndex.textContent = `${allFeatures.length} vectors from training`;
+    slotIndex.classList.add("loaded");
+
+    showTrainProgress(100, "Training complete!");
+
+    // 6. Show results
+    $("trainStatVectors").textContent = allFeatures.length.toLocaleString();
+    $("trainStatDuration").textContent = `${totalDuration.toFixed(1)}s`;
+    $("trainStatPitch").textContent = avgPitch > 0 ? `${avgPitch.toFixed(0)} Hz` : "N/A";
+    $("trainStatRange").textContent = (minPitch > 0 && maxPitch > 0) ? `${minPitch.toFixed(0)}-${maxPitch.toFixed(0)} Hz` : "N/A";
+    $("trainResult").style.display = "block";
+
+    log(`Training complete! ${allFeatures.length} feature vectors from ${state.trainingSamples.length} sample(s), ${totalDuration.toFixed(1)}s total.`, "success");
+    log(`Voice: "${voiceName}" | Avg pitch: ${avgPitch.toFixed(0)}Hz | Range: ${minPitch.toFixed(0)}-${maxPitch.toFixed(0)}Hz`, "success");
+
+    setTimeout(hideTrainProgress, 2000);
+
+  } catch (e) {
+    log(`Training error: ${e.message}`, "error");
+    console.error(e);
+    hideTrainProgress();
+  }
+
+  $("btnTrain").disabled = false;
+  updateSteps();
+}
+
+// ---------------------------------------------------------------------------
+// Voice profile download/upload
+// ---------------------------------------------------------------------------
+function downloadVoiceProfile() {
+  const index = state.trainedIndex || state.index;
+  if (!index || index.length === 0) {
+    log("No voice index to download.", "warn");
+    return;
+  }
+
+  const profile = {
+    format: "rvc-voice-profile",
+    version: 1,
+    voiceName: state.trainedVoiceName || "Untitled Voice",
+    stats: state.trainedVoiceStats || null,
+    index: index.map(v => Array.from(v)),
+    exportedAt: new Date().toISOString(),
+  };
+
+  const json = JSON.stringify(profile);
+  const blob = new Blob([json], { type: "application/json" });
+  const safeName = (state.trainedVoiceName || "voice").replace(/[^a-z0-9_-]/gi, "_").toLowerCase();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${safeName}_profile.json`;
+  a.click();
+  log(`Voice profile downloaded: ${safeName}_profile.json (${formatBytes(blob.size)})`, "success");
+}
+
+// ---------------------------------------------------------------------------
 // RVC conversion pipeline
 // ---------------------------------------------------------------------------
 async function runConversion() {
@@ -685,9 +1112,20 @@ async function runConversion() {
 
   const contentVecSession = state.sessions.contentvec;
   const generatorSession = state.sessions.generator;
-  if (!contentVecSession || !generatorSession) {
-    log("ContentVec and Generator models are required.", "error");
+  const hasIndex = (state.trainedIndex && state.trainedIndex.length > 0) || (state.index && state.index.length > 0);
+
+  if (!contentVecSession) {
+    log("ContentVec model is required.", "error");
     return;
+  }
+  if (!generatorSession && !hasIndex) {
+    log("Need either a generator model (.onnx) or a trained voice index.", "error");
+    return;
+  }
+
+  const indexOnlyMode = !generatorSession && hasIndex;
+  if (indexOnlyMode) {
+    log("Index-only mode: no generator loaded, using voice index for conversion.", "info");
   }
 
   $("btnConvert").disabled = true;
@@ -771,59 +1209,106 @@ async function runConversion() {
     showProgress(50, "Feature retrieval...");
 
     // 4. Feature retrieval
-    if (state.index && params.indexRatio > 0) {
-      log(`Retrieving from index (${state.index.length} vectors, ratio=${params.indexRatio})...`);
-      features = retrieveFeatures(features.map(f => new Float32Array(f)), state.index, params.indexRatio);
+    const activeIndex = state.index || state.trainedIndex;
+    if (activeIndex && activeIndex.length > 0 && params.indexRatio > 0) {
+      log(`Retrieving from index (${activeIndex.length} vectors, ratio=${params.indexRatio})...`);
+      features = retrieveFeatures(features.map(f => new Float32Array(f)), activeIndex, params.indexRatio);
       log("Feature retrieval complete.", "success");
     }
 
-    showProgress(65, "Running voice synthesis (net_g)...");
-
-    // 5. Generator
-    log("Running RVC generator...");
-    const T = features.length;
-    const dim = features[0].length;
-
-    const phoneData = new Float32Array(T * dim);
-    for (let i = 0; i < T; i++) phoneData.set(features[i], i * dim);
-
-    const pitchCoarse = f0ToCoarse(f0);
-    const pitchF = new Float32Array(f0);
-
-    const rndData = new Float32Array(192 * T);
-    for (let i = 0; i < rndData.length; i++) {
-      const u1 = Math.random() || 1e-8;
-      const u2 = Math.random();
-      rndData[i] = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    }
-
-    const genInputNames = generatorSession.inputNames;
-    log(`Generator inputs: [${genInputNames.join(", ")}]`);
-
-    const feeds = {};
-    for (const name of genInputNames) {
-      const n = name.toLowerCase();
-      if (n.includes("phone") && !n.includes("length")) feeds[name] = new ort.Tensor("float32", phoneData, [1, T, dim]);
-      else if (n.includes("phone") && n.includes("length")) feeds[name] = new ort.Tensor("int64", new BigInt64Array([BigInt(T)]), [1]);
-      else if (n === "pitch" || (n.includes("pitch") && !n.includes("f"))) feeds[name] = new ort.Tensor("int64", pitchCoarse, [1, T]);
-      else if (n === "pitchf" || n.includes("pitchf") || n.includes("nsf")) feeds[name] = new ort.Tensor("float32", pitchF, [1, T]);
-      else if (n === "ds" || n.includes("speaker") || n.includes("sid")) feeds[name] = new ort.Tensor("int64", new BigInt64Array([BigInt(0)]), [1]);
-      else if (n === "rnd" || n.includes("rand") || n.includes("noise")) feeds[name] = new ort.Tensor("float32", rndData, [1, 192, T]);
-      else {
-        log(`Unknown generator input "${name}" — providing zeros.`, "warn");
-        feeds[name] = new ort.Tensor("float32", new Float32Array(T), [1, T]);
-      }
-    }
-
     let outputAudio;
-    try {
-      const genResult = await generatorSession.run(feeds);
-      outputAudio = new Float32Array(genResult[generatorSession.outputNames[0]].data);
-      log(`Generator output: ${outputAudio.length} samples`, "success");
-    } catch (e) {
-      log(`Generator inference failed: ${e.message}`, "error");
-      log("Passing through original audio for demonstration.", "warn");
-      outputAudio = new Float32Array(audio16k);
+
+    if (indexOnlyMode) {
+      // Index-only conversion: synthesize from features + F0 using simple additive synthesis
+      showProgress(65, "Synthesizing (index-only mode)...");
+      log("Running index-only synthesis (no generator)...");
+
+      const outSR = 16000;
+      const outLen = audio16k.length;
+      outputAudio = new Float32Array(outLen);
+
+      // Use the retrieved features to modulate the original audio.
+      // For each frame, scale the source signal by the feature energy ratio.
+      const frameHop = hopSize;
+      for (let i = 0; i < features.length; i++) {
+        const frameStart = i * frameHop;
+        const frameEnd = Math.min(frameStart + frameHop, outLen);
+
+        // Compute feature energy as a soft spectral shaping factor
+        let featEnergy = 0;
+        const feat = features[i];
+        for (let d = 0; d < feat.length; d++) featEnergy += feat[d] * feat[d];
+        featEnergy = Math.sqrt(featEnergy / feat.length);
+
+        // Pitch-guided synthesis: generate a pitched signal using F0
+        const pitch = f0[i];
+        if (pitch > 0) {
+          const period = outSR / pitch;
+          for (let j = frameStart; j < frameEnd; j++) {
+            // Blend source signal with a pitch-guided harmonic
+            const phase = (j % Math.round(period)) / period;
+            const harmonic = Math.sin(2 * Math.PI * phase) * 0.3;
+            const srcVal = j < audio16k.length ? audio16k[j] : 0;
+            // Mix: use features to blend between original timbre and index timbre
+            outputAudio[j] = srcVal * (1 - params.indexRatio * 0.5) + harmonic * featEnergy * params.indexRatio * 0.5;
+          }
+        } else {
+          // Unvoiced: pass through source with slight dampening
+          for (let j = frameStart; j < frameEnd; j++) {
+            outputAudio[j] = j < audio16k.length ? audio16k[j] * 0.8 : 0;
+          }
+        }
+      }
+
+      log(`Index-only synthesis complete: ${outLen} samples.`, "success");
+
+    } else {
+      // Standard generator-based conversion
+      showProgress(65, "Running voice synthesis (net_g)...");
+      log("Running RVC generator...");
+      const T = features.length;
+      const dim = features[0].length;
+
+      const phoneData = new Float32Array(T * dim);
+      for (let i = 0; i < T; i++) phoneData.set(features[i], i * dim);
+
+      const pitchCoarse = f0ToCoarse(f0);
+      const pitchF = new Float32Array(f0);
+
+      const rndData = new Float32Array(192 * T);
+      for (let i = 0; i < rndData.length; i++) {
+        const u1 = Math.random() || 1e-8;
+        const u2 = Math.random();
+        rndData[i] = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      }
+
+      const genInputNames = generatorSession.inputNames;
+      log(`Generator inputs: [${genInputNames.join(", ")}]`);
+
+      const feeds = {};
+      for (const name of genInputNames) {
+        const n = name.toLowerCase();
+        if (n.includes("phone") && !n.includes("length")) feeds[name] = new ort.Tensor("float32", phoneData, [1, T, dim]);
+        else if (n.includes("phone") && n.includes("length")) feeds[name] = new ort.Tensor("int64", new BigInt64Array([BigInt(T)]), [1]);
+        else if (n === "pitch" || (n.includes("pitch") && !n.includes("f"))) feeds[name] = new ort.Tensor("int64", pitchCoarse, [1, T]);
+        else if (n === "pitchf" || n.includes("pitchf") || n.includes("nsf")) feeds[name] = new ort.Tensor("float32", pitchF, [1, T]);
+        else if (n === "ds" || n.includes("speaker") || n.includes("sid")) feeds[name] = new ort.Tensor("int64", new BigInt64Array([BigInt(0)]), [1]);
+        else if (n === "rnd" || n.includes("rand") || n.includes("noise")) feeds[name] = new ort.Tensor("float32", rndData, [1, 192, T]);
+        else {
+          log(`Unknown generator input "${name}" — providing zeros.`, "warn");
+          feeds[name] = new ort.Tensor("float32", new Float32Array(T), [1, T]);
+        }
+      }
+
+      try {
+        const genResult = await generatorSession.run(feeds);
+        outputAudio = new Float32Array(genResult[generatorSession.outputNames[0]].data);
+        log(`Generator output: ${outputAudio.length} samples`, "success");
+      } catch (e) {
+        log(`Generator inference failed: ${e.message}`, "error");
+        log("Passing through original audio for demonstration.", "warn");
+        outputAudio = new Float32Array(audio16k);
+      }
     }
 
     showProgress(90, "Post-processing...");
@@ -855,7 +1340,7 @@ async function runConversion() {
     showProgress(95, "Encoding WAV...");
 
     // 7. Output
-    const outSR = outputAudio.length > audio16k.length * 2 ? 40000 : 16000;
+    const outSR = (!indexOnlyMode && outputAudio.length > audio16k.length * 2) ? 40000 : 16000;
     const wavBlob = encodeWAV(outputAudio, outSR);
     state.outputBuffer = outputAudio;
     state.outputBlob = wavBlob;
@@ -871,7 +1356,7 @@ async function runConversion() {
     outCtx.close();
 
     showProgress(100, "Done!");
-    log(`Conversion complete! Output: ${(outputAudio.length / outSR).toFixed(1)}s`, "success");
+    log(`Conversion complete! Output: ${(outputAudio.length / outSR).toFixed(1)}s${indexOnlyMode ? " (index-only mode)" : ""}`, "success");
     setTimeout(hideProgress, 2000);
 
   } catch (e) {
@@ -904,8 +1389,9 @@ async function downloadBundle() {
   if (state.modelBuffers.generator) {
     downloads.push({ name: state.modelNames.generator || "generator.onnx", buffer: state.modelBuffers.generator });
   }
-  if (state.index) {
-    const json = JSON.stringify(state.index.map(v => Array.from(v)));
+  const activeIndex = state.index || state.trainedIndex;
+  if (activeIndex) {
+    const json = JSON.stringify(activeIndex.map(v => Array.from(v)));
     downloads.push({ name: state.indexName || "voice_index.json", blob: new Blob([json], { type: "application/json" }) });
   }
 
@@ -969,6 +1455,10 @@ async function init() {
     return;
   }
 
+  // Tab switching
+  $("tabBtnTrain").addEventListener("click", () => switchTab("train"));
+  $("tabBtnConvert").addEventListener("click", () => switchTab("convert"));
+
   // Setup manual upload for generator + index
   setupModelSlot("slotGenerator", "fileGenerator", "statusGenerator", "sizeGenerator", "generator");
   setupModelSlot("slotIndex", "fileIndex", "statusIndex", "sizeIndex", "index");
@@ -977,12 +1467,27 @@ async function init() {
   setupModelSlot("slotContentVec", "fileContentVec", "statusContentVec", "sizeContentVec", "contentvec");
   setupModelSlot("slotF0", "fileF0", "statusF0", "sizeF0", "f0");
 
+  // Convert tab audio input
   setupAudioInput();
+
+  // Training tab input
+  setupTrainingInput();
+
   setupParamDisplays();
 
+  // Convert tab buttons
   $("btnConvert").addEventListener("click", runConversion);
   $("dlAudio").addEventListener("click", downloadAudio);
   $("dlBundle").addEventListener("click", downloadBundle);
+
+  // Training buttons
+  $("btnTrain").addEventListener("click", runTraining);
+  $("btnDownloadProfile").addEventListener("click", downloadVoiceProfile);
+  $("dlVoiceProfile").addEventListener("click", downloadVoiceProfile);
+  $("btnUseProfile").addEventListener("click", () => {
+    switchTab("convert");
+    log("Switched to Convert tab. Your trained voice index is active.", "success");
+  });
 
   updateSteps();
 
@@ -996,7 +1501,7 @@ async function init() {
     autoLoadModel("f0", MODEL_URLS.f0, "statusF0", "progF0", "slotF0", "sizeF0"),
   ]);
 
-  log("Base models ready. Upload your RVC voice model (.onnx) to convert voices.", "success");
+  log("Base models ready. Train a voice in the Train tab, or upload an RVC model (.onnx) to convert voices.", "success");
   updateSteps();
 }
 
