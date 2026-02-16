@@ -53,27 +53,96 @@
     }
   }
 
+  // Fixed display size so both canvases always match
+  const DISPLAY_W = 380;
+  const DISPLAY_H = 380;
+
   function drawImageWithBox(canvas, img, detection) {
-    const maxW = 380;
-    const scale = Math.min(1, maxW / img.width);
-    canvas.width = img.width * scale;
-    canvas.height = img.height * scale;
+    canvas.width = DISPLAY_W;
+    canvas.height = DISPLAY_H;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Fill background
+    ctx.fillStyle = '#141414';
+    ctx.fillRect(0, 0, DISPLAY_W, DISPLAY_H);
+
+    // Fit image within the square, centered
+    const imgAspect = img.width / img.height;
+    let drawW, drawH, offsetX, offsetY;
+    if (imgAspect > 1) {
+      drawW = DISPLAY_W;
+      drawH = DISPLAY_W / imgAspect;
+      offsetX = 0;
+      offsetY = (DISPLAY_H - drawH) / 2;
+    } else {
+      drawH = DISPLAY_H;
+      drawW = DISPLAY_H * imgAspect;
+      offsetX = (DISPLAY_W - drawW) / 2;
+      offsetY = 0;
+    }
+
+    ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+
+    // Scale factor from original image coords to canvas coords
+    const scaleX = drawW / img.width;
+    const scaleY = drawH / img.height;
 
     if (detection) {
+      // Draw bounding box
       const box = detection.detection.box;
       ctx.strokeStyle = '#4a9eff';
       ctx.lineWidth = 2;
       ctx.strokeRect(
-        box.x * scale, box.y * scale,
-        box.width * scale, box.height * scale
+        box.x * scaleX + offsetX, box.y * scaleY + offsetY,
+        box.width * scaleX, box.height * scaleY
       );
       ctx.fillStyle = 'rgba(74, 158, 255, 0.08)';
       ctx.fillRect(
-        box.x * scale, box.y * scale,
-        box.width * scale, box.height * scale
+        box.x * scaleX + offsetX, box.y * scaleY + offsetY,
+        box.width * scaleX, box.height * scaleY
       );
+
+      // Draw 68 face landmarks
+      if (detection.landmarks) {
+        const points = detection.landmarks.positions;
+        // Draw landmark points
+        ctx.fillStyle = '#00ff66';
+        for (const pt of points) {
+          ctx.beginPath();
+          ctx.arc(pt.x * scaleX + offsetX, pt.y * scaleY + offsetY, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Connect landmark groups with lines
+        const groups = [
+          [0, 16],   // jawline
+          [17, 21],  // left eyebrow
+          [22, 26],  // right eyebrow
+          [27, 30],  // nose bridge
+          [31, 35],  // nose bottom
+          [36, 41],  // left eye (closed loop)
+          [42, 47],  // right eye (closed loop)
+          [48, 59],  // outer lip (closed loop)
+          [60, 67],  // inner lip (closed loop)
+        ];
+        ctx.strokeStyle = 'rgba(0, 255, 102, 0.4)';
+        ctx.lineWidth = 1;
+        for (const [start, end] of groups) {
+          ctx.beginPath();
+          for (let i = start; i <= end; i++) {
+            const x = points[i].x * scaleX + offsetX;
+            const y = points[i].y * scaleY + offsetY;
+            if (i === start) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          // Close loops for eyes and lips
+          if (start === 36 || start === 42 || start === 48 || start === 60) {
+            const x = points[start].x * scaleX + offsetX;
+            const y = points[start].y * scaleY + offsetY;
+            ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+      }
     }
   }
 
