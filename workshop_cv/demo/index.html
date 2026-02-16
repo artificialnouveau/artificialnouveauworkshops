@@ -43,6 +43,7 @@
     <button class="step-tab" data-step="3">3. Surveillance</button>
     <button class="step-tab" data-step="4">4. Break It</button>
     <button class="step-tab" data-step="5">5. Mirror</button>
+    <button class="step-tab" data-step="6">6. Clone</button>
   </nav>
 
   <!-- Step 1: What the Machine Sees -->
@@ -433,6 +434,97 @@
     </div>
   </section>
 
+  <!-- Step 6: Clone -->
+  <section id="step-6" class="step">
+    <div class="step-intro">
+      <h2>Clone</h2>
+      <p>Face recognition doesn't see faces — it sees numbers. Every face is compressed into a list of 128 numbers called a <strong>face descriptor</strong>. Two faces are "the same person" if their numbers are close enough. Upload two photos to see how the machine measures identity.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px">
+      <div class="upload-area" id="upload-area-6a">
+        <label for="file-input-6a" class="upload-label">
+          <span class="upload-icon">A</span>
+          <span>Upload Face A</span>
+        </label>
+        <input type="file" id="file-input-6a" accept="image/*" capture="user">
+      </div>
+      <div class="upload-area" id="upload-area-6b">
+        <label for="file-input-6b" class="upload-label">
+          <span class="upload-icon">B</span>
+          <span>Upload Face B</span>
+        </label>
+        <input type="file" id="file-input-6b" accept="image/*" capture="user">
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px">
+      <canvas id="canvas-clone-a"></canvas>
+      <canvas id="canvas-clone-b"></canvas>
+    </div>
+
+    <!-- Loading bar for face recognition models -->
+    <div id="clone-loading-bar">
+      <div class="loading-label">
+        <span>Loading face recognition models<span class="loading-dots"></span></span>
+        <span id="clone-loading-percent">0%</span>
+      </div>
+      <div class="loading-track"><div class="loading-fill" id="clone-loading-fill"></div></div>
+      <div class="loading-steps" id="clone-loading-steps"></div>
+    </div>
+
+    <button id="clone-compare-btn" disabled style="
+      display:block; width:100%; padding:14px; margin-bottom:24px;
+      background:var(--accent); border:none; border-radius:var(--radius);
+      color:#000; font-family:var(--mono); font-size:1rem; font-weight:600;
+      cursor:pointer; transition:opacity 0.2s; opacity:0.4;
+    ">Compare Faces</button>
+
+    <div id="step6-results" class="results hidden">
+      <!-- Verdict -->
+      <div id="clone-verdict" class="explainer-block" style="text-align:center; margin-bottom:20px">
+      </div>
+
+      <!-- Similarity bar -->
+      <div style="margin-bottom:20px">
+        <div class="prediction-bar">
+          <span class="prediction-label">Similarity</span>
+          <div class="prediction-track">
+            <div class="prediction-fill" id="clone-similarity-fill" style="width:0%"></div>
+          </div>
+          <span class="prediction-value" id="clone-similarity-value">0%</span>
+        </div>
+        <div class="prediction-bar" style="margin-top:8px">
+          <span class="prediction-label">Distance</span>
+          <div class="prediction-track">
+            <div class="prediction-fill" id="clone-distance-fill" style="width:0%; background:var(--yellow)"></div>
+          </div>
+          <span class="prediction-value" id="clone-distance-value">0.00</span>
+        </div>
+      </div>
+
+      <!-- Descriptor visualization -->
+      <div class="explainer-block">
+        <h3>128-Dimensional Face Descriptors</h3>
+        <p>Each face is encoded as a vector of 128 numbers. Below, each tiny bar represents one dimension of the descriptor. The machine doesn't see eyes, noses, or smiles — it sees these abstract numbers.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px">
+        <div>
+          <h3 class="mono" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:6px">Face A descriptor</h3>
+          <canvas id="canvas-descriptor-a" height="40" style="width:100%; background:var(--bg-card); border-radius:var(--radius)"></canvas>
+        </div>
+        <div>
+          <h3 class="mono" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:6px">Face B descriptor</h3>
+          <canvas id="canvas-descriptor-b" height="40" style="width:100%; background:var(--bg-card); border-radius:var(--radius)"></canvas>
+        </div>
+      </div>
+
+      <div class="critical-text">
+        <p>"A 128-number summary of your face. That's all it takes for a machine to decide if you're you. Governments and corporations use vectors like these to track people across cameras, borders, and databases — often without consent, and with error rates that fall hardest on women and people of colour."</p>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer>
     <p class="mono">All processing happens on your device. No data leaves your browser.</p>
@@ -446,5 +538,6 @@
   <script src="js/step3-surveillance.js"></script>
   <script src="js/step4-break.js"></script>
   <script src="js/step5-beauty.js"></script>
+  <script src="js/step6-clone.js"></script>
 </body>
 </html>
