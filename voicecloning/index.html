@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RVC Voice Cloning — Browser Prototype</title>
+<style>
+  :root {
+    --bg: #09090b;
+    --surface: #18181b;
+    --surface2: #1e1e23;
+    --border: #27272a;
+    --accent: #8b5cf6;
+    --accent-dim: #7c3aed;
+    --accent-bg: rgba(139,92,246,0.08);
+    --danger: #ef4444;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --text: #fafafa;
+    --text2: #a1a1aa;
+    --text3: #71717a;
+    --radius: 10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* ---------- Header ---------- */
+  header { background:var(--surface); border-bottom:1px solid var(--border); padding:14px 28px; display:flex; align-items:center; gap:12px; }
+  header h1 { font-size:1.1rem; font-weight:600; letter-spacing:-0.02em; }
+  .tag { background:var(--accent); color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:4px; text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+  .tag.orange { background:#ea580c; }
+  header .spacer { flex:1; }
+  header .webgpu-status { font-size:0.75rem; color:var(--text3); display:flex; align-items:center; gap:6px; }
+  .dot { width:8px; height:8px; border-radius:50%; }
+  .dot.green { background:var(--success); }
+  .dot.yellow { background:var(--warning); }
+  .dot.red { background:var(--danger); }
+  .dot.gray { background:var(--text3); }
+
+  /* ---------- Layout ---------- */
+  .app { display:grid; grid-template-columns:380px 1fr; height:calc(100vh - 53px); }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar { background:var(--surface); border-right:1px solid var(--border); overflow-y:auto; padding:16px; }
+  .sidebar::-webkit-scrollbar { width:4px; }
+  .sidebar::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .section { margin-bottom:20px; }
+  .section-title { font-size:0.7rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--text3); margin-bottom:10px; font-weight:600; }
+
+  /* Model slots */
+  .model-slot { background:var(--surface2); border:1px dashed var(--border); border-radius:var(--radius); padding:14px; margin-bottom:8px; cursor:pointer; transition:all 0.15s; position:relative; }
+  .model-slot:hover { border-color:var(--accent); background:var(--accent-bg); }
+  .model-slot.loaded { border-style:solid; border-color:var(--success); }
+  .model-slot.auto { cursor:default; }
+  .model-slot .name { font-size:0.85rem; font-weight:500; margin-bottom:2px; }
+  .model-slot .desc { font-size:0.7rem; color:var(--text3); }
+  .model-slot .status { position:absolute; top:14px; right:14px; font-size:0.65rem; padding:2px 6px; border-radius:3px; }
+  .model-slot .status.empty { background:var(--border); color:var(--text3); }
+  .model-slot .status.ok { background:rgba(34,197,94,0.15); color:var(--success); }
+  .model-slot .status.downloading { background:rgba(245,158,11,0.15); color:var(--warning); }
+  .model-slot .status.cached { background:rgba(139,92,246,0.15); color:var(--accent); }
+  .model-slot .size { font-size:0.65rem; color:var(--text3); margin-top:4px; }
+  .model-slot .auto-badge { font-size:0.6rem; background:rgba(34,197,94,0.12); color:var(--success); padding:1px 5px; border-radius:3px; margin-left:6px; }
+  .model-slot input[type="file"] { display:none; }
+  .model-slot .progress-mini { height:3px; background:var(--border); border-radius:2px; margin-top:6px; overflow:hidden; display:none; }
+  .model-slot .progress-mini .fill { height:100%; background:var(--accent); width:0%; transition:width 0.3s; }
+
+  /* Params */
+  .param { margin-bottom:12px; }
+  .param label { display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text2); margin-bottom:4px; }
+  .param .val { color:var(--accent); font-weight:500; }
+  input[type="range"] { width:100%; accent-color:var(--accent); background:transparent; height:6px; }
+  select, input[type="number"] {
+    width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+    padding:7px 10px; border-radius:6px; font-size:0.8rem; font-family:inherit;
+  }
+  select:focus, input[type="number"]:focus { outline:none; border-color:var(--accent); }
+
+  /* Buttons */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:9px 18px; border-radius:7px; border:none; cursor:pointer; font-family:inherit; font-size:0.8rem; font-weight:500; transition:all 0.15s; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-primary:hover { background:var(--accent-dim); }
+  .btn-primary:disabled { opacity:0.35; cursor:not-allowed; }
+  .btn-secondary { background:var(--border); color:var(--text); }
+  .btn-secondary:hover { background:#3a3a44; }
+  .btn-danger { background:rgba(239,68,68,0.12); color:var(--danger); border:1px solid rgba(239,68,68,0.25); }
+  .btn-danger:hover { background:rgba(239,68,68,0.2); }
+  .btn-block { width:100%; }
+  .btn-group { display:flex; gap:6px; margin-top:8px; }
+
+  /* ---------- Main area ---------- */
+  .main { display:flex; flex-direction:column; overflow:hidden; }
+  .main-content { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; overflow-y:auto; }
+
+  /* Audio input area */
+  .audio-input-area { width:100%; max-width:700px; }
+  .drop-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:40px 20px; text-align:center; cursor:pointer; transition:all 0.2s; margin-bottom:16px; }
+  .drop-zone:hover, .drop-zone.dragover { border-color:var(--accent); background:var(--accent-bg); }
+  .drop-zone p { color:var(--text3); font-size:0.85rem; }
+  .drop-zone .or { color:var(--text3); font-size:0.75rem; margin:8px 0; }
+  .mic-row { display:flex; gap:8px; }
+
+  /* Waveform display */
+  .waveform-panel { width:100%; max-width:700px; margin-top:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .waveform-panel .label { font-size:0.7rem; color:var(--text3); padding:8px 12px; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .waveform-panel canvas { width:100%; height:80px; display:block; }
+  .waveform-panel audio { width:100%; display:block; }
+
+  /* Progress */
+  .progress-bar { width:100%; max-width:700px; margin-top:12px; }
+  .progress-track { background:var(--border); height:6px; border-radius:3px; overflow:hidden; }
+  .progress-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.3s; width:0%; }
+  .progress-label { font-size:0.7rem; color:var(--text3); margin-top:4px; text-align:center; }
+
+  /* Log */
+  .log-area { width:100%; max-width:700px; margin-top:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); max-height:150px; overflow-y:auto; font-family:'SF Mono','Fira Code',monospace; font-size:0.7rem; padding:8px 12px; }
+  .log-area::-webkit-scrollbar { width:4px; }
+  .log-area::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .log-line { padding:1px 0; color:var(--text3); }
+  .log-line.info { color:var(--text2); }
+  .log-line.success { color:var(--success); }
+  .log-line.warn { color:var(--warning); }
+  .log-line.error { color:var(--danger); }
+
+  /* Checkbox */
+  .checkbox { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .checkbox input { accent-color:var(--accent); }
+  .checkbox label { font-size:0.8rem; color:var(--text2); }
+
+  /* Download bundle section */
+  .bundle-section { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-top:12px; }
+  .bundle-section h3 { font-size:0.8rem; margin-bottom:8px; }
+  .bundle-section p { font-size:0.7rem; color:var(--text3); margin-bottom:10px; }
+  .bundle-item { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); }
+  .bundle-item:last-child { border:none; }
+  .bundle-item .name { font-size:0.75rem; }
+  .bundle-item .btn { padding:4px 10px; font-size:0.7rem; }
+
+  /* Recording indicator */
+  @keyframes recPulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  .recording-dot { width:10px; height:10px; border-radius:50%; background:var(--danger); animation: recPulse 1s infinite; display:inline-block; margin-right:6px; vertical-align:middle; }
+
+  /* Steps indicator */
+  .steps { display:flex; gap:4px; margin-bottom:16px; }
+  .step { flex:1; text-align:center; padding:8px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; font-size:0.7rem; color:var(--text3); }
+  .step.active { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+  .step.done { border-color:var(--success); color:var(--success); }
+  .step .num { font-weight:700; display:block; font-size:0.85rem; margin-bottom:2px; }
+
+  /* Info callout */
+  .info-box { background:rgba(139,92,246,0.06); border:1px solid rgba(139,92,246,0.2); border-radius:var(--radius); padding:12px; margin-bottom:12px; font-size:0.75rem; color:var(--text2); line-height:1.5; }
+  .info-box strong { color:var(--text); }
+  .info-box code { background:var(--bg); padding:1px 4px; border-radius:3px; font-size:0.7rem; }
+  .info-box a { color:var(--accent); text-decoration:none; }
+  .info-box a:hover { text-decoration:underline; }
+
+  /* Convert helper link */
+  .helper-link { font-size:0.7rem; color:var(--accent); text-decoration:none; display:block; margin-top:6px; text-align:center; }
+  .helper-link:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>RVC Voice Cloning</h1>
+  <span class="tag">Prototype</span>
+  <span class="tag orange">Client-Side</span>
+  <div class="spacer"></div>
+  <div class="webgpu-status">
+    <div class="dot gray" id="gpuDot"></div>
+    <span id="gpuLabel">Checking WebGPU...</span>
+  </div>
+</header>
+
+<div class="app">
+  <!-- ==================== Sidebar ==================== -->
+  <aside class="sidebar">
+
+    <div class="section">
+      <div class="section-title">1 &middot; Models</div>
+
+      <div class="info-box">
+        <strong>Auto-download:</strong> ContentVec and RMVPE load automatically from HuggingFace on first use (~650 MB total, cached in your browser afterwards).<br><br>
+        <strong>You provide:</strong> Only the voice-specific RVC model (.onnx) for the voice you want to clone to. See the converter script below to export .pth &rarr; .onnx.
+      </div>
+
+      <div class="model-slot auto" id="slotContentVec" data-model="contentvec">
+        <div class="name">ContentVec / HuBERT <span class="auto-badge">auto</span></div>
+        <div class="desc">Speech feature extractor &middot; ~290 MB &middot; downloads automatically</div>
+        <div class="status empty" id="statusContentVec">Pending</div>
+        <div class="size" id="sizeContentVec"></div>
+        <div class="progress-mini" id="progContentVec"><div class="fill"></div></div>
+        <input type="file" accept=".onnx" id="fileContentVec">
+      </div>
+
+      <div class="model-slot auto" id="slotF0" data-model="f0">
+        <div class="name">RMVPE (F0 Pitch) <span class="auto-badge">auto</span></div>
+        <div class="desc">Pitch estimation &middot; ~362 MB &middot; downloads automatically</div>
+        <div class="status empty" id="statusF0">Pending</div>
+        <div class="size" id="sizeF0"></div>
+        <div class="progress-mini" id="progF0"><div class="fill"></div></div>
+        <input type="file" accept=".onnx" id="fileF0">
+      </div>
+
+      <div class="model-slot" id="slotGenerator" data-model="generator">
+        <div class="name">RVC Voice Model (net_g)</div>
+        <div class="desc">Your voice-specific model (.onnx) &mdash; click to upload</div>
+        <div class="status empty" id="statusGenerator">Not loaded</div>
+        <div class="size" id="sizeGenerator"></div>
+        <input type="file" accept=".onnx" id="fileGenerator">
+      </div>
+
+      <div class="model-slot" id="slotIndex" data-model="index">
+        <div class="name">Voice Index (optional)</div>
+        <div class="desc">Feature vectors for retrieval (.bin / .json / .npy)</div>
+        <div class="status empty" id="statusIndex">Not loaded</div>
+        <div class="size" id="sizeIndex"></div>
+        <input type="file" accept=".bin,.json,.npy" id="fileIndex">
+      </div>
+
+      <div class="info-box" style="margin-top:8px;">
+        <strong>Need to convert a .pth model to .onnx?</strong><br>
+        Use the included <code>convert_model.py</code> script or open the
+        <a href="https://colab.research.google.com/" target="_blank" rel="noopener">Google Colab converter</a>.<br>
+        <code style="display:block;margin-top:6px;">python convert_model.py --pth my_voice.pth --out my_voice.onnx</code>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">2 &middot; Parameters</div>
+
+      <div class="param">
+        <label>Pitch Shift (semitones) <span class="val" id="pitchVal">0</span></label>
+        <input type="range" id="pitchShift" min="-24" max="24" value="0" step="1">
+      </div>
+
+      <div class="param">
+        <label>Index Ratio <span class="val" id="indexRatioVal">0.75</span></label>
+        <input type="range" id="indexRatio" min="0" max="100" value="75" step="1">
+      </div>
+
+      <div class="param">
+        <label>Filter Radius <span class="val" id="filterRadiusVal">3</span></label>
+        <input type="range" id="filterRadius" min="0" max="7" value="3" step="1">
+      </div>
+
+      <div class="param">
+        <label>Volume Envelope <span class="val" id="volEnvVal">1.00</span></label>
+        <input type="range" id="volEnvelope" min="0" max="100" value="100" step="1">
+      </div>
+
+      <div class="param">
+        <label>Protect Consonants <span class="val" id="protectVal">0.33</span></label>
+        <input type="range" id="protect" min="0" max="50" value="33" step="1">
+      </div>
+
+      <div class="param">
+        <label>Chunk Size (seconds)</label>
+        <select id="chunkSize">
+          <option value="1">1s (lower latency)</option>
+          <option value="2" selected>2s (balanced)</option>
+          <option value="4">4s (higher quality)</option>
+        </select>
+      </div>
+
+      <div class="checkbox">
+        <input type="checkbox" id="useF0" checked>
+        <label for="useF0">Use F0 pitch guidance</label>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">3 &middot; Export / Download</div>
+
+      <div class="bundle-section">
+        <h3>Download Assets</h3>
+        <p>Save your converted audio and loaded models for later use.</p>
+
+        <div class="bundle-item">
+          <span class="name">Converted Audio (.wav)</span>
+          <button class="btn btn-secondary" id="dlAudio" disabled>Download</button>
+        </div>
+        <div class="bundle-item">
+          <span class="name">Voice Model + Index</span>
+          <button class="btn btn-secondary" id="dlBundle" disabled>Download</button>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ==================== Main ==================== -->
+  <div class="main">
+    <div class="main-content">
+
+      <div class="steps" style="width:100%;max-width:700px;">
+        <div class="step active" id="step1"><span class="num">1</span>Models Loading</div>
+        <div class="step" id="step2"><span class="num">2</span>Input Audio</div>
+        <div class="step" id="step3"><span class="num">3</span>Convert</div>
+        <div class="step" id="step4"><span class="num">4</span>Download</div>
+      </div>
+
+      <!-- Audio input -->
+      <div class="audio-input-area">
+        <div class="drop-zone" id="dropZone">
+          <p><strong>Drop an audio file here</strong></p>
+          <p class="or">or click to browse &middot; .wav .mp3 .ogg .flac .m4a</p>
+          <p class="or" style="margin-top:12px;">or record from microphone below</p>
+        </div>
+        <input type="file" id="audioFileInput" accept="audio/*" style="display:none;">
+        <div class="mic-row">
+          <button class="btn btn-secondary" id="btnRecord" style="flex:1;">Record from Mic</button>
+          <button class="btn btn-danger" id="btnStopRecord" style="flex:1;display:none;"><span class="recording-dot"></span>Stop Recording</button>
+        </div>
+      </div>
+
+      <!-- Source waveform -->
+      <div class="waveform-panel" id="sourcePanel" style="display:none;">
+        <div class="label">
+          <span>Source Audio</span>
+          <span id="sourceDuration"></span>
+        </div>
+        <canvas id="sourceWaveform"></canvas>
+        <audio id="sourceAudio" controls></audio>
+      </div>
+
+      <!-- Convert button -->
+      <div style="width:100%;max-width:700px;margin-top:16px;text-align:center;">
+        <button class="btn btn-primary btn-block" id="btnConvert" disabled style="padding:14px;font-size:0.95rem;">
+          Convert Voice
+        </button>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-bar" id="progressContainer" style="display:none;">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-label" id="progressLabel">Initializing...</div>
+      </div>
+
+      <!-- Output waveform -->
+      <div class="waveform-panel" id="outputPanel" style="display:none;">
+        <div class="label">
+          <span>Converted Audio</span>
+          <span id="outputDuration"></span>
+        </div>
+        <canvas id="outputWaveform"></canvas>
+        <audio id="outputAudio" controls></audio>
+      </div>
+
+      <!-- Log -->
+      <div class="log-area" id="logArea">
+        <div class="log-line info">RVC Voice Cloning — Browser Prototype</div>
+        <div class="log-line">Base models will auto-download from HuggingFace. Upload your RVC voice model (.onnx) to begin.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ONNX Runtime Web -->
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.3/dist/ort.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
