@@ -65,6 +65,41 @@ async def analyze(file: UploadFile = File(...)):
     return {"faces": faces, "count": len(faces)}
 
 
+@app.post("/detect")
+async def detect(file: UploadFile = File(...)):
+    """
+    Detect Nazi symbols in an uploaded image.
+    Replace the placeholder logic below with your own YOLO / object-detection model.
+    Returns: { detections: [{ x, y, w, h, label, confidence }] }
+    """
+    try:
+        contents = await file.read()
+        img = Image.open(io.BytesIO(contents)).convert("RGB")
+        img_array = np.array(img)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not read image file")
+
+    # ——— Placeholder: replace with your trained model ———
+    # Example with ultralytics YOLO:
+    #   from ultralytics import YOLO
+    #   model = YOLO("path/to/nazi_symbol_detector.pt")
+    #   results = model(img_array)
+    #   detections = []
+    #   for r in results:
+    #       for box in r.boxes:
+    #           x1, y1, x2, y2 = box.xyxy[0].tolist()
+    #           detections.append({
+    #               "x": x1, "y": y1,
+    #               "w": x2 - x1, "h": y2 - y1,
+    #               "label": r.names[int(box.cls[0])],
+    #               "confidence": float(box.conf[0]),
+    #           })
+    detections = []
+    # ——— End placeholder ———
+
+    return {"detections": detections}
+
+
 if __name__ == "__main__":
     print("Starting backend on http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000)
