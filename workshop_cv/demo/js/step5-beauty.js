@@ -75,9 +75,6 @@
     // Apply beauty filter transformations
     const changes = applyBeautyFilter(fCtx, keypoints, w, h, img);
 
-    // Draw landmarks on filtered version too (to show displacement)
-    drawLandmarks(fCtx, keypoints, w, h, 'rgba(74, 158, 255, 0.3)');
-
     // Show what was changed
     detailsDiv.innerHTML = changes.map(c =>
       `<div class="change-item">
