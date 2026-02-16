@@ -1,13 +1,21 @@
 /**
- * step1-nazi-detection.js — Video frame extraction + placeholder detection model
+ * step1-nazi-detection.js — Image + video upload with backend-based detection
  */
 
 const Step1 = {
   video: null,
   frames: [],
+  backendUrl: 'http://localhost:8000',
+  online: false,
 
   init() {
     this.video = document.getElementById('local-video');
+
+    // Check backend
+    this.checkBackend();
+
+    // Image upload
+    document.getElementById('file-input-1-img').addEventListener('change', (e) => this.handleImageUpload(e));
 
     // YouTube URL loading
     document.getElementById('btn-load-youtube').addEventListener('click', () => this.loadYouTube());
@@ -18,6 +26,107 @@ const Step1 = {
     // Scan frames button
     document.getElementById('btn-scan-frames').addEventListener('click', () => this.scanFrames());
   },
+
+  async checkBackend() {
+    const dot = document.getElementById('nazi-backend-dot');
+    const label = document.getElementById('nazi-backend-label');
+    try {
+      const res = await fetch(`${this.backendUrl}/health`, { signal: AbortSignal.timeout(3000) });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        dot.className = 'status-dot online';
+        label.textContent = 'Backend: connected';
+        this.online = true;
+      } else {
+        throw new Error('bad status');
+      }
+    } catch {
+      dot.className = 'status-dot offline';
+      label.textContent = 'Backend: offline — start server (cd backend && python server.py)';
+      this.online = false;
+    }
+  },
+
+  // ——— Image upload ———
+
+  async handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!this.online) {
+      await this.checkBackend();
+      if (!this.online) {
+        alert('Backend is offline. Start the server first:\ncd backend && python server.py');
+        return;
+      }
+    }
+
+    document.getElementById('upload-area-1-img').classList.add('has-file');
+
+    // Show image on canvas
+    const img = await App.loadImage(file);
+    const canvas = document.getElementById('nazi-image-canvas');
+    const ctx = App.drawToCanvas(canvas, img);
+
+    const container = document.getElementById('image-result-container');
+    container.classList.remove('hidden');
+
+    const detectionsDiv = document.getElementById('nazi-image-detections');
+    detectionsDiv.innerHTML = '<div class="loading-bar visible"><div class="loading-label"><span>Detecting<span class="loading-dots"></span></span></div><div class="loading-track"><div class="loading-fill" style="width:100%;animation:pulse 1.5s ease infinite"></div></div></div>';
+
+    // Send to backend
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch(`${this.backendUrl}/detect`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Server error ${res.status}`);
+      }
+
+      const data = await res.json();
+      this.drawDetections(canvas, ctx, img, data.detections);
+
+      if (data.detections.length > 0) {
+        detectionsDiv.innerHTML = `<div class="face-card"><h4 style="color:var(--red)">${data.detections.length} detection(s) found</h4>${data.detections.map((d, i) => `<p class="description">Detection ${i + 1}: ${d.label || 'symbol'} — ${(d.confidence * 100).toFixed(1)}% confidence</p>`).join('')}</div>`;
+      } else {
+        detectionsDiv.innerHTML = '<p class="description">No detections found in this image.</p>';
+      }
+    } catch (err) {
+      detectionsDiv.innerHTML = `<p class="description" style="color:var(--red)">Detection failed: ${err.message}</p>`;
+    }
+  },
+
+  drawDetections(canvas, ctx, img, detections) {
+    // Redraw original
+    App.drawToCanvas(canvas, img);
+    const newCtx = canvas.getContext('2d');
+
+    const scaleX = canvas.width / img.width;
+    const scaleY = canvas.height / img.height;
+
+    newCtx.strokeStyle = '#ff4a4a';
+    newCtx.lineWidth = 3;
+    newCtx.font = '14px monospace';
+    newCtx.fillStyle = '#ff4a4a';
+
+    for (const det of detections) {
+      const x = det.x * scaleX;
+      const y = det.y * scaleY;
+      const w = det.w * scaleX;
+      const h = det.h * scaleY;
+      newCtx.strokeRect(x, y, w, h);
+      const label = `${det.label || 'symbol'} ${(det.confidence * 100).toFixed(0)}%`;
+      newCtx.fillText(label, x, y - 6);
+    }
+  },
+
+  // ——— YouTube ———
 
   loadYouTube() {
     const url = document.getElementById('youtube-url').value.trim();
@@ -31,7 +140,6 @@ const Step1 = {
 
     const iframe = document.getElementById('youtube-iframe');
     iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}`;
-
     document.getElementById('youtube-container').classList.remove('hidden');
     document.getElementById('local-video-container').classList.add('hidden');
   },
@@ -48,6 +156,8 @@ const Step1 = {
     return null;
   },
 
+  // ——— Video upload + frame scanning ———
+
   loadLocalVideo(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -61,6 +171,14 @@ const Step1 = {
   async scanFrames() {
     const video = this.video;
     if (!video.src) return;
+
+    if (!this.online) {
+      await this.checkBackend();
+      if (!this.online) {
+        alert('Backend is offline. Start the server first:\ncd backend && python server.py');
+        return;
+      }
+    }
 
     // Wait for metadata
     if (video.readyState < 1) {
@@ -100,15 +218,18 @@ const Step1 = {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Run detection (placeholder)
-      const detections = await this.runDetection(canvas);
+      // Send frame to backend for detection
+      const detections = await this.detectFrame(canvas);
 
       // Draw bounding boxes if any
       if (detections.length > 0) {
         ctx.strokeStyle = '#ff4a4a';
         ctx.lineWidth = 3;
+        ctx.font = '14px monospace';
+        ctx.fillStyle = '#ff4a4a';
         for (const det of detections) {
           ctx.strokeRect(det.x, det.y, det.w, det.h);
+          ctx.fillText(`${det.label || ''} ${(det.confidence * 100).toFixed(0)}%`, det.x, det.y - 4);
         }
       }
 
@@ -145,18 +266,25 @@ const Step1 = {
   },
 
   /**
-   * Placeholder detection function.
-   * Replace this with your actual TF.js / YOLO model inference.
-   * Should return an array of { x, y, w, h, label, confidence }.
+   * Send a canvas frame to the backend /detect endpoint as a JPEG blob.
    */
-  async runDetection(canvas) {
-    // TODO: Load your model and run inference on the canvas ImageData
-    // Example:
-    //   const model = await tf.loadGraphModel('model/model.json');
-    //   const tensor = tf.browser.fromPixels(canvas);
-    //   const predictions = await model.predict(tensor);
-    //   return parsePredictions(predictions);
-    return [];
+  async detectFrame(canvas) {
+    try {
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+      const formData = new FormData();
+      formData.append('file', blob, 'frame.jpg');
+
+      const res = await fetch(`${this.backendUrl}/detect`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.detections || [];
+    } catch {
+      return [];
+    }
   },
 
   formatTime(seconds) {

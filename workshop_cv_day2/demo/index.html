@@ -33,18 +33,29 @@
   <section id="step-1" class="step active">
     <div class="step-intro">
       <h2>Nazi Symbol Detection</h2>
-      <p>Upload a video file or paste a YouTube URL to scan frames for Nazi symbols. The detection model is a <strong>placeholder</strong> — replace <code>runDetection()</code> in the code with your own TF.js or YOLO model.</p>
+      <p>Upload an image or video to scan for Nazi symbols. Detection runs through the Python backend using a YOLO-based model. Start the backend first.</p>
     </div>
 
     <div class="explainer-block" style="border-left-color:var(--red)">
       <h3 style="color:var(--red)">How it works</h3>
-      <p>The scanner extracts frames from your video at <strong>1 frame per second</strong>, then runs each frame through an object-detection model. Frames with detections get <strong>red bounding boxes</strong> drawn over them. Currently the model is a stub that returns no detections — you need to supply your own trained model.</p>
+      <p><strong>Images:</strong> Uploaded directly and sent to the backend for detection. Bounding boxes are drawn in red over detected symbols.</p>
+      <p style="margin-top:6px"><strong>Videos:</strong> Frames are extracted at <strong>1 frame per second</strong>, then each frame is sent to the backend. Frames with detections are highlighted.</p>
+      <p style="margin-top:6px"><strong>YouTube:</strong> You can embed a YouTube video for viewing, but frame extraction requires a local file upload.</p>
     </div>
 
-    <!-- YouTube URL input -->
-    <div class="url-input-row">
-      <input type="text" id="youtube-url" class="url-input" placeholder="Paste YouTube URL (e.g. https://youtube.com/watch?v=...)">
-      <button id="btn-load-youtube" class="btn-secondary">Load</button>
+    <!-- Backend status for Tab 1 -->
+    <div id="nazi-backend-status" class="backend-status">
+      <span id="nazi-backend-dot" class="status-dot offline"></span>
+      <span id="nazi-backend-label">Backend: checking...</span>
+    </div>
+
+    <!-- Image upload -->
+    <div class="upload-area" id="upload-area-1-img">
+      <label for="file-input-1-img" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload an image (.jpg, .png, .webp)</span>
+      </label>
+      <input type="file" id="file-input-1-img" accept="image/*">
     </div>
 
     <div class="or-divider"><span>or</span></div>
@@ -58,10 +69,26 @@
       <input type="file" id="file-input-1" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov">
     </div>
 
+    <div class="or-divider"><span>or</span></div>
+
+    <!-- YouTube URL input -->
+    <div class="url-input-row">
+      <input type="text" id="youtube-url" class="url-input" placeholder="Paste YouTube URL (e.g. https://youtube.com/watch?v=...)">
+      <button id="btn-load-youtube" class="btn-secondary">Load</button>
+    </div>
+
     <!-- YouTube embed container -->
     <div id="youtube-container" class="video-container hidden">
       <iframe id="youtube-iframe" allowfullscreen></iframe>
-      <p class="description" style="margin-top:8px">YouTube videos can be viewed here, but frame extraction requires a local file due to CORS restrictions.</p>
+    </div>
+
+    <!-- Image result -->
+    <div id="image-result-container" class="hidden" style="margin-top:20px">
+      <div class="canvas-container">
+        <h3>Detection Result</h3>
+        <canvas id="nazi-image-canvas"></canvas>
+      </div>
+      <div id="nazi-image-detections" style="margin-top:12px"></div>
     </div>
 
     <!-- Local video player -->
