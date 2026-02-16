@@ -315,6 +315,18 @@
           allData.push({ key: 'HEAD TILT', value: `${tiltDeg.toFixed(1)}°` });
         }
       }
+
+      // BMI estimation from face width-to-height ratio
+      const faceWHR = w / h;
+      const estimatedBMI = 12.0 + (faceWHR * 22.0);
+      let bmiCategory = 'Normal';
+      if (estimatedBMI < 18.5) bmiCategory = 'Underweight';
+      else if (estimatedBMI < 25) bmiCategory = 'Normal';
+      else if (estimatedBMI < 30) bmiCategory = 'Overweight';
+      else bmiCategory = 'Obese';
+      allData.push({ key: 'FACE WIDTH/HEIGHT', value: `${faceWHR.toFixed(3)}` });
+      allData.push({ key: 'BMI ESTIMATE', value: `${estimatedBMI.toFixed(1)} (${bmiCategory})` });
+
       allData.push({ spacer: true });
     });
   }

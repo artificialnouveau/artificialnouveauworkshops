@@ -87,8 +87,11 @@
     ).join('');
 
     // Run symmetry & proportionality analysis
-    analyzeSymmetry(keypoints);
-    analyzeProportions(keypoints);
+    const symmetryScore = analyzeSymmetry(keypoints);
+    const proportionScore = analyzeProportions(keypoints);
+
+    // Compute and display composite attractiveness score
+    computeAttractivenessScore(keypoints, symmetryScore, proportionScore);
   }
 
   function drawLandmarks(ctx, keypoints, w, h, color = 'rgba(74, 158, 255, 0.5)') {
@@ -320,7 +323,7 @@
   // Compares left/right landmark pairs relative to the nose midline
   function analyzeSymmetry(kp) {
     const div = document.getElementById('symmetry-analysis');
-    if (!div) return;
+    if (!div) return 50;
 
     // Landmark pairs: [leftIndex, rightIndex, label]
     const pairs = [
@@ -339,7 +342,7 @@
     const noseTip = kp[1];     // tip of nose
     if (!noseBridge || !noseTip) {
       div.innerHTML = 'Could not determine facial midline.';
-      return;
+      return 50;
     }
     const midX = (noseBridge[0] + noseTip[0]) / 2;
 
@@ -391,13 +394,15 @@
         <div class="score-note">100% = perfectly mirrored. No real human face is perfectly symmetric.</div>
       </div>
     `;
+
+    return symmetryScore;
   }
 
   // ── Proportionality Analysis ──
   // Checks ratios against classical facial proportion ideals
   function analyzeProportions(kp) {
     const div = document.getElementById('proportion-analysis');
-    if (!div) return;
+    if (!div) return 50;
 
     // Key landmarks
     const forehead = kp[10];   // top of forehead
@@ -417,7 +422,7 @@
 
     if (!forehead || !chin || !browMid || !noseBase) {
       div.innerHTML = 'Could not measure facial proportions.';
-      return;
+      return 50;
     }
 
     const rows = [];
@@ -503,6 +508,126 @@
           <div class="score-fill" style="width:${proportionScore}%; background:${scoreColor}"></div>
         </div>
         <div class="score-note">Based on classical "ideal" ratios (rule of thirds, golden ratio). These are cultural constructs, not objective truths.</div>
+      </div>
+    `;
+
+    return proportionScore;
+  }
+
+  // ── Attractiveness / Beauty Score ──
+  // Combines symmetry, proportion, and golden ratio checks into a composite score
+  function computeAttractivenessScore(kp, symmetryScore, proportionScore) {
+    const div = document.getElementById('attractiveness-score');
+    if (!div) return;
+
+    // Default scores if upstream analysis failed
+    const symScore = (typeof symmetryScore === 'number') ? symmetryScore : 50;
+    const propScore = (typeof proportionScore === 'number') ? proportionScore : 50;
+
+    // Golden ratio checks (phi = 1.618)
+    const PHI = 1.618;
+    let goldenTotal = 0;
+    let goldenCount = 0;
+
+    // 1. Face length / face width ~ phi
+    const forehead = kp[10];
+    const chin = kp[152];
+    const leftCheek = kp[234];
+    const rightCheek = kp[454];
+    if (forehead && chin && leftCheek && rightCheek) {
+      const faceLength = dist(forehead, chin);
+      const faceWidth = dist(leftCheek, rightCheek);
+      if (faceWidth > 0) {
+        const ratio = faceLength / faceWidth;
+        const deviation = Math.abs(ratio - PHI) / PHI;
+        goldenTotal += Math.max(0, 100 - deviation * 200);
+        goldenCount++;
+      }
+    }
+
+    // 2. Mouth width / nose width ~ phi
+    const mouthLeft = kp[61];
+    const mouthRight = kp[291];
+    const noseLeft = kp[48];
+    const noseRight = kp[278];
+    if (mouthLeft && mouthRight && noseLeft && noseRight) {
+      const mouthW = dist(mouthLeft, mouthRight);
+      const noseW = dist(noseLeft, noseRight);
+      if (noseW > 0) {
+        const ratio = mouthW / noseW;
+        const deviation = Math.abs(ratio - PHI) / PHI;
+        goldenTotal += Math.max(0, 100 - deviation * 200);
+        goldenCount++;
+      }
+    }
+
+    // 3. Eye width / inter-pupil distance
+    const leftEyeOuter = kp[33];
+    const leftEyeInner = kp[133];
+    const rightEyeOuter = kp[263];
+    const rightEyeInner = kp[362];
+    if (leftEyeOuter && leftEyeInner && rightEyeOuter && rightEyeInner) {
+      const avgEyeWidth = (dist(leftEyeOuter, leftEyeInner) + dist(rightEyeInner, rightEyeOuter)) / 2;
+      const pupilDist = dist(getCenter(kp, [33, 133]), getCenter(kp, [362, 263]));
+      if (pupilDist > 0) {
+        const ratio = avgEyeWidth / pupilDist;
+        // Ideal eye width / inter-pupil ~ 0.618 (1/phi)
+        const ideal = 1 / PHI;
+        const deviation = Math.abs(ratio - ideal) / ideal;
+        goldenTotal += Math.max(0, 100 - deviation * 200);
+        goldenCount++;
+      }
+    }
+
+    const goldenScore = goldenCount > 0 ? goldenTotal / goldenCount : 50;
+
+    // Weighted composite: symmetry 35%, proportion 35%, golden ratio 30%
+    const composite = symScore * 0.35 + propScore * 0.35 + goldenScore * 0.30;
+
+    let scoreColor = 'var(--green)';
+    if (composite < 50) scoreColor = 'var(--red)';
+    else if (composite < 70) scoreColor = 'var(--yellow)';
+
+    let goldenColor = 'var(--green)';
+    if (goldenScore < 50) goldenColor = 'var(--red)';
+    else if (goldenScore < 70) goldenColor = 'var(--yellow)';
+
+    let symColor = 'var(--green)';
+    if (symScore < 60) symColor = 'var(--red)';
+    else if (symScore < 80) symColor = 'var(--yellow)';
+
+    let propColor = 'var(--green)';
+    if (propScore < 60) propColor = 'var(--red)';
+    else if (propScore < 80) propColor = 'var(--yellow)';
+
+    div.innerHTML = `
+      <div class="analysis-title" style="color:var(--red)">Composite "Beauty" Score</div>
+
+      <div class="score-bar" style="margin-bottom:12px">
+        <div class="score-label">
+          <span>Overall Attractiveness</span>
+          <span style="color:${scoreColor};font-size:1.4em">${composite.toFixed(0)}%</span>
+        </div>
+        <div class="score-track">
+          <div class="score-fill" style="width:${composite}%; background:${scoreColor}"></div>
+        </div>
+      </div>
+
+      <div class="analysis-row">
+        <span class="label">Symmetry (35%)</span>
+        <span class="value" style="color:${symColor}">${symScore.toFixed(0)}%</span>
+      </div>
+      <div class="analysis-row">
+        <span class="label">Proportions (35%)</span>
+        <span class="value" style="color:${propColor}">${propScore.toFixed(0)}%</span>
+      </div>
+      <div class="analysis-row">
+        <span class="label">Golden Ratio (30%)</span>
+        <span class="value" style="color:${goldenColor}">${goldenScore.toFixed(0)}%</span>
+      </div>
+
+      <div class="score-note" style="margin-top:12px; color:var(--red); border-top:1px solid rgba(255,74,74,0.3); padding-top:8px">
+        This score is pseudoscience. "Attractiveness" cannot be reduced to geometry. These ratios reflect Eurocentric beauty standards from the Renaissance — they are cultural constructs, not universal truths. Algorithms like this are used in dating apps, hiring tools, and social media ranking systems to score real people.
       </div>
     `;
   }
