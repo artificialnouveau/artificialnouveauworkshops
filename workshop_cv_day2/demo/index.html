@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Computer Vision Workshop — Day 2</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="loader-content">
+      <div class="spinner"></div>
+      <p>Loading<span class="dots"></span></p>
+      <p class="loader-sub">Preparing workshop materials</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header id="app-header">
+    <h1>Computer Vision Workshop — Day 2</h1>
+    <p class="subtitle">Bias in computer vision — detection, classification &amp; recognition</p>
+  </header>
+
+  <!-- Step navigation -->
+  <nav id="step-nav">
+    <button class="step-tab active" data-step="1">1. Nazi Detection</button>
+    <button class="step-tab" data-step="2">2. ICE Detection</button>
+    <button class="step-tab" data-step="3">3. Dutch Politicians</button>
+  </nav>
+
+  <!-- Step 1: Nazi Detection -->
+  <section id="step-1" class="step active">
+    <div class="step-intro">
+      <h2>Nazi Symbol Detection</h2>
+      <p>Upload a video file or paste a YouTube URL to scan frames for Nazi symbols. The detection model is a <strong>placeholder</strong> — replace <code>runDetection()</code> in the code with your own TF.js or YOLO model.</p>
+    </div>
+
+    <div class="explainer-block" style="border-left-color:var(--red)">
+      <h3 style="color:var(--red)">How it works</h3>
+      <p>The scanner extracts frames from your video at <strong>1 frame per second</strong>, then runs each frame through an object-detection model. Frames with detections get <strong>red bounding boxes</strong> drawn over them. Currently the model is a stub that returns no detections — you need to supply your own trained model.</p>
+    </div>
+
+    <!-- YouTube URL input -->
+    <div class="url-input-row">
+      <input type="text" id="youtube-url" class="url-input" placeholder="Paste YouTube URL (e.g. https://youtube.com/watch?v=...)">
+      <button id="btn-load-youtube" class="btn-secondary">Load</button>
+    </div>
+
+    <div class="or-divider"><span>or</span></div>
+
+    <!-- Video file upload -->
+    <div class="upload-area" id="upload-area-1">
+      <label for="file-input-1" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a video file (.mp4, .webm, .mov)</span>
+      </label>
+      <input type="file" id="file-input-1" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov">
+    </div>
+
+    <!-- YouTube embed container -->
+    <div id="youtube-container" class="video-container hidden">
+      <iframe id="youtube-iframe" allowfullscreen></iframe>
+      <p class="description" style="margin-top:8px">YouTube videos can be viewed here, but frame extraction requires a local file due to CORS restrictions.</p>
+    </div>
+
+    <!-- Local video player -->
+    <div id="local-video-container" class="video-container hidden">
+      <video id="local-video" controls></video>
+      <button id="btn-scan-frames" class="btn-primary" style="margin-top:16px">Scan Frames</button>
+    </div>
+
+    <!-- Progress bar -->
+    <div id="scan-progress" class="loading-bar">
+      <div class="loading-label">
+        <span>Extracting frames<span class="loading-dots"></span></span>
+        <span id="scan-progress-pct">0%</span>
+      </div>
+      <div class="loading-track">
+        <div class="loading-fill" id="scan-progress-fill"></div>
+      </div>
+      <div class="loading-steps" id="scan-progress-steps">Frame 0 / 0</div>
+    </div>
+
+    <!-- Detection grid -->
+    <div id="detection-grid" class="detection-grid"></div>
+  </section>
+
+  <!-- Step 2: ICE Detection (DeepFace) -->
+  <section id="step-2" class="step">
+    <div class="step-intro">
+      <h2>ICE Detection — Ethnicity Classification</h2>
+      <p>Upload a face photo to analyze perceived ethnicity using DeepFace. This requires the Python backend to be running.</p>
+    </div>
+
+    <div class="explainer-block" style="border-left-color:var(--red)">
+      <h3 style="color:var(--red)">Backend Required</h3>
+      <p>Start the backend server before using this tab:</p>
+      <p style="margin-top:8px"><code>cd backend && pip install -r requirements.txt && python server.py</code></p>
+      <p style="margin-top:8px">The server runs on <code>http://localhost:8000</code>. You need Python 3.8+ with pip.</p>
+    </div>
+
+    <!-- Backend status -->
+    <div id="backend-status" class="backend-status">
+      <span id="backend-dot" class="status-dot offline"></span>
+      <span id="backend-label">Backend: checking...</span>
+    </div>
+
+    <!-- Image upload -->
+    <div class="upload-area" id="upload-area-2">
+      <label for="file-input-2" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a face photo</span>
+      </label>
+      <input type="file" id="file-input-2" accept="image/*">
+    </div>
+
+    <!-- Loading -->
+    <div id="ice-loading" class="loading-bar">
+      <div class="loading-label">
+        <span>Analyzing faces<span class="loading-dots"></span></span>
+      </div>
+      <div class="loading-track">
+        <div class="loading-fill" style="width:100%;animation:pulse 1.5s ease infinite"></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="ice-results" class="results hidden">
+      <div class="canvas-container" style="margin-bottom:20px">
+        <h3>Detected Faces</h3>
+        <canvas id="ice-canvas"></canvas>
+      </div>
+      <div id="ice-faces"></div>
+    </div>
+  </section>
+
+  <!-- Step 3: Dutch Politicians -->
+  <section id="step-3" class="step">
+    <div class="step-intro">
+      <h2>Dutch Politicians Analysis</h2>
+      <p>Facial recognition and bias analysis applied to Dutch political figures.</p>
+    </div>
+
+    <div class="explainer-block" style="border-left-color:var(--yellow)">
+      <h3 style="color:var(--yellow)">Coming Soon</h3>
+      <p>This module is under development. It will include facial recognition comparisons, bias analysis across political parties, and discussion prompts about the ethical implications of using CV on public figures.</p>
+    </div>
+
+    <div class="critical-text">
+      <p>"When we train machines to see race, whose definitions of race do they learn?"</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p class="mono">All processing happens locally. Backend analysis stays on your machine.</p>
+    <p>A workshop tool by Artificial Nouveau</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/step1-nazi-detection.js"></script>
+  <script src="js/step2-ice-detection.js"></script>
+  <script src="js/step3-dutch-politicians.js"></script>
+</body>
+</html>
