@@ -219,7 +219,7 @@
       <h2>Who Is Watching?</h2>
       <p>A surveillance camera doesn't see a person. It sees data points. Choose a source and toggle detection layers to see what gets extracted.</p>
       <div class="model-info">
-        <p><strong>Face Analysis</strong> — <em>BlazeFace</em> detects faces and landmarks; <em>face-api.js</em> (SSD MobileNet v1 + AgeGenderNet + FaceExpressionNet) estimates age, gender, and expression.</p>
+        <p><strong>Face Analysis</strong> — <em>BlazeFace</em> detects faces and landmarks; <em>face-api.js</em> (SSD MobileNet v1 + AgeGenderNet + FaceExpressionNet) estimates age, gender, and expression. A crude <strong>BMI estimate</strong> is derived from the face bounding box width-to-height ratio — research (Coetzee et al., 2009) shows facial WHR loosely correlates with body mass, but the estimate is intentionally unreliable, demonstrating how surveillance systems extract body data from minimal facial geometry.</p>
         <p><strong>Pose</strong> — Facial geometry derived from BlazeFace's 6 keypoints (eyes, nose, mouth, ears).</p>
         <p><strong>Objects</strong> — <em>COCO-SSD</em> identifies 80 everyday object categories (person, car, dog, chair, etc.).</p>
         <p><strong>Content</strong> — <em>NudeNet</em> detects and censors exposed body parts (16 categories). Black boxes are drawn over NSFW regions.</p>
