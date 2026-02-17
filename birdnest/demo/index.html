@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Birdnest Classifier — Artificial Nouveau</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div class="loader-content">
+    <div class="spinner"></div>
+    <p>Loading<span class="dots"></span></p>
+    <p class="loader-sub">Preparing birdnest classifier</p>
+  </div>
+</div>
+
+<header id="app-header">
+  <h1>Birdnest Classifier</h1>
+  <p class="subtitle">Train a binary image classifier in your browser</p>
+</header>
+
+<nav id="step-nav">
+  <button class="step-tab active" data-step="1">1. Create Dataset</button>
+  <button class="step-tab" data-step="2">2. Train Model</button>
+  <button class="step-tab" data-step="3">3. Classify</button>
+</nav>
+
+<!-- ============ STEP 1: CREATE DATASET ============ -->
+<section id="step-1" class="step active">
+  <div class="explainer-block">
+    <h3>Build your dataset</h3>
+    <p>Upload images of <strong>bird nests</strong> and <strong>non-bird-nest</strong> objects. The more varied your dataset, the better your classifier will perform. Aim for at least 20 images per category.</p>
+  </div>
+
+  <div class="dataset-panels">
+    <!-- Bird Nest panel -->
+    <div class="dataset-panel" id="panel-birdnest">
+      <div class="panel-header">
+        <h3>Bird Nest</h3>
+        <span class="image-count" id="count-birdnest">0</span>
+      </div>
+
+      <div class="upload-area" id="upload-area-birdnest">
+        <label class="upload-label">
+          <span class="upload-icon">+</span>
+          <span>Drop images or click to upload</span>
+        </label>
+        <input type="file" class="file-input" accept="image/*" multiple>
+      </div>
+
+      <div class="url-paste-section">
+        <textarea class="url-textarea" placeholder="Paste image URLs (one per line)"></textarea>
+        <button class="btn-secondary btn-fetch-urls">Fetch URLs</button>
+      </div>
+
+      <div class="thumbnail-grid" id="grid-birdnest"></div>
+
+      <button class="btn-clear" data-category="birdnest">Clear all</button>
+    </div>
+
+    <!-- Not Bird Nest panel -->
+    <div class="dataset-panel" id="panel-not_birdnest">
+      <div class="panel-header">
+        <h3>Not Bird Nest</h3>
+        <span class="image-count" id="count-not_birdnest">0</span>
+      </div>
+
+      <div class="upload-area" id="upload-area-not_birdnest">
+        <label class="upload-label">
+          <span class="upload-icon">+</span>
+          <span>Drop images or click to upload</span>
+        </label>
+        <input type="file" class="file-input" accept="image/*" multiple>
+      </div>
+
+      <div class="url-paste-section">
+        <textarea class="url-textarea" placeholder="Paste image URLs (one per line)"></textarea>
+        <button class="btn-secondary btn-fetch-urls">Fetch URLs</button>
+      </div>
+
+      <div class="thumbnail-grid" id="grid-not_birdnest"></div>
+
+      <button class="btn-clear" data-category="not_birdnest">Clear all</button>
+    </div>
+  </div>
+
+  <div class="dataset-status" id="dataset-status">
+    <span id="status-birdnest">Bird Nest: 0 images</span>
+    <span class="status-divider">|</span>
+    <span id="status-not_birdnest">Not Bird Nest: 0 images</span>
+  </div>
+</section>
+
+<!-- ============ STEP 2: TRAIN MODEL ============ -->
+<section id="step-2" class="step">
+  <div class="explainer-block">
+    <h3>Transfer learning</h3>
+    <p><strong>MobileNet v2</strong> was trained on millions of images. We freeze its learned features and add a small classification head on top, training only the new layers on your bird nest dataset. This is called <em>transfer learning</em>.</p>
+  </div>
+
+  <div id="mobilenet-status" class="model-load-status">
+    <div class="model-load-item">
+      <span id="mobilenet-dot" class="model-load-dot loading"></span>
+      <span class="model-load-label">MobileNet v2</span>
+      <span id="mobilenet-detail" class="model-load-detail">waiting...</span>
+    </div>
+  </div>
+
+  <div class="training-controls">
+    <div class="control-group">
+      <label class="control-label">Epochs</label>
+      <input type="range" id="epochs-slider" min="5" max="50" value="20" class="slider">
+      <span class="control-value" id="epochs-value">20</span>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">Batch Size</label>
+      <div class="toggle-row">
+        <button class="toggle-chip" data-batch="8">8</button>
+        <button class="toggle-chip active" data-batch="16">16</button>
+        <button class="toggle-chip" data-batch="32">32</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">Learning Rate</label>
+      <div class="toggle-row">
+        <button class="toggle-chip" data-lr="0.0001">0.0001</button>
+        <button class="toggle-chip active" data-lr="0.001">0.001</button>
+        <button class="toggle-chip" data-lr="0.01">0.01</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">Train / Validation Split</label>
+      <span class="control-value">80% / 20%</span>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="btn-train" disabled>Train Model</button>
+
+  <div id="training-progress" class="loading-bar">
+    <div class="loading-label">
+      <span>Training<span class="loading-dots"></span></span>
+      <span id="train-progress-pct">0%</span>
+    </div>
+    <div class="loading-track">
+      <div class="loading-fill" id="train-progress-fill"></div>
+    </div>
+    <div class="loading-steps" id="train-progress-steps">Epoch 0 / 0</div>
+  </div>
+
+  <div id="training-chart-container" class="hidden">
+    <h3 class="section-title">Training Progress</h3>
+    <div class="chart-row">
+      <div class="chart-box">
+        <h4>Loss</h4>
+        <canvas id="chart-loss" width="360" height="200"></canvas>
+      </div>
+      <div class="chart-box">
+        <h4>Accuracy</h4>
+        <canvas id="chart-accuracy" width="360" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div id="confusion-matrix" class="hidden">
+    <h3 class="section-title">Confusion Matrix (Validation Set)</h3>
+    <div class="matrix-grid" id="matrix-grid"></div>
+  </div>
+
+  <div id="model-actions" class="hidden">
+    <button class="btn-secondary" id="btn-save-model">Save Model</button>
+    <button class="btn-secondary" id="btn-load-model">Load Model</button>
+    <input type="file" id="model-file-input" accept=".json" class="hidden">
+  </div>
+</section>
+
+<!-- ============ STEP 3: CLASSIFY ============ -->
+<section id="step-3" class="step">
+  <div class="explainer-block">
+    <h3>Test your classifier</h3>
+    <p>Upload new images to see how your trained model classifies them. Images that are misclassified can be added back to your dataset to improve the model.</p>
+  </div>
+
+  <div id="classify-model-status" class="model-load-status">
+    <div class="model-load-item">
+      <span id="classify-model-dot" class="model-load-dot loading"></span>
+      <span class="model-load-label">Classifier</span>
+      <span id="classify-model-detail" class="model-load-detail">no model trained yet</span>
+    </div>
+  </div>
+
+  <div class="upload-area" id="upload-area-classify">
+    <label class="upload-label">
+      <span class="upload-icon">+</span>
+      <span>Upload images to classify</span>
+    </label>
+    <input type="file" id="classify-file-input" accept="image/*" multiple>
+  </div>
+
+  <div id="classify-results" class="results-grid"></div>
+</section>
+
+<footer>
+  <p class="mono">All processing happens on your device.</p>
+  <p>A workshop tool by Artificial Nouveau</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/step1-dataset.js"></script>
+<script src="js/step2-train.js"></script>
+<script src="js/step3-classify.js"></script>
+
+</body>
+</html>
