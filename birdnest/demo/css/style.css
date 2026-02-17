@@ -299,6 +299,71 @@ body {
 
 .file-input { display: none; }
 
+/* ============ PRESET BUTTONS ============ */
+.preset-section {
+  margin-bottom: 12px;
+}
+
+.preset-section .control-label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.preset-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.btn-preset {
+  padding: 8px 14px;
+  background: var(--accent-glow);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-preset:hover {
+  background: var(--accent);
+  color: #000;
+}
+
+.btn-preset:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ============ OR DIVIDER ============ */
+.or-divider {
+  text-align: center;
+  margin: 12px 0;
+  position: relative;
+}
+
+.or-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #333;
+}
+
+.or-divider span {
+  position: relative;
+  background: var(--bg-card);
+  padding: 0 12px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+}
+
 /* ============ BULK UPLOAD ============ */
 .bulk-upload-row {
   display: flex;
