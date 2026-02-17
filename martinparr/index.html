@@ -17,23 +17,22 @@
 
     <div id="status" class="status">Loading face detection models…</div>
 
-    <div id="drop-zone" class="drop-zone hidden">
-      <input type="file" id="file-input" accept="image/*" multiple>
-      <p>Drag &amp; drop Martin Parr photos here, or <label for="file-input" class="browse-link">browse</label></p>
-    </div>
-
-    <div class="controls">
-      <button id="load-preset-btn" class="btn" disabled>Load Pre-downloaded Instagram Photos</button>
-      <button id="generate-btn" class="btn primary" disabled>Generate Average Face</button>
-      <button id="clear-btn" class="btn" disabled>Clear All</button>
-    </div>
-
     <div id="progress-wrap" class="progress-wrap hidden">
       <div id="progress-bar" class="progress-bar"></div>
     </div>
 
     <p id="gallery-title" class="section-title hidden">Photos — click to toggle inclusion</p>
     <div id="gallery" class="gallery"></div>
+
+    <div class="controls">
+      <button id="analyze-btn" class="btn primary" disabled>Analyze All Images</button>
+      <button id="clear-btn" class="btn" disabled>Clear All</button>
+    </div>
+
+    <div id="drop-zone" class="drop-zone hidden">
+      <input type="file" id="file-input" accept="image/*" multiple>
+      <p>Add more photos: drag &amp; drop here, or <label for="file-input" class="browse-link">browse</label></p>
+    </div>
 
     <div id="faces-section" class="hidden">
       <p class="section-title">Detected &amp; Aligned Faces</p>

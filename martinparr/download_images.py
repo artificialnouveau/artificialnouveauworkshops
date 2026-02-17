@@ -50,11 +50,15 @@ def main():
             filepath = os.path.join(OUTPUT_DIR, filename)
 
             if not os.path.exists(filepath):
-                L.download_pic(filepath, post.url, post.date_utc)
-                # instaloader appends extension, rename if needed
-                downloaded = filepath + ".jpg" if not filepath.endswith(".jpg") else filepath
-                if os.path.exists(downloaded) and downloaded != filepath:
-                    shutil.move(downloaded, filepath)
+                # download_pic may append its own extension
+                stem = os.path.splitext(filepath)[0]
+                L.download_pic(stem, post.url, post.date_utc)
+                # find whatever file was created and rename to our target
+                for ext in [".jpg", ".jpeg", ".png", ".webp"]:
+                    candidate = stem + ext
+                    if os.path.exists(candidate) and candidate != filepath:
+                        shutil.move(candidate, filepath)
+                        break
 
             image_files.append(filename)
             count += 1
