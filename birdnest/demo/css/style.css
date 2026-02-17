@@ -348,6 +348,30 @@ body {
 .url-textarea:focus { border-color: var(--accent); }
 .url-textarea::placeholder { color: var(--text-dim); }
 
+.url-btn-row {
+  display: flex;
+  gap: 6px;
+}
+
+.url-btn-row .btn-secondary {
+  flex: 1;
+  font-size: 0.7rem;
+  padding: 6px 8px;
+}
+
+.scrape-status {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--yellow);
+}
+
+.scrape-status.done { color: var(--green); }
+.scrape-status.error { color: var(--red); }
+
 /* ============ THUMBNAIL GRID ============ */
 .thumbnail-grid {
   display: grid;
