@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Martin Parr — Average Face</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Martin Parr — Average Face</h1>
+      <p class="subtitle">Detecting faces in @martinparrstudio photos and computing the average face</p>
+    </header>
+
+    <div id="status" class="status">Loading face detection models…</div>
+
+    <div id="drop-zone" class="drop-zone hidden">
+      <input type="file" id="file-input" accept="image/*" multiple>
+      <p>Drag &amp; drop Martin Parr photos here, or <label for="file-input" class="browse-link">browse</label></p>
+    </div>
+
+    <div class="controls">
+      <button id="load-preset-btn" class="btn" disabled>Load Pre-downloaded Instagram Photos</button>
+      <button id="generate-btn" class="btn primary" disabled>Generate Average Face</button>
+      <button id="clear-btn" class="btn" disabled>Clear All</button>
+    </div>
+
+    <div id="progress-wrap" class="progress-wrap hidden">
+      <div id="progress-bar" class="progress-bar"></div>
+    </div>
+
+    <p id="gallery-title" class="section-title hidden">Photos — click to toggle inclusion</p>
+    <div id="gallery" class="gallery"></div>
+
+    <div id="faces-section" class="hidden">
+      <p class="section-title">Detected &amp; Aligned Faces</p>
+      <div id="face-strip" class="face-strip"></div>
+    </div>
+
+    <div id="result-section" class="result-section hidden">
+      <h2>Average Face</h2>
+      <canvas id="average-canvas" width="300" height="300"></canvas>
+      <p id="result-meta" class="result-meta"></p>
+    </div>
+  </div>
+</body>
+</html>
