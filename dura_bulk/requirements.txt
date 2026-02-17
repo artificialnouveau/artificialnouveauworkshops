@@ -1,0 +1,6 @@
+flask
+flask-cors
+instaloader
+ultralytics
+easyocr
+pillow
