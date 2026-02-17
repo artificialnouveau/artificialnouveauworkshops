@@ -232,10 +232,27 @@ async function analyzeAll() {
   }
 
   hideProgress();
+
+  // Remove photos without faces
+  const totalBefore = allEntries.length;
+  allEntries = allEntries.filter((e) => e.faces.length > 0);
+
+  // Rebuild aligned faces array to match filtered entries
+  alignedFaces = [];
+  totalFaces = 0;
+  for (const entry of allEntries) {
+    for (const det of entry.faces) {
+      const aligned = alignFace(entry.img, det.landmarks);
+      alignedFaces.push(aligned);
+      totalFaces++;
+    }
+  }
+
   renderGallery();
   renderFaceStrip();
 
-  status.textContent = `Found ${totalFaces} face(s) in ${allEntries.length} photo(s). Generating average…`;
+  const removed = totalBefore - allEntries.length;
+  status.textContent = `Found ${totalFaces} face(s) in ${allEntries.length} photo(s). Removed ${removed} photo(s) without faces. Generating average…`;
 
   // Step 2: Generate average face
   generateAverageFace();
