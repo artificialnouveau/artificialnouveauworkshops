@@ -54,6 +54,29 @@
       urlTextarea.value = '';
     });
 
+    // Folder upload
+    const folderBtn = panel.querySelector('.btn-folder-upload');
+    const folderInput = panel.querySelector('.folder-input');
+
+    folderBtn.addEventListener('click', () => folderInput.click());
+
+    folderInput.addEventListener('change', async () => {
+      const files = Array.from(folderInput.files).filter(f => f.type.startsWith('image/'));
+      if (files.length === 0) {
+        alert('No image files found in the selected folder.');
+        return;
+      }
+      folderBtn.textContent = `Loading 0/${files.length}...`;
+      folderBtn.disabled = true;
+      for (let i = 0; i < files.length; i++) {
+        await addImageFile(category, files[i]);
+        folderBtn.textContent = `Loading ${i + 1}/${files.length}...`;
+      }
+      folderBtn.textContent = 'Upload Folder';
+      folderBtn.disabled = false;
+      folderInput.value = '';
+    });
+
     // Clear
     clearBtn.addEventListener('click', async () => {
       await App.clearCategory(category);
