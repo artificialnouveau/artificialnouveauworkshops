@@ -4,6 +4,7 @@ const $ = (sel) => document.querySelector(sel);
 
 let labeledDescriptors = [];
 let modelsLoaded = false;
+let processing = false;
 
 async function init() {
   const status = $("#status");
@@ -61,6 +62,9 @@ function findBestMatch(descriptor) {
 }
 
 async function processImage(file) {
+  if (processing) return;
+  processing = true;
+
   const status = $("#status");
   const result = $("#result");
   const previewSection = $("#preview-section");
@@ -68,6 +72,8 @@ async function processImage(file) {
   const overlayCanvas = $("#overlay-canvas");
   const resetBtn = $("#reset-btn");
   const dropZone = $("#drop-zone");
+
+  try {
 
   dropZone.classList.add("hidden");
   result.classList.add("hidden");
@@ -133,6 +139,18 @@ async function processImage(file) {
 
   result.classList.remove("hidden");
   resetBtn.classList.remove("hidden");
+
+  } catch (err) {
+    console.error("Error processing image:", err);
+    status.textContent = "Error processing image";
+    status.className = "status error";
+    result.innerHTML = "Something went wrong. Please try again.";
+    result.className = "result no-face";
+    result.classList.remove("hidden");
+    resetBtn.classList.remove("hidden");
+  } finally {
+    processing = false;
+  }
 }
 
 function reset() {
@@ -152,7 +170,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const dropZone = $("#drop-zone");
   const fileInput = $("#file-input");
 
-  dropZone.addEventListener("click", () => fileInput.click());
+  dropZone.addEventListener("click", (e) => {
+    // Prevent double-trigger when clicking on the input or label
+    if (e.target === fileInput) return;
+    fileInput.click();
+  });
 
   dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -168,6 +190,11 @@ document.addEventListener("DOMContentLoaded", () => {
     dropZone.classList.remove("drag-over");
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith("image/")) processImage(file);
+  });
+
+  fileInput.addEventListener("click", (e) => {
+    // Reset value so re-selecting the same file triggers change
+    fileInput.value = "";
   });
 
   fileInput.addEventListener("change", (e) => {
