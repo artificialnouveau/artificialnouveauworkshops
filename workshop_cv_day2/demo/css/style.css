@@ -149,6 +149,11 @@ body {
   display: block;
 }
 
+/* Tab 3 needs wider layout for dashboard charts */
+#step-3 {
+  max-width: 1100px;
+}
+
 .step-intro {
   margin-bottom: 24px;
 }
@@ -603,6 +608,42 @@ canvas {
   color: var(--yellow);
 }
 
+/* ===== API Key Input ===== */
+.api-key-row {
+  margin-bottom: 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.api-key-label {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.api-key-input-wrap {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.api-key-help {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.api-key-help a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.api-key-help a:hover {
+  text-decoration: underline;
+}
+
 /* ===== Utility ===== */
 .mono {
   font-family: var(--mono);
@@ -837,4 +878,598 @@ code {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+/* ===== Model Loading Status ===== */
+.model-load-status {
+  margin-bottom: 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.model-load-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+.model-load-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.model-load-dot.loading {
+  background: var(--yellow);
+  box-shadow: 0 0 6px var(--yellow);
+  animation: pulse 1.5s ease infinite;
+}
+
+.model-load-dot.ready {
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+
+.model-load-dot.error {
+  background: var(--red);
+  box-shadow: 0 0 6px var(--red);
+}
+
+.model-load-label {
+  color: var(--text);
+  min-width: 120px;
+}
+
+.model-load-detail {
+  color: var(--text-dim);
+}
+
+/* ===== Section Headings (Tab 3) ===== */
+.section-heading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  margin-top: 28px;
+}
+
+.section-sub {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+/* ===== Party Filter Row ===== */
+.party-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.party-chip {
+  padding: 5px 12px;
+  background: var(--bg-card);
+  border: 1px solid #333;
+  border-radius: 20px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.party-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.party-chip.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+
+/* ===== Politician Grid ===== */
+.pol-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.pol-card {
+  background: var(--bg-card);
+  border: 1px solid #222;
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.pol-card-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: #111;
+}
+
+.pol-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pol-card-info {
+  padding: 10px 12px;
+}
+
+.pol-card-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pol-card-party {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.pol-card-pending {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  padding: 4px 0;
+}
+
+.pol-card-result {
+  margin-top: 4px;
+}
+
+.pol-card-dominant {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* ===== Mini Prediction Bars (politician cards) ===== */
+.pol-mini-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+}
+
+.pol-mini-label {
+  width: 90px;
+  text-align: right;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pol-mini-track {
+  flex: 1;
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pol-mini-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.pol-mini-val {
+  width: 32px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* ===== Party Chart ===== */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chart-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.chart-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chart-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chart-label {
+  width: 120px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.chart-count {
+  color: var(--text-dim);
+  margin-left: 6px;
+  font-size: 0.65rem;
+}
+
+.chart-bar {
+  flex: 1;
+  height: 24px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+}
+
+.chart-segment {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+/* ===== Politician Controls ===== */
+.pol-controls {
+  margin-bottom: 16px;
+}
+
+/* ===== Accordion / Collapsible Dropdowns ===== */
+.accordion {
+  margin-top: 20px;
+  border: 1px solid #222;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.accordion-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.accordion-toggle:hover {
+  background: var(--bg-hover);
+}
+
+.accordion-arrow {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--text-dim);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.accordion-toggle[aria-expanded="true"] .accordion-arrow {
+  transform: rotate(180deg);
+}
+
+.accordion-body {
+  display: none;
+  padding: 16px;
+  background: var(--bg);
+  border-top: 1px solid #222;
+}
+
+.accordion.open .accordion-body {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ===== Dashboard Controls ===== */
+.dash-controls {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.dash-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dash-control-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.dash-select {
+  background: var(--bg-card);
+  border: 1px solid #333;
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.dash-select:focus {
+  border-color: var(--accent);
+}
+
+/* ===== Dashboard Cards & Grid ===== */
+.dash-card {
+  background: var(--bg-card);
+  border: 1px solid #222;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.dash-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.dash-card canvas {
+  width: 100% !important;
+}
+
+.dash-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 700px) {
+  .dash-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Dashboard Detail Panel ===== */
+.dash-detail-panel {
+  background: var(--bg-card);
+  border: 1px solid #222;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 20px;
+  display: none;
+}
+
+.dash-detail-panel.visible {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.dash-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.dash-stat-card {
+  background: var(--bg-hover);
+  border-radius: var(--radius);
+  padding: 12px;
+  text-align: center;
+}
+
+.dash-stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+.dash-stat-label {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  margin-top: 2px;
+  font-family: var(--mono);
+}
+
+/* ===== Dashboard Term Lists ===== */
+.dash-term-heading {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.dash-term-list {
+  list-style: none;
+  padding: 0;
+}
+
+.dash-term-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid #1a1a1a;
+  font-size: 0.8rem;
+  font-family: var(--mono);
+}
+
+.dash-term-count {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ===== Dashboard Prose (Methodology/Results) ===== */
+.dash-prose {
+  line-height: 1.75;
+  font-size: 0.9rem;
+}
+
+.dash-prose p {
+  margin-bottom: 10px;
+  color: var(--text-dim);
+}
+
+.dash-prose strong {
+  color: var(--text);
+}
+
+.dash-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: rgba(74, 158, 255, 0.15);
+  color: var(--accent);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.dash-formula {
+  background: var(--bg-card);
+  border: 1px solid #222;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text);
+  overflow-x: auto;
+}
+
+.dash-list {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+.dash-list li {
+  margin-bottom: 8px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.dash-list li strong {
+  color: var(--text);
+}
+
+/* ===== Score Guide (Results tab) ===== */
+.dash-score-guide {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+
+.dash-score-row {
+  padding: 4px 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+.dash-score-range {
+  display: inline-block;
+  width: 60px;
+  font-weight: 700;
+  margin-right: 12px;
+}
+
+/* ===== Results Table ===== */
+.dash-results-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 20px;
+  font-size: 0.8rem;
+  font-family: var(--mono);
+}
+
+.dash-results-table th,
+.dash-results-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.dash-results-table th {
+  color: var(--accent);
+  font-weight: 600;
+  background: var(--bg-card);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.dash-results-table td:nth-child(n+3) {
+  text-align: center;
+}
+
+.dash-results-table th:nth-child(n+3) {
+  text-align: center;
+}
+
+.score-high { color: var(--red); font-weight: 700; }
+.score-med { color: var(--yellow); font-weight: 600; }
+.score-low { color: var(--green); }
+
+/* ===== Responsive additions ===== */
+@media (max-width: 600px) {
+  .pol-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .pol-mini-label {
+    width: 60px;
+  }
+
+  .chart-label {
+    width: 80px;
+    font-size: 0.65rem;
+  }
 }
