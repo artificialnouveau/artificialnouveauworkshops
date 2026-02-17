@@ -299,6 +299,30 @@ body {
 
 .file-input { display: none; }
 
+/* ============ BULK UPLOAD ============ */
+.bulk-upload-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.bulk-upload-row .btn-secondary {
+  width: 100%;
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  background: var(--bg);
+  color: var(--accent);
+  border: 1px solid #333;
+}
+
+.bulk-upload-row .btn-secondary:hover {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  opacity: 1;
+}
+
+.folder-input { display: none; }
+
 /* ============ URL PASTE ============ */
 .url-paste-section {
   margin-bottom: 12px;
