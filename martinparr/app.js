@@ -1,5 +1,5 @@
 const FACE_SIZE = 300;
-const CONFIDENCE_THRESHOLD = 0.7; // minimum face detection confidence (0-1)
+const CONFIDENCE_THRESHOLD = 0.9; // minimum face detection confidence (0-1)
 const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.14/model/";
 
 const $ = (sel) => document.querySelector(sel);
