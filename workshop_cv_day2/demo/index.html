@@ -25,7 +25,7 @@
   <!-- Step navigation -->
   <nav id="step-nav">
     <button class="step-tab active" data-step="1">1. Nazi Detection</button>
-    <button class="step-tab" data-step="2">2. ICE Detection</button>
+    <button class="step-tab" data-step="2">2. Cream</button>
     <button class="step-tab" data-step="3">3. Dutch Politicians</button>
   </nav>
 
@@ -33,20 +33,24 @@
   <section id="step-1" class="step active">
     <div class="step-intro">
       <h2>Nazi Symbol Detection</h2>
-      <p>Upload an image or video to scan for Nazi symbols. Detection runs through the Python backend using a YOLO-based model. Start the backend first.</p>
+      <p>Upload an image or video to scan for swastika-like symbols using traditional computer vision — edge detection and contour analysis. No AI model, no backend.</p>
     </div>
 
     <div class="explainer-block" style="border-left-color:var(--red)">
       <h3 style="color:var(--red)">How it works</h3>
-      <p><strong>Images:</strong> Uploaded directly and sent to the backend for detection. Bounding boxes are drawn in red over detected symbols.</p>
-      <p style="margin-top:6px"><strong>Videos:</strong> Frames are extracted at <strong>1 frame per second</strong>, then each frame is sent to the backend. Frames with detections are highlighted.</p>
-      <p style="margin-top:6px"><strong>YouTube:</strong> You can embed a YouTube video for viewing, but frame extraction requires a local file upload.</p>
+      <p><strong>Step 1:</strong> The image is converted to grayscale, blurred, and run through <strong>Canny edge detection</strong>.</p>
+      <p style="margin-top:6px"><strong>Step 2:</strong> Contours are extracted and each shape is analyzed: polygon vertices, convexity defects, aspect ratio, and symmetry.</p>
+      <p style="margin-top:6px"><strong>Step 3:</strong> Shapes matching the geometric signature of a swastika (4 arms, ~4 convexity defects, roughly square) are highlighted in red.</p>
+      <p style="margin-top:8px"><em>This is traditional CV — no trained model. It shows what detection looks like without AI.</em></p>
     </div>
 
-    <!-- Backend status for Tab 1 -->
-    <div id="nazi-backend-status" class="backend-status">
-      <span id="nazi-backend-dot" class="status-dot offline"></span>
-      <span id="nazi-backend-label">Backend: checking...</span>
+    <!-- OpenCV.js loading status -->
+    <div id="opencv-status" class="model-load-status">
+      <div class="model-load-item">
+        <span id="opencv-dot" class="model-load-dot loading"></span>
+        <span class="model-load-label">OpenCV.js</span>
+        <span id="opencv-detail" class="model-load-detail">loading (~8 MB)...</span>
+      </div>
     </div>
 
     <!-- Image upload -->
@@ -113,24 +117,32 @@
     <div id="detection-grid" class="detection-grid"></div>
   </section>
 
-  <!-- Step 2: ICE Detection (DeepFace) -->
+  <!-- Step 2: Cream — Ethnicity Classification (In-Browser FairFace) -->
   <section id="step-2" class="step">
     <div class="step-intro">
-      <h2>ICE Detection — Ethnicity Classification</h2>
-      <p>Upload a face photo to analyze perceived ethnicity using DeepFace. This requires the Python backend to be running.</p>
+      <h2>Cream — Ethnicity Classification</h2>
+      <p>Upload a face photo to analyze perceived ethnicity. Everything runs in your browser — no backend needed.</p>
     </div>
 
-    <div class="explainer-block" style="border-left-color:var(--red)">
-      <h3 style="color:var(--red)">Backend Required</h3>
-      <p>Start the backend server before using this tab:</p>
-      <p style="margin-top:8px"><code>cd backend && pip install -r requirements.txt && python server.py</code></p>
-      <p style="margin-top:8px">The server runs on <code>http://localhost:8000</code>. You need Python 3.8+ with pip.</p>
+    <div class="explainer-block" style="border-left-color:var(--accent)">
+      <h3 style="color:var(--accent)">How it works</h3>
+      <p><strong>face-api.js</strong> detects faces in the image and returns bounding boxes.</p>
+      <p style="margin-top:6px"><strong>FairFace</strong> (ONNX, ~85 MB) classifies each face into 7 ethnicity categories: White, Black, Latino/Hispanic, East Asian, Southeast Asian, Indian, Middle Eastern.</p>
+      <p style="margin-top:6px">Both models run entirely in your browser via WebAssembly. No data leaves your machine.</p>
     </div>
 
-    <!-- Backend status -->
-    <div id="backend-status" class="backend-status">
-      <span id="backend-dot" class="status-dot offline"></span>
-      <span id="backend-label">Backend: checking...</span>
+    <!-- Model loading status -->
+    <div id="cream-model-status" class="model-load-status">
+      <div class="model-load-item" id="cream-faceapi-status">
+        <span class="model-load-dot loading"></span>
+        <span class="model-load-label">face-api.js</span>
+        <span class="model-load-detail">waiting...</span>
+      </div>
+      <div class="model-load-item" id="cream-fairface-status">
+        <span class="model-load-dot loading"></span>
+        <span class="model-load-label">FairFace ONNX</span>
+        <span class="model-load-detail">waiting...</span>
+      </div>
     </div>
 
     <!-- Image upload -->
@@ -143,7 +155,7 @@
     </div>
 
     <!-- Loading -->
-    <div id="ice-loading" class="loading-bar">
+    <div id="cream-loading" class="loading-bar">
       <div class="loading-label">
         <span>Analyzing faces<span class="loading-dots"></span></span>
       </div>
@@ -153,29 +165,256 @@
     </div>
 
     <!-- Results -->
-    <div id="ice-results" class="results hidden">
+    <div id="cream-results" class="results hidden">
       <div class="canvas-container" style="margin-bottom:20px">
         <h3>Detected Faces</h3>
-        <canvas id="ice-canvas"></canvas>
+        <canvas id="cream-canvas"></canvas>
       </div>
-      <div id="ice-faces"></div>
+      <div id="cream-faces"></div>
     </div>
   </section>
 
-  <!-- Step 3: Dutch Politicians -->
+  <!-- Step 3: Dutch Politicians — CV Bias Audit -->
   <section id="step-3" class="step">
     <div class="step-intro">
-      <h2>Dutch Politicians Analysis</h2>
-      <p>Facial recognition and bias analysis applied to Dutch political figures.</p>
+      <h2>Dutch Politicians — Bias Audit</h2>
+      <p>Explore how AI models see Dutch parliament members — computer vision ethnicity classification and NLP analysis of party manifestos.</p>
     </div>
 
     <div class="explainer-block" style="border-left-color:var(--yellow)">
-      <h3 style="color:var(--yellow)">Coming Soon</h3>
-      <p>This module is under development. It will include facial recognition comparisons, bias analysis across political parties, and discussion prompts about the ethical implications of using CV on public figures.</p>
+      <h3 style="color:var(--yellow)">What this demonstrates</h3>
+      <p>FairFace was trained to classify faces into 7 ethnic categories. What happens when we run it on a group of predominantly white European politicians? Do all parties look the same to the model?</p>
+      <p style="margin-top:8px">This exercise reveals the <strong>arbitrariness of racial classification</strong> by computer vision systems and how training data shapes model outputs.</p>
     </div>
 
-    <div class="critical-text">
-      <p>"When we train machines to see race, whose definitions of race do they learn?"</p>
+    <!-- Model status (shared with Tab 2) -->
+    <div id="pol-model-status" class="model-load-status">
+      <div class="model-load-item" id="pol-faceapi-status">
+        <span class="model-load-dot loading"></span>
+        <span class="model-load-label">face-api.js</span>
+        <span class="model-load-detail">waiting...</span>
+      </div>
+      <div class="model-load-item" id="pol-fairface-status">
+        <span class="model-load-dot loading"></span>
+        <span class="model-load-label">FairFace ONNX</span>
+        <span class="model-load-detail">waiting...</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="pol-controls">
+      <button id="btn-analyze-all" class="btn-primary" disabled>Analyze All Politicians</button>
+    </div>
+
+    <!-- Batch progress -->
+    <div id="pol-progress" class="loading-bar">
+      <div class="loading-label">
+        <span>Classifying politicians<span class="loading-dots"></span></span>
+        <span id="pol-progress-pct">0%</span>
+      </div>
+      <div class="loading-track">
+        <div class="loading-fill" id="pol-progress-fill"></div>
+      </div>
+      <div class="loading-steps" id="pol-progress-steps">0 / 0</div>
+    </div>
+
+    <!-- Party aggregation chart -->
+    <div id="pol-chart-section" class="hidden">
+      <h3 class="section-heading">Ethnicity Distribution by Party</h3>
+      <p class="section-sub">How does FairFace classify members of each party?</p>
+      <div id="pol-chart"></div>
+    </div>
+
+    <!-- Politician gallery -->
+    <div id="pol-gallery">
+      <h3 class="section-heading">Politician Gallery</h3>
+      <div id="pol-party-filter" class="party-filter-row"></div>
+      <div id="pol-grid" class="pol-grid"></div>
+    </div>
+
+    <!-- ═══ Collapsible: NLP Dashboard ═══ -->
+    <div class="accordion" id="accordion-dashboard">
+      <button class="accordion-toggle" aria-expanded="false">
+        <span>NLP Dashboard — Interactive Charts</span>
+        <span class="accordion-arrow"></span>
+      </button>
+      <div class="accordion-body">
+        <div class="explainer-block" style="border-left-color:var(--accent)">
+          <h3 style="color:var(--accent)">NLP Analysis of Party Manifestos</h3>
+          <p>Four independent NLP methods — lexicon analysis, topic modeling, sentiment analysis, and zero-shot classification — are combined into composite racism and sexism scores (0-100) for each party's 2023 election manifesto.</p>
+        </div>
+
+        <div class="dash-controls">
+          <div class="dash-control-group">
+            <label class="dash-control-label">Sort By</label>
+            <select id="dashSortSelect" class="dash-select">
+              <option value="racism">Racism Score</option>
+              <option value="sexism">Sexism Score</option>
+              <option value="combined">Combined</option>
+              <option value="alpha">Alphabetical</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="dashPartySelector" class="party-filter-row" style="margin-bottom:20px"></div>
+
+        <div id="dashChartsContainer">
+          <div class="dash-card">
+            <h3 class="dash-card-title">Racism &amp; Sexism Score Rankings</h3>
+            <canvas id="dashCombinedBarChart"></canvas>
+          </div>
+
+          <div class="dash-grid-2">
+            <div class="dash-card">
+              <h3 class="dash-card-title">Racism vs Sexism</h3>
+              <canvas id="dashScatterChart"></canvas>
+            </div>
+            <div class="dash-card">
+              <h3 class="dash-card-title">Component Breakdown</h3>
+              <canvas id="dashRadarChart"></canvas>
+            </div>
+          </div>
+
+          <div class="dash-grid-2">
+            <div class="dash-card">
+              <h3 class="dash-card-title">Topic Focus (Immigration vs Gender)</h3>
+              <canvas id="dashTopicChart"></canvas>
+            </div>
+            <div class="dash-card">
+              <h3 class="dash-card-title">Sentiment on Relevant Passages</h3>
+              <canvas id="dashSentimentChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-detail-panel" id="dashDetailPanel">
+          <h3 class="section-heading" id="dashDetailPartyName"></h3>
+          <div class="dash-detail-grid" id="dashDetailStats"></div>
+          <div class="dash-grid-2" style="margin-top:12px">
+            <div>
+              <h4 class="dash-term-heading">Top Racism-related Terms</h4>
+              <ul class="dash-term-list" id="dashRacismTerms"></ul>
+            </div>
+            <div>
+              <h4 class="dash-term-heading">Top Sexism-related Terms</h4>
+              <ul class="dash-term-list" id="dashSexismTerms"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Collapsible: NLP Results ═══ -->
+    <div class="accordion" id="accordion-results">
+      <button class="accordion-toggle" aria-expanded="false">
+        <span>NLP Results — Racism &amp; Sexism Scores</span>
+        <span class="accordion-arrow"></span>
+      </button>
+      <div class="accordion-body">
+        <div class="dash-prose">
+          <div id="dashResultsContent">
+            <p class="description">Loading results from pipeline data...</p>
+          </div>
+
+          <h4 class="section-heading" style="margin-top:20px">Interpreting the Scores</h4>
+          <p>Scores range from <strong>0</strong> (no detected racist/sexist language) to <strong>100</strong> (highest detected levels relative to other parties). Scores are <strong>relative</strong>, not absolute.</p>
+
+          <div class="dash-score-guide">
+            <div class="dash-score-row"><span class="dash-score-range" style="color:var(--red)">70-100</span> Significantly elevated</div>
+            <div class="dash-score-row"><span class="dash-score-range" style="color:var(--yellow)">40-69</span> Moderate</div>
+            <div class="dash-score-row"><span class="dash-score-range" style="color:var(--green)">10-39</span> Low</div>
+            <div class="dash-score-row"><span class="dash-score-range" style="color:var(--text-dim)">0-9</span> Minimal</div>
+          </div>
+
+          <h4 class="section-heading" style="margin-top:20px">Key Observations</h4>
+          <div id="dashKeyObservations">
+            <p class="description">Observations will appear once data is loaded.</p>
+          </div>
+
+          <h4 class="section-heading" style="margin-top:20px">Component Breakdown</h4>
+          <div id="dashComponentTable">
+            <p class="description">Loading component data...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Collapsible: Methodology ═══ -->
+    <div class="accordion" id="accordion-methodology">
+      <button class="accordion-toggle" aria-expanded="false">
+        <span>Methodology — How Scores Are Computed</span>
+        <span class="accordion-arrow"></span>
+      </button>
+      <div class="accordion-body">
+        <div class="dash-prose">
+          <p>This project quantifies levels of <strong>racism</strong> and <strong>sexism</strong> in the language used by Dutch parliamentary parties. The corpus analysed consists of <strong>2023 election manifestos</strong> (verkiezingsprogramma's).</p>
+          <p>Four independent NLP methods are combined into a single weighted composite score (0-100) for each party. All scores are <strong>normalised per 1,000 words</strong> to account for varying document lengths.</p>
+
+          <h4 class="section-heading" style="margin-top:20px">Analysis Methods</h4>
+
+          <div class="explainer-block" style="border-left-color:var(--accent)">
+            <h3 style="color:var(--accent)">1. Lexicon-Based Analysis <span class="dash-badge">Weight: 20%</span> <span class="dash-badge">Dog whistles: 15%</span></h3>
+            <p>Three hand-curated Dutch-language lexicons score text passages for racism- and sexism-related terminology. Context-aware scoring with a negation window of 5 tokens distinguishes parties that <em>criticise</em> racism from those that <em>express</em> it.</p>
+            <p style="margin-top:6px">Equality-related terms carry <strong>negative weights (-1.5)</strong>, meaning parties that frequently discuss gender equality receive a lower sexism score.</p>
+          </div>
+
+          <div class="explainer-block" style="border-left-color:var(--yellow)">
+            <h3 style="color:var(--yellow)">2. Topic Modeling (LDA) <span class="dash-badge">Weight: 15%</span></h3>
+            <p>Latent Dirichlet Allocation with 20 topics. Topics are classified as immigration, gender, related, or other based on keyword overlap. Parties with higher weight on immigration topics contribute to the racism score; gender topics to sexism.</p>
+          </div>
+
+          <div class="explainer-block" style="border-left-color:var(--green)">
+            <h3 style="color:var(--green)">3. Sentiment Analysis <span class="dash-badge">Weight: 20%</span></h3>
+            <p>A multilingual BERT model (<code>nlptown/bert-base-multilingual-uncased-sentiment</code>) scores passages pre-filtered by lexicon keywords. Parties expressing negative sentiment when discussing immigration or minority topics are more likely using exclusionary rhetoric.</p>
+          </div>
+
+          <div class="explainer-block" style="border-left-color:var(--red)">
+            <h3 style="color:var(--red)">4. Zero-Shot Classification <span class="dash-badge">Weight: 30%</span></h3>
+            <p>XLM-RoBERTa (<code>joeddav/xlm-roberta-large-xnli</code>) classifies passages against Dutch-language labels: <code>racisme</code>, <code>anti-immigratie</code>, <code>islamofobie</code>, <code>seksisme</code>, <code>traditionele genderrollen</code>. This method receives the highest weight because it captures semantic meaning beyond keyword matching.</p>
+          </div>
+
+          <h4 class="section-heading" style="margin-top:20px">Composite Scoring</h4>
+          <div class="dash-formula">
+            <strong>Racism Score</strong> = 0.20 x lexicon + 0.15 x dog_whistles + 0.15 x topic_weight + 0.20 x negative_sentiment + 0.30 x zero_shot
+          </div>
+          <div class="dash-formula">
+            <strong>Sexism Score</strong> = 0.20 x lexicon + 0.15 x topic_weight + 0.20 x negative_sentiment + 0.30 x zero_shot + 0.15 x absence_of_equality_language
+          </div>
+
+          <h4 class="section-heading" style="margin-top:20px">Limitations</h4>
+          <ul class="dash-list">
+            <li><strong>Lexicon bias:</strong> Hand-curated lexicons reflect the researchers' judgement about which terms are problematic.</li>
+            <li><strong>Manifesto length:</strong> PVV's single-page manifesto has far fewer passages than D66's 200+ pages.</li>
+            <li><strong>Zero-shot limitations:</strong> XLM-RoBERTa was not specifically trained on Dutch political language.</li>
+            <li><strong>No human validation:</strong> Scores have not been validated against expert annotations.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Collapsible: Discussion ═══ -->
+    <div class="accordion" id="accordion-discussion">
+      <button class="accordion-toggle" aria-expanded="false">
+        <span>Discussion — Critical Questions</span>
+        <span class="accordion-arrow"></span>
+      </button>
+      <div class="accordion-body">
+        <div class="explainer-block" style="border-left-color:var(--accent)">
+          <h3 style="color:var(--accent)">What does it mean?</h3>
+          <p>A computer vision model assigns ethnic categories to Dutch politicians — most of whom are white Europeans. What does this tell us about the model, its training data, and the concept of "race" in AI?</p>
+        </div>
+        <div class="explainer-block" style="border-left-color:var(--yellow)">
+          <h3 style="color:var(--yellow)">Consistency check</h3>
+          <p>Do similar-looking politicians get the same label? Are there politicians who switch categories depending on lighting or photo angle? What does inconsistency reveal about confidence?</p>
+        </div>
+        <div class="explainer-block" style="border-left-color:var(--green)">
+          <h3 style="color:var(--green)">Party diversity</h3>
+          <p>Which party has the most "diverse" predictions according to the model? Is that diversity real, or an artifact of how the model processes faces?</p>
+        </div>
+        <div class="critical-text">
+          <p>"When we train machines to see race, whose definitions of race do they learn?"</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -185,10 +424,20 @@
     <p>A workshop tool by Artificial Nouveau</p>
   </footer>
 
+  <!-- CDN: OpenCV.js (traditional CV), face-api.js, ONNX Runtime, Chart.js -->
+  <script async src="https://docs.opencv.org/4.9.0/opencv.js" onload="window._opencvReady && window._opencvReady()"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.24.1/dist/ort.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Politician data + NLP dashboard data (loaded as globals, no fetch needed) -->
+  <script src="data/members.js"></script>
+  <script src="data/dashboard_data.js"></script>
+
   <!-- Scripts -->
   <script src="js/app.js"></script>
   <script src="js/step1-nazi-detection.js"></script>
-  <script src="js/step2-ice-detection.js"></script>
+  <script src="js/step2-cream-detection.js"></script>
   <script src="js/step3-dutch-politicians.js"></script>
 </body>
 </html>
