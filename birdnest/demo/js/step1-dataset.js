@@ -4,12 +4,17 @@
 
 (function () {
   const CATEGORIES = ['birdnest', 'not_birdnest'];
+
+  // CORS proxies for fetching page HTML (tried in order)
   const CORS_PROXIES = [
-    'https://api.allorigins.win/raw?url=',
-    'https://corsproxy.io/?',
+    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
   ];
-  const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|bmp|svg|tiff?)(\?.*)?$/i;
-  const MIN_IMAGE_SIZE = 5000; // Skip tiny images (icons, spacers) — 5KB
+
+  const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|bmp|tiff?)(\?.*)?$/i;
+  const MIN_IMAGE_WIDTH = 80;  // Skip tiny icons
+  const MIN_IMAGE_HEIGHT = 80;
 
   function setupPanel(category) {
     const panel = document.getElementById(`panel-${category}`);
@@ -61,7 +66,7 @@
       fetchBtn.textContent = `Loading 0/${urls.length}...`;
       let loaded = 0;
       for (const url of urls) {
-        const ok = await addImageURL(category, url);
+        const ok = await addImageFromUrl(category, url);
         if (ok) loaded++;
         fetchBtn.textContent = `Loading ${loaded}/${urls.length}...`;
       }
@@ -75,7 +80,6 @@
     scrapeBtn.addEventListener('click', async () => {
       const input = urlTextarea.value.trim();
       if (!input) return;
-      // Take the first line as the page URL
       const pageUrl = input.split('\n')[0].trim();
       if (!pageUrl.startsWith('http')) {
         showStatus(scrapeStatus, 'Enter a valid URL starting with http:// or https://', 'error');
@@ -84,27 +88,37 @@
 
       scrapeBtn.disabled = true;
       scrapeBtn.textContent = 'Scraping...';
-      showStatus(scrapeStatus, 'Fetching page...', '');
+      showStatus(scrapeStatus, 'Fetching page via proxy...', '');
 
       try {
-        const imageUrls = await scrapeImagesFromPage(pageUrl);
-        if (imageUrls.length === 0) {
-          showStatus(scrapeStatus, 'No images found on that page', 'error');
+        const html = await fetchPageHTML(pageUrl);
+        if (!html) {
+          showStatus(scrapeStatus, 'Could not fetch page — all CORS proxies failed. Try pasting direct image URLs instead.', 'error');
           scrapeBtn.textContent = 'Scrape Page for Images';
           scrapeBtn.disabled = false;
           return;
         }
 
-        showStatus(scrapeStatus, `Found ${imageUrls.length} images. Downloading...`, '');
-        let loaded = 0;
-        let failed = 0;
-        for (let i = 0; i < imageUrls.length; i++) {
-          const ok = await addImageURL(category, imageUrls[i]);
-          if (ok) loaded++;
-          else failed++;
-          showStatus(scrapeStatus, `Downloaded ${loaded}/${imageUrls.length} images${failed ? ` (${failed} failed)` : ''}...`, '');
+        showStatus(scrapeStatus, 'Parsing page for images...', '');
+        const imageUrls = extractImageUrls(html, pageUrl);
+
+        if (imageUrls.length === 0) {
+          showStatus(scrapeStatus, 'No images found on that page (images may be loaded by JavaScript)', 'error');
+          scrapeBtn.textContent = 'Scrape Page for Images';
+          scrapeBtn.disabled = false;
+          return;
         }
-        showStatus(scrapeStatus, `Done! Added ${loaded} images${failed ? `, ${failed} failed` : ''}`, 'done');
+
+        showStatus(scrapeStatus, `Found ${imageUrls.length} image candidates. Downloading (skipping tiny ones)...`, '');
+        let loaded = 0;
+        let skipped = 0;
+        for (let i = 0; i < imageUrls.length; i++) {
+          const ok = await addImageFromUrl(category, imageUrls[i]);
+          if (ok) loaded++;
+          else skipped++;
+          showStatus(scrapeStatus, `Progress: ${i + 1}/${imageUrls.length} — added ${loaded}, skipped ${skipped}`, '');
+        }
+        showStatus(scrapeStatus, `Done! Added ${loaded} images (${skipped} skipped as too small or failed)`, 'done');
         urlTextarea.value = '';
       } catch (err) {
         console.error('Scrape error:', err);
@@ -153,91 +167,160 @@
     el.textContent = msg;
   }
 
-  /* ---- Scrape images from a webpage ---- */
-  async function scrapeImagesFromPage(pageUrl) {
-    const html = await fetchPageHTML(pageUrl);
-    if (!html) throw new Error('Could not fetch page (CORS blocked)');
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const baseUrl = new URL(pageUrl);
-    const found = new Set();
-
-    // Collect from <img> tags — src and data-src (lazy loading)
-    doc.querySelectorAll('img').forEach(img => {
-      const src = img.getAttribute('src') || img.getAttribute('data-src') ||
-                  img.getAttribute('data-lazy-src') || img.getAttribute('data-original');
-      if (src) addResolvedUrl(src, baseUrl, found);
-    });
-
-    // Collect from <a> tags linking to images
-    doc.querySelectorAll('a[href]').forEach(a => {
-      const href = a.getAttribute('href');
-      if (href && IMAGE_EXTENSIONS.test(href)) {
-        addResolvedUrl(href, baseUrl, found);
-      }
-    });
-
-    // Collect from <source> tags (picture elements)
-    doc.querySelectorAll('source[srcset]').forEach(source => {
-      const srcset = source.getAttribute('srcset');
-      if (srcset) {
-        srcset.split(',').forEach(entry => {
-          const url = entry.trim().split(/\s+/)[0];
-          if (url) addResolvedUrl(url, baseUrl, found);
-        });
-      }
-    });
-
-    // Collect from CSS background-image in inline styles
-    doc.querySelectorAll('[style]').forEach(el => {
-      const style = el.getAttribute('style');
-      const matches = style.match(/url\(['"]?([^'")\s]+)['"]?\)/g);
-      if (matches) {
-        matches.forEach(m => {
-          const url = m.replace(/url\(['"]?/, '').replace(/['"]?\)/, '');
-          if (IMAGE_EXTENSIONS.test(url)) addResolvedUrl(url, baseUrl, found);
-        });
-      }
-    });
-
-    // Collect from og:image and meta tags
-    doc.querySelectorAll('meta[property="og:image"], meta[name="twitter:image"]').forEach(meta => {
-      const content = meta.getAttribute('content');
-      if (content) addResolvedUrl(content, baseUrl, found);
-    });
-
-    return Array.from(found);
-  }
-
-  function addResolvedUrl(src, baseUrl, set) {
-    try {
-      // Skip data URIs and tiny inline images
-      if (src.startsWith('data:')) return;
-      // Resolve relative URLs
-      const resolved = new URL(src, baseUrl).href;
-      set.add(resolved);
-    } catch {
-      // Invalid URL, skip
-    }
-  }
-
+  /* ---- Fetch page HTML through CORS proxies ---- */
   async function fetchPageHTML(url) {
-    // Try direct fetch first
+    // Try direct fetch first (same-origin or CORS-enabled sites)
     try {
-      const resp = await fetch(url, { mode: 'cors' });
-      if (resp.ok) return await resp.text();
-    } catch { /* CORS blocked, try proxies */ }
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const text = await resp.text();
+        if (text.length > 100) return text; // sanity check
+      }
+    } catch { /* expected — CORS blocked */ }
 
-    // Try CORS proxies
-    for (const proxy of CORS_PROXIES) {
+    // Try each proxy
+    for (const proxyFn of CORS_PROXIES) {
       try {
-        const resp = await fetch(proxy + encodeURIComponent(url));
-        if (resp.ok) return await resp.text();
-      } catch { /* try next */ }
+        const proxyUrl = proxyFn(url);
+        console.log('Trying proxy:', proxyUrl);
+        const resp = await fetch(proxyUrl);
+        if (resp.ok) {
+          const text = await resp.text();
+          if (text.length > 100) return text;
+        }
+      } catch (err) {
+        console.warn('Proxy failed:', err.message);
+      }
     }
 
     return null;
+  }
+
+  /* ---- Extract image URLs from HTML ---- */
+  function extractImageUrls(html, pageUrl) {
+    const baseUrl = new URL(pageUrl);
+    const found = new Set();
+
+    // Parse as DOM
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // 1) <img> tags — check src, data-src, data-lazy-src, data-original, data-file-width
+    doc.querySelectorAll('img').forEach(img => {
+      // All possible src attributes
+      ['src', 'data-src', 'data-lazy-src', 'data-original', 'data-file-url'].forEach(attr => {
+        const val = img.getAttribute(attr);
+        if (val) addUrl(val, baseUrl, found);
+      });
+      // srcset on img tags (Wikipedia uses this heavily)
+      const srcset = img.getAttribute('srcset');
+      if (srcset) parseSrcset(srcset, baseUrl, found);
+    });
+
+    // 2) <source> srcset (inside <picture>)
+    doc.querySelectorAll('source[srcset]').forEach(source => {
+      parseSrcset(source.getAttribute('srcset'), baseUrl, found);
+    });
+
+    // 3) <a> tags linking directly to image files
+    doc.querySelectorAll('a[href]').forEach(a => {
+      const href = a.getAttribute('href');
+      if (href && IMAGE_EXTENSIONS.test(href)) {
+        addUrl(href, baseUrl, found);
+      }
+    });
+
+    // 4) CSS background-image in inline styles
+    doc.querySelectorAll('[style]').forEach(el => {
+      const style = el.getAttribute('style');
+      const matches = style.match(/url\(\s*['"]?([^'")\s]+)['"]?\s*\)/g);
+      if (matches) {
+        matches.forEach(m => {
+          const url = m.replace(/url\(\s*['"]?/, '').replace(/['"]?\s*\)/, '');
+          addUrl(url, baseUrl, found);
+        });
+      }
+    });
+
+    // 5) og:image and twitter:image meta
+    doc.querySelectorAll('meta[property="og:image"], meta[name="twitter:image"], meta[name="twitter:image:src"]').forEach(meta => {
+      const content = meta.getAttribute('content');
+      if (content) addUrl(content, baseUrl, found);
+    });
+
+    // 6) Google Images: extract URLs from script tags and data attributes
+    //    Google embeds real image URLs in encoded JSON inside script tags
+    doc.querySelectorAll('script').forEach(script => {
+      const text = script.textContent || '';
+      // Match URLs that look like images in script content
+      const urlPattern = /https?:\/\/[^\s"'\\]+\.(?:jpe?g|png|gif|webp)(?:[^\s"'\\]*)/gi;
+      let match;
+      while ((match = urlPattern.exec(text)) !== null) {
+        let url = match[0];
+        // Unescape common JS escapes
+        url = url.replace(/\\u003d/gi, '=')
+                 .replace(/\\u0026/gi, '&')
+                 .replace(/\\x3d/gi, '=')
+                 .replace(/\\x26/gi, '&')
+                 .replace(/\\\//g, '/')
+                 .replace(/\\"/g, '');
+        // Skip Google's own UI images
+        if (url.includes('gstatic.com/images') || url.includes('google.com/images')) continue;
+        if (url.includes('googleusercontent') || url.includes('ggpht')) continue;
+        addUrl(url, baseUrl, found);
+      }
+    });
+
+    // 7) data-tbnid, data-ou, data-iurl — Google Images specific attributes
+    doc.querySelectorAll('[data-ou]').forEach(el => {
+      addUrl(el.getAttribute('data-ou'), baseUrl, found);
+    });
+    doc.querySelectorAll('[data-iurl]').forEach(el => {
+      addUrl(el.getAttribute('data-iurl'), baseUrl, found);
+    });
+
+    // 8) Look for image URLs in all data- attributes as a catch-all
+    doc.querySelectorAll('[data-src], [data-original], [data-lazy], [data-url]').forEach(el => {
+      ['data-src', 'data-original', 'data-lazy', 'data-url'].forEach(attr => {
+        const val = el.getAttribute(attr);
+        if (val && isLikelyImageUrl(val)) addUrl(val, baseUrl, found);
+      });
+    });
+
+    // Filter: prefer larger image versions (remove thumbnail variants if full version exists)
+    return Array.from(found).filter(url => {
+      // Skip SVGs (usually icons/logos)
+      if (url.endsWith('.svg')) return false;
+      // Skip data URIs
+      if (url.startsWith('data:')) return false;
+      return true;
+    });
+  }
+
+  function parseSrcset(srcset, baseUrl, found) {
+    if (!srcset) return;
+    srcset.split(',').forEach(entry => {
+      const parts = entry.trim().split(/\s+/);
+      if (parts[0]) addUrl(parts[0], baseUrl, found);
+    });
+  }
+
+  function isLikelyImageUrl(str) {
+    if (!str) return false;
+    if (str.startsWith('data:image/')) return false; // skip inline
+    return IMAGE_EXTENSIONS.test(str) || str.includes('/image') || str.includes('photo');
+  }
+
+  function addUrl(src, baseUrl, set) {
+    if (!src) return;
+    try {
+      if (src.startsWith('data:')) return;
+      if (src.startsWith('//')) src = 'https:' + src;
+      const resolved = new URL(src, baseUrl).href;
+      set.add(resolved);
+    } catch {
+      // Invalid URL
+    }
   }
 
   /* ---- Add image from file ---- */
@@ -248,63 +331,70 @@
     updateCounts();
   }
 
-  /* ---- Add image from URL ---- */
-  async function addImageURL(category, url) {
+  /* ---- Add image from URL (using <img> tag — most CORS-friendly) ---- */
+  async function addImageFromUrl(category, url) {
     try {
-      // Try fetching as blob directly (handles more cases than <img> tag)
-      let blob = await fetchImageAsBlob(url);
-      if (blob && blob.size >= MIN_IMAGE_SIZE) {
-        const id = await App.addImage(category, blob);
-        addThumbnail(category, id, blob);
-        updateCounts();
-        return true;
-      }
+      const img = await loadImageWithTimeout(url, 10000);
+      // Skip tiny images (icons, spacers, 1px trackers)
+      if (img.naturalWidth < MIN_IMAGE_WIDTH || img.naturalHeight < MIN_IMAGE_HEIGHT) return false;
 
-      // Fallback: load via <img> tag and draw to canvas
-      const img = await App.loadImage(url);
-      if (img.naturalWidth < 32 || img.naturalHeight < 32) return false; // too small
+      // Draw to canvas and export as blob
       const canvas = document.createElement('canvas');
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
       canvas.getContext('2d').drawImage(img, 0, 0);
-      blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-      if (blob && blob.size >= MIN_IMAGE_SIZE) {
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+      if (!blob) return false;
+
+      const id = await App.addImage(category, blob);
+      addThumbnail(category, id, blob);
+      updateCounts();
+      return true;
+    } catch {
+      // Image failed to load — try via proxy as last resort
+      try {
+        const blob = await fetchImageViaProxy(url);
+        if (!blob) return false;
+
+        // Validate it's actually an image by loading it
+        const testImg = await loadImageWithTimeout(URL.createObjectURL(blob), 5000);
+        if (testImg.naturalWidth < MIN_IMAGE_WIDTH || testImg.naturalHeight < MIN_IMAGE_HEIGHT) return false;
+
         const id = await App.addImage(category, blob);
         addThumbnail(category, id, blob);
         updateCounts();
         return true;
+      } catch {
+        return false;
       }
-      return false;
-    } catch (err) {
-      console.warn('Failed to load image URL:', url, err);
-      return false;
     }
   }
 
-  async function fetchImageAsBlob(url) {
-    // Direct fetch
-    try {
-      const resp = await fetch(url, { mode: 'cors' });
-      if (resp.ok) {
-        const ct = resp.headers.get('content-type') || '';
-        if (ct.startsWith('image/')) return await resp.blob();
-      }
-    } catch { /* CORS blocked */ }
+  function loadImageWithTimeout(src, ms) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const timer = setTimeout(() => {
+        img.src = '';
+        reject(new Error('timeout'));
+      }, ms);
+      img.onload = () => { clearTimeout(timer); resolve(img); };
+      img.onerror = () => { clearTimeout(timer); reject(new Error('load failed')); };
+      img.src = src;
+    });
+  }
 
-    // Try via CORS proxy
-    for (const proxy of CORS_PROXIES) {
+  async function fetchImageViaProxy(url) {
+    for (const proxyFn of CORS_PROXIES) {
       try {
-        const resp = await fetch(proxy + encodeURIComponent(url));
+        const resp = await fetch(proxyFn(url));
         if (resp.ok) {
-          const ct = resp.headers.get('content-type') || '';
-          if (ct.startsWith('image/')) return await resp.blob();
-          // Some proxies don't pass content-type, check if it's valid image data
           const blob = await resp.blob();
-          if (blob.type.startsWith('image/') || blob.size > MIN_IMAGE_SIZE) return blob;
+          if (blob.type.startsWith('image/') && blob.size > 1000) return blob;
         }
       } catch { /* try next */ }
     }
-
     return null;
   }
 
