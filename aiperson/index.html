@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro AI or Anti AI?</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #00d2ff, #ff6ec7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .drop-zone {
+            width: 100%;
+            max-width: 500px;
+            border: 2px dashed #444;
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #111;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #00d2ff;
+            background: #0d1b2a;
+        }
+
+        .drop-zone p {
+            font-size: 1.1rem;
+            color: #999;
+        }
+
+        .drop-zone .icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .drop-zone .browse {
+            color: #00d2ff;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        input[type="file"] { display: none; }
+
+        .preview-container {
+            margin-top: 32px;
+            width: 100%;
+            max-width: 500px;
+            display: none;
+        }
+
+        .preview-container.visible { display: block; }
+
+        .preview-img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #888;
+            font-size: 1.1rem;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading.visible { display: block; }
+
+        .result {
+            display: none;
+            padding: 24px;
+            border-radius: 12px;
+            background: #161616;
+        }
+
+        .result.visible { display: block; }
+
+        .result-label {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-label.pro { color: #00d2ff; }
+        .result-label.anti { color: #ff6ec7; }
+
+        .bar-container {
+            width: 100%;
+            height: 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            background: #222;
+            margin-bottom: 12px;
+        }
+
+        .bar-pro {
+            height: 100%;
+            background: linear-gradient(90deg, #00b4d8, #00d2ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #000;
+            transition: width 0.6s ease;
+            min-width: 0;
+        }
+
+        .bar-anti {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6ec7, #ff3c8e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #000;
+            transition: width 0.6s ease;
+            min-width: 0;
+        }
+
+        .bar-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .try-another {
+            display: block;
+            margin: 24px auto 0;
+            padding: 12px 32px;
+            background: #222;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .try-another:hover {
+            background: #333;
+            border-color: #00d2ff;
+        }
+
+        .model-status {
+            position: fixed;
+            top: 12px;
+            right: 16px;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #1a1a1a;
+        }
+
+        .model-status.loading-model { color: #f0ad4e; }
+        .model-status.ready { color: #5cb85c; }
+        .model-status.error { color: #d9534f; }
+    </style>
+</head>
+<body>
+    <h1>Pro AI or Anti AI?</h1>
+    <p class="subtitle">Upload a photo to find out</p>
+
+    <div class="drop-zone" id="dropZone">
+        <div class="icon">📸</div>
+        <p>Drag & drop a photo here</p>
+        <p>or <span class="browse">browse files</span></p>
+    </div>
+    <input type="file" id="fileInput" accept="image/*">
+
+    <div class="preview-container" id="previewContainer">
+        <img class="preview-img" id="previewImg">
+        <div class="loading" id="loadingEl">Analyzing...</div>
+        <div class="result" id="resultEl">
+            <div class="result-label" id="resultLabel"></div>
+            <div class="bar-container">
+                <div class="bar-pro" id="barPro"></div>
+                <div class="bar-anti" id="barAnti"></div>
+            </div>
+            <div class="bar-labels">
+                <span>Pro AI</span>
+                <span>Anti AI</span>
+            </div>
+            <button class="try-another" id="tryAnother">Try another photo</button>
+        </div>
+    </div>
+
+    <div class="model-status loading-model" id="modelStatus">Loading model...</div>
+
+    <script>
+        let model = null;
+
+        async function loadModel() {
+            const statusEl = document.getElementById('modelStatus');
+            try {
+                model = await tf.loadLayersModel('tfjs_model/model.json');
+                statusEl.textContent = 'Model ready';
+                statusEl.className = 'model-status ready';
+            } catch (e) {
+                statusEl.textContent = 'Model failed to load';
+                statusEl.className = 'model-status error';
+                console.error('Model load error:', e);
+            }
+        }
+
+        function preprocessImage(imgEl) {
+            return tf.tidy(() => {
+                let tensor = tf.browser.fromPixels(imgEl)
+                    .resizeBilinear([224, 224])
+                    .toFloat();
+                // MobileNetV2 preprocessing: scale [0,255] to [-1,1]
+                tensor = tensor.div(127.5).sub(1.0);
+                return tensor.expandDims(0);
+            });
+        }
+
+        async function predict(imgEl) {
+            if (!model) return null;
+            const input = preprocessImage(imgEl);
+            const prediction = model.predict(input);
+            const prob = (await prediction.data())[0];
+            input.dispose();
+            prediction.dispose();
+            return prob; // probability of "pro AI" (1 = pro, 0 = anti)
+        }
+
+        function showResult(proProb) {
+            const loadingEl = document.getElementById('loadingEl');
+            const resultEl = document.getElementById('resultEl');
+            const resultLabel = document.getElementById('resultLabel');
+            const barPro = document.getElementById('barPro');
+            const barAnti = document.getElementById('barAnti');
+
+            loadingEl.classList.remove('visible');
+
+            const proPct = Math.round(proProb * 100);
+            const antiPct = 100 - proPct;
+
+            if (proProb >= 0.5) {
+                resultLabel.textContent = `Pro AI (${proPct}%)`;
+                resultLabel.className = 'result-label pro';
+            } else {
+                resultLabel.textContent = `Anti AI (${antiPct}%)`;
+                resultLabel.className = 'result-label anti';
+            }
+
+            barPro.style.width = proPct + '%';
+            barPro.textContent = proPct > 15 ? proPct + '%' : '';
+            barAnti.style.width = antiPct + '%';
+            barAnti.textContent = antiPct > 15 ? antiPct + '%' : '';
+
+            resultEl.classList.add('visible');
+        }
+
+        async function handleImage(file) {
+            const previewContainer = document.getElementById('previewContainer');
+            const previewImg = document.getElementById('previewImg');
+            const loadingEl = document.getElementById('loadingEl');
+            const resultEl = document.getElementById('resultEl');
+
+            resultEl.classList.remove('visible');
+            previewContainer.classList.add('visible');
+            loadingEl.classList.add('visible');
+
+            const url = URL.createObjectURL(file);
+            previewImg.src = url;
+
+            previewImg.onload = async () => {
+                const prob = await predict(previewImg);
+                if (prob !== null) {
+                    showResult(prob);
+                } else {
+                    loadingEl.textContent = 'Model not loaded yet. Please wait...';
+                }
+            };
+        }
+
+        // Drop zone events
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleImage(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleImage(file);
+        });
+
+        document.getElementById('tryAnother').addEventListener('click', () => {
+            document.getElementById('previewContainer').classList.remove('visible');
+            document.getElementById('resultEl').classList.remove('visible');
+            document.getElementById('loadingEl').classList.remove('visible');
+            fileInput.value = '';
+        });
+
+        // Load model on page load
+        loadModel();
+    </script>
+</body>
+</html>
