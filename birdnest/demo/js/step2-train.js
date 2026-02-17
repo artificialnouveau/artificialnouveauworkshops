@@ -1,9 +1,9 @@
 /**
- * step2-train.js — Transfer learning from MobileNet v2
+ * step2-train.js — Transfer learning using @tensorflow-models/mobilenet embeddings
  */
 
 (function () {
-  let mobilenet = null;
+  let mobilenetModel = null;  // The @tensorflow-models/mobilenet instance
   let trainedModel = null;
   let trainingLogs = { loss: [], val_loss: [], acc: [], val_acc: [] };
 
@@ -45,47 +45,34 @@
     });
   });
 
-  /* ---- Load MobileNet ---- */
+  /* ---- Load MobileNet via official package ---- */
   async function loadMobileNet() {
     const dot = document.getElementById('mobilenet-dot');
     const detail = document.getElementById('mobilenet-detail');
-    detail.textContent = 'loading (~14 MB)...';
+    detail.textContent = 'loading (~7 MB)...';
 
     try {
-      const base = await tf.loadLayersModel(
-        'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v2_1.0_224/model.json'
-      );
-
-      // Use an intermediate layer as feature extractor
-      const layer = base.getLayer('out_relu');
-      mobilenet = tf.model({ inputs: base.inputs, outputs: layer.output });
-      mobilenet.trainable = false;
+      // Use the @tensorflow-models/mobilenet package (loaded via CDN)
+      mobilenetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
 
       dot.className = 'model-load-dot ready';
       detail.textContent = 'ready';
       btnTrain.disabled = false;
     } catch (err) {
       dot.className = 'model-load-dot error';
-      detail.textContent = 'failed to load';
+      detail.textContent = 'failed — ' + err.message;
       console.error('MobileNet load error:', err);
     }
   }
 
-  /* ---- Preprocess Image ---- */
-  function preprocessImage(imgElement) {
-    return tf.tidy(() => {
-      let tensor = tf.browser.fromPixels(imgElement)
-        .resizeBilinear([IMAGE_SIZE, IMAGE_SIZE])
-        .toFloat()
-        .div(127.5)
-        .sub(1)
-        .expandDims(0);
-      return tensor;
-    });
+  /* ---- Extract embeddings from an image element ---- */
+  function getEmbedding(imgElement) {
+    // infer(img, embedding=true) returns a 1D feature vector (1280-dim for MobileNet v2)
+    return mobilenetModel.infer(imgElement, true);
   }
 
   /* ---- Build Dataset Tensors ---- */
-  async function buildDataset() {
+  async function buildDataset(statusFn) {
     const birdnestImages = await App.getImagesByCategory('birdnest');
     const notBirdnestImages = await App.getImagesByCategory('not_birdnest');
 
@@ -108,13 +95,15 @@
     const features = [];
     const labels = [];
 
-    for (const item of allImages) {
+    for (let i = 0; i < allImages.length; i++) {
+      const item = allImages[i];
+      statusFn(`Extracting features: ${i + 1}/${allImages.length}`);
       const img = await App.loadImage(item.blob);
-      const preprocessed = preprocessImage(img);
-      const feat = mobilenet.predict(preprocessed);
-      features.push(feat);
+      const embedding = getEmbedding(img);
+      features.push(embedding);
       labels.push(item.label);
-      preprocessed.dispose();
+      // Small delay to keep UI responsive
+      if (i % 5 === 0) await tf.nextFrame();
     }
 
     const xs = tf.concat(features);
@@ -127,8 +116,8 @@
   /* ---- Build Classification Head ---- */
   function buildHead(inputShape) {
     const model = tf.sequential();
-    model.add(tf.layers.globalAveragePooling2d({ inputShape }));
-    model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
+    // Input is a flat 1280-dim embedding vector from MobileNet
+    model.add(tf.layers.dense({ inputShape, units: 128, activation: 'relu' }));
     model.add(tf.layers.dropout({ rate: 0.3 }));
     model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
 
@@ -159,7 +148,9 @@
     confusionContainer.classList.add('hidden');
     modelActions.classList.add('hidden');
 
-    const dataset = await buildDataset();
+    const dataset = await buildDataset((msg) => {
+      steps.textContent = msg;
+    });
     if (!dataset) {
       progressBar.classList.remove('visible');
       btnTrain.disabled = false;
@@ -169,15 +160,17 @@
     const { xs, ys, total } = dataset;
 
     // Split train/validation (80/20)
-    const splitIdx = Math.floor(total * 0.8);
+    const splitIdx = Math.max(1, Math.floor(total * 0.8));
     const xTrain = xs.slice(0, splitIdx);
     const yTrain = ys.slice(0, splitIdx).toFloat();
     const xVal = xs.slice(splitIdx);
     const yVal = ys.slice(splitIdx).toFloat();
 
-    // Build head
+    // Build head — input shape is [1280] for mobilenet v2
     const featureShape = xs.shape.slice(1);
     const head = buildHead(featureShape);
+
+    steps.textContent = 'Training...';
 
     await head.fit(xTrain, yTrain, {
       epochs,
@@ -350,8 +343,6 @@
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    // Need both .json and .bin — user selects the .json, bin must be in same dir
-    // For simplicity, use uploads handler
     const jsonFile = files.find(f => f.name.endsWith('.json'));
     if (!jsonFile) {
       alert('Please select the model .json file');
@@ -390,9 +381,9 @@
 
   // Expose for Step 3
   window.BirdnestTrain = {
-    getMobileNet: () => mobilenet,
+    getMobileNet: () => mobilenetModel,
     getModel: () => trainedModel,
-    preprocessImage,
+    getEmbedding,
     IMAGE_SIZE
   };
 

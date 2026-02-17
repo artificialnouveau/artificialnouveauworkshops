@@ -33,10 +33,10 @@
   });
 
   async function classifyFiles(files) {
-    const mobilenet = BirdnestTrain.getMobileNet();
+    const mobileNetModel = BirdnestTrain.getMobileNet();
     const model = BirdnestTrain.getModel();
 
-    if (!mobilenet || !model) {
+    if (!mobileNetModel || !model) {
       alert('No trained model available. Please train a model in Step 2 first.');
       return;
     }
@@ -44,19 +44,17 @@
     for (const file of files) {
       const blob = await App.fileToBlob(file);
       const img = await App.loadImage(blob);
-      const result = await classifySingle(mobilenet, model, img);
+      const result = await classifySingle(model, img);
       addResultCard(blob, result);
     }
   }
 
-  async function classifySingle(mobilenet, model, imgElement) {
-    const preprocessed = BirdnestTrain.preprocessImage(imgElement);
-    const features = mobilenet.predict(preprocessed);
-    const prediction = model.predict(features);
+  async function classifySingle(model, imgElement) {
+    const embedding = BirdnestTrain.getEmbedding(imgElement);
+    const prediction = model.predict(embedding);
     const score = (await prediction.data())[0];
 
-    preprocessed.dispose();
-    features.dispose();
+    embedding.dispose();
     prediction.dispose();
 
     return {
@@ -78,8 +76,6 @@
     info.className = 'result-info';
 
     const labelClass = result.isBirdnest ? 'birdnest' : 'not-birdnest';
-    const barColor = result.isBirdnest ? 'green' : 'red';
-    const pct = (result.confidence * 100).toFixed(1);
     const nestPct = (result.rawScore * 100).toFixed(1);
     const notNestPct = ((1 - result.rawScore) * 100).toFixed(1);
 
