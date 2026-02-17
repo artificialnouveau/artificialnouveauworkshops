@@ -1,0 +1,13 @@
+{
+  "name": "cream-facial-recognition",
+  "version": "1.0.0",
+  "description": "Facial recognition descriptor generator for Cream photos",
+  "scripts": {
+    "generate": "node generate-descriptors.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.65",
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "@vladmandic/face-api": "^1.7.14"
+  }
+}
