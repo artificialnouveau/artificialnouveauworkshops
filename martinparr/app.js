@@ -6,6 +6,7 @@ const $ = (sel) => document.querySelector(sel);
 let modelsLoaded = false;
 let allEntries = []; // { img, faces[], included }
 let alignedFaces = []; // canvas elements for each aligned face
+let allAges = []; // estimated age per detected face
 
 // ── Initialise ──────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ async function init() {
     const modelPromise = Promise.all([
       faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
       faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
     ]);
 
     // Start loading images immediately
@@ -211,13 +213,15 @@ async function analyzeAll() {
   showProgress(0);
 
   alignedFaces = [];
+  allAges = [];
   let totalFaces = 0;
 
   for (let i = 0; i < allEntries.length; i++) {
     const entry = allEntries[i];
     const detections = await faceapi
       .detectAllFaces(entry.img)
-      .withFaceLandmarks();
+      .withFaceLandmarks()
+      .withAgeAndGender();
 
     entry.faces = detections;
     entry._detected = true;
@@ -225,6 +229,7 @@ async function analyzeAll() {
     for (const det of detections) {
       const aligned = alignFace(entry.img, det.landmarks);
       alignedFaces.push(aligned);
+      allAges.push(Math.round(det.age));
       totalFaces++;
     }
 
@@ -237,13 +242,15 @@ async function analyzeAll() {
   const totalBefore = allEntries.length;
   allEntries = allEntries.filter((e) => e.faces.length > 0);
 
-  // Rebuild aligned faces array to match filtered entries
+  // Rebuild aligned faces and ages arrays to match filtered entries
   alignedFaces = [];
+  allAges = [];
   totalFaces = 0;
   for (const entry of allEntries) {
     for (const det of entry.faces) {
       const aligned = alignFace(entry.img, det.landmarks);
       alignedFaces.push(aligned);
+      allAges.push(Math.round(det.age));
       totalFaces++;
     }
   }
@@ -252,12 +259,13 @@ async function analyzeAll() {
   renderFaceStrip();
 
   const removed = totalBefore - allEntries.length;
-  status.textContent = `Found ${totalFaces} face(s) in ${allEntries.length} photo(s). Removed ${removed} photo(s) without faces. Generating average…`;
+  const avgAge = allAges.length > 0 ? (allAges.reduce((a, b) => a + b, 0) / allAges.length).toFixed(1) : "N/A";
+  status.textContent = `Found ${totalFaces} face(s) in ${allEntries.length} photo(s). Removed ${removed} without faces. Generating average…`;
 
   // Step 2: Generate average face
   generateAverageFace();
 
-  status.textContent = `Done — averaged ${totalFaces} face(s) from ${allEntries.length} photo(s)`;
+  status.textContent = `Done — averaged ${totalFaces} face(s) from ${allEntries.length} photo(s) | Estimated average age: ${avgAge}`;
   status.classList.add("ready");
   btn.disabled = false;
 }
@@ -382,7 +390,8 @@ function generateAverageFace() {
   ctx.putImageData(output, 0, 0);
 
   $("#result-section").classList.remove("hidden");
-  $("#result-meta").textContent = `Averaged ${count} face(s) from ${allEntries.filter((e) => e.included).length} photo(s)`;
+  const estAge = allAges.length > 0 ? (allAges.reduce((a, b) => a + b, 0) / allAges.length).toFixed(1) : "N/A";
+  $("#result-meta").textContent = `Averaged ${count} face(s) from ${allEntries.filter((e) => e.included).length} photo(s) | Estimated average age: ${estAge}`;
 }
 
 // ── Clear all ───────────────────────────────────────────────
@@ -390,6 +399,7 @@ function generateAverageFace() {
 function clearAll() {
   allEntries = [];
   alignedFaces = [];
+  allAges = [];
   $("#gallery").innerHTML = "";
   $("#gallery-title").classList.add("hidden");
   $("#face-strip").innerHTML = "";
