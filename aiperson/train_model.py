@@ -14,11 +14,14 @@ pillow_heif.register_heif_opener()
 
 from PIL import Image, ImageEnhance
 import random
+import os
+os.environ['TF_USE_LEGACY_KERAS'] = '1'  # Force Keras 2 for tfjs compatibility
+
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.applications import MobileNetV2
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+import tf_keras as keras
+from tf_keras import layers
+from tf_keras.applications import MobileNetV2
+from tf_keras.applications.mobilenet_v2 import preprocess_input
 
 # Config
 IMG_SIZE = 224
