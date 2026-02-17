@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pro AI or Anti AI?</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -230,7 +230,7 @@
                 statusEl.textContent = 'Model ready';
                 statusEl.className = 'model-status ready';
             } catch (e) {
-                statusEl.textContent = 'Model failed to load';
+                statusEl.textContent = 'Model failed to load: ' + e.message;
                 statusEl.className = 'model-status error';
                 console.error('Model load error:', e);
             }
