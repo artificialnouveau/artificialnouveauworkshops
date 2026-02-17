@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Salute Detection Exercise</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #141414;
+      --bg-hover: #1a1a1a;
+      --text: #e0e0e0;
+      --text-dim: #888;
+      --accent: #4a9eff;
+      --accent-glow: rgba(74, 158, 255, 0.15);
+      --green: #00ff66;
+      --red: #ff4a4a;
+      --yellow: #ffd94a;
+      --radius: 8px;
+      --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    #app-header {
+      text-align: center;
+      padding: 32px 20px 16px;
+    }
+    #app-header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-top: 6px;
+      font-family: var(--mono);
+    }
+
+    /* Layout */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+    }
+
+    /* Source tabs */
+    .source-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .source-tab {
+      flex: 1;
+      padding: 10px 8px;
+      background: var(--bg-card);
+      border: 1px solid #222;
+      border-radius: var(--radius);
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .source-tab:hover { background: var(--bg-hover); }
+    .source-tab.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Source panels */
+    .source-panel { display: none; margin-bottom: 20px; }
+    .source-panel.active { display: block; }
+
+    /* Upload area */
+    .upload-area {
+      border: 2px dashed #333;
+      border-radius: var(--radius);
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .upload-area:hover { border-color: var(--accent); }
+    .upload-area.has-file {
+      border-color: var(--green);
+      border-style: solid;
+    }
+    .upload-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: var(--text-dim);
+    }
+    .upload-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: var(--accent);
+      font-family: var(--mono);
+    }
+    input[type="file"] { display: none; }
+
+    /* YouTube input */
+    .yt-input-row {
+      display: flex;
+      gap: 8px;
+    }
+    .yt-input-row input[type="text"] {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid #333;
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+    .yt-input-row input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .btn {
+      padding: 10px 20px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #000;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-secondary {
+      background: var(--bg-card);
+      border: 1px solid #333;
+      color: var(--text);
+    }
+
+    .yt-info {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: var(--mono);
+    }
+
+    /* Main layout: canvas + sidebar */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    /* Canvas area */
+    .canvas-wrap {
+      position: relative;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    #output-canvas {
+      display: block;
+      width: 100%;
+      border-radius: var(--radius);
+    }
+    #webcam-video {
+      display: block;
+      width: 100%;
+      border-radius: var(--radius);
+      background: #000;
+    }
+    #webcam-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .video-controls {
+      display: flex;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(0,0,0,0.6);
+      align-items: center;
+    }
+    .video-controls .btn { padding: 6px 14px; font-size: 0.75rem; }
+    #video-progress {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #333;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    #video-progress::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+    #frame-info {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    /* Sidebar parameters */
+    .sidebar {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 16px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .sidebar h3 {
+      font-size: 0.85rem;
+      font-family: var(--mono);
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .param-group {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #222;
+    }
+    .param-group:last-child { border-bottom: none; }
+    .param-group h4 {
+      font-size: 0.75rem;
+      font-family: var(--mono);
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .param-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .param-row label {
+      font-size: 0.8rem;
+      color: var(--text);
+      font-family: var(--mono);
+    }
+    .param-row .val {
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-family: var(--mono);
+      min-width: 40px;
+      text-align: right;
+    }
+    input[type="range"] {
+      width: 100%;
+      margin: 4px 0 8px;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: #333;
+      border-radius: 2px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+    .toggle-row-param {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .toggle-row-param label {
+      font-size: 0.8rem;
+      color: var(--text);
+      font-family: var(--mono);
+    }
+    .toggle-switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #333;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 2px;
+      top: 2px;
+      background: #888;
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent-glow); }
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(16px);
+      background: var(--accent);
+    }
+
+    /* Results panel */
+    .results-panel {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 20px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+    .results-panel h3 {
+      font-size: 0.85rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .person-result {
+      margin-bottom: 12px;
+      padding: 10px;
+      background: var(--bg);
+      border-radius: var(--radius);
+      border-left: 3px solid var(--accent);
+    }
+    .person-result.salute-detected {
+      border-left-color: var(--red);
+    }
+    .person-result .person-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+    .arm-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .arm-stat {
+      font-size: 0.75rem;
+    }
+    .arm-stat .arm-label {
+      color: var(--text-dim);
+      margin-bottom: 2px;
+    }
+    .arm-stat .arm-value { color: var(--text); }
+    .arm-stat .arm-value.high { color: var(--red); font-weight: 600; }
+
+    .salute-alert {
+      background: rgba(255, 74, 74, 0.1);
+      border: 1px solid var(--red);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      color: var(--red);
+      font-weight: 600;
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    /* Explainer */
+    .explainer-block {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--bg-card);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .explainer-block h3 {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+    .explainer-block p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .explainer-block strong { color: var(--text); }
+
+    /* Loading overlay */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.4s;
+    }
+    #loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loader-content { text-align: center; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--bg-card);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-sub { color: var(--text-dim); font-size: 0.85rem; margin-top: 8px; }
+    .dots::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
+    @keyframes dots {
+      0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; }
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      border-top: 1px solid #1a1a1a;
+      margin-top: 40px;
+    }
+    footer .mono { font-size: 0.75rem; margin-bottom: 4px; font-family: var(--mono); }
+
+    .hidden { display: none !important; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        max-height: none;
+      }
+      #app-header h1 { font-size: 1.2rem; }
+      .source-tabs { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="loader-content">
+      <div class="spinner"></div>
+      <p>Loading MediaPipe Pose model<span class="dots"></span></p>
+      <p class="loader-sub">This may take a moment on first visit</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header id="app-header">
+    <h1>Salute Detection Exercise</h1>
+    <p class="subtitle">Pose estimation + gesture analysis. Everything runs locally in your browser.</p>
+  </header>
+
+  <div class="container">
+
+    <!-- Explainer -->
+    <div class="explainer-block" style="margin-bottom: 24px;">
+      <h3>How It Works</h3>
+      <p>This tool uses <strong>MediaPipe Pose</strong> to detect body keypoints, then computes a salute probability based on two geometric criteria:</p>
+      <p style="margin-top:8px"><strong>Extension (E)</strong> &mdash; The angle at the elbow (shoulder-elbow-wrist). A fully extended arm is ~180&deg;.</p>
+      <p><strong>Horizon (H)</strong> &mdash; The angle of the upper arm relative to horizontal. The "ideal" salute range is 30&deg;&ndash;45&deg; above horizontal.</p>
+      <p style="margin-top:8px">Additional checks: the wrist must be <strong>above the shoulder</strong>, and if both arms have similar extension (&lt;10&deg; difference), the gesture is classified as not a salute. Adjust the parameters to see how each threshold changes the detection.</p>
+    </div>
+
+    <!-- Source selection tabs -->
+    <div class="source-tabs">
+      <button class="source-tab active" data-source="image">Upload Image</button>
+      <button class="source-tab" data-source="video">Upload Video</button>
+      <button class="source-tab" data-source="webcam">Webcam</button>
+      <button class="source-tab" data-source="youtube">YouTube Thumbnail</button>
+    </div>
+
+    <!-- Image upload panel -->
+    <div class="source-panel active" id="panel-image">
+      <div class="upload-area" id="upload-area-image">
+        <label for="file-input-image" class="upload-label">
+          <span class="upload-icon">+</span>
+          <span>Tap to upload or take a photo</span>
+        </label>
+        <input type="file" id="file-input-image" accept="image/*" capture="environment">
+      </div>
+    </div>
+
+    <!-- Video upload panel -->
+    <div class="source-panel" id="panel-video">
+      <div class="upload-area" id="upload-area-video">
+        <label for="file-input-video" class="upload-label">
+          <span class="upload-icon">+</span>
+          <span>Upload a video file (mp4, webm)</span>
+        </label>
+        <input type="file" id="file-input-video" accept="video/*">
+      </div>
+    </div>
+
+    <!-- Webcam panel -->
+    <div class="source-panel" id="panel-webcam">
+      <button class="btn" id="webcam-start-btn">Start Webcam</button>
+      <button class="btn btn-secondary hidden" id="webcam-stop-btn" style="margin-left:8px">Stop</button>
+    </div>
+
+    <!-- YouTube panel -->
+    <div class="source-panel" id="panel-youtube">
+      <div class="yt-input-row">
+        <input type="text" id="yt-url" placeholder="Paste YouTube URL (e.g. https://www.youtube.com/watch?v=...)">
+        <button class="btn" id="yt-fetch-btn">Fetch Thumbnail</button>
+      </div>
+      <p class="yt-info">Fetches the video's thumbnail image for single-frame analysis. For full video analysis, download the video and use "Upload Video."</p>
+    </div>
+
+    <!-- Main layout: canvas + parameters -->
+    <div class="main-layout" id="main-layout">
+      <div class="canvas-wrap" id="canvas-wrap">
+        <canvas id="output-canvas" width="800" height="600"></canvas>
+        <!-- Webcam elements (hidden by default) -->
+        <video id="webcam-video" autoplay playsinline class="hidden"></video>
+        <canvas id="webcam-overlay" class="hidden"></canvas>
+        <!-- Video playback controls -->
+        <div class="video-controls hidden" id="video-controls">
+          <button class="btn" id="vid-play-btn">Play</button>
+          <button class="btn btn-secondary" id="vid-step-btn">Step</button>
+          <input type="range" id="video-progress" min="0" max="100" value="0">
+          <span id="frame-info">0:00</span>
+        </div>
+      </div>
+
+      <!-- Parameters sidebar -->
+      <div class="sidebar">
+        <h3>Detection Parameters</h3>
+
+        <div class="param-group">
+          <h4>Extension (Elbow Angle)</h4>
+          <div class="param-row">
+            <label>Min angle</label>
+            <span class="val" id="val-ext-min">140&deg;</span>
+          </div>
+          <input type="range" id="param-ext-min" min="100" max="170" value="140" step="1">
+          <div class="param-row">
+            <label>Full extension</label>
+            <span class="val" id="val-ext-full">153&deg;</span>
+          </div>
+          <input type="range" id="param-ext-full" min="140" max="180" value="153" step="1">
+        </div>
+
+        <div class="param-group">
+          <h4>Horizon (Upper Arm Angle)</h4>
+          <div class="param-row">
+            <label>Low threshold</label>
+            <span class="val" id="val-hor-low">30&deg;</span>
+          </div>
+          <input type="range" id="param-hor-low" min="0" max="60" value="30" step="1">
+          <div class="param-row">
+            <label>Ideal max</label>
+            <span class="val" id="val-hor-high">45&deg;</span>
+          </div>
+          <input type="range" id="param-hor-high" min="30" max="80" value="45" step="1">
+          <div class="param-row">
+            <label>Max cutoff</label>
+            <span class="val" id="val-hor-max">60&deg;</span>
+          </div>
+          <input type="range" id="param-hor-max" min="45" max="90" value="60" step="1">
+        </div>
+
+        <div class="param-group">
+          <h4>Thresholds</h4>
+          <div class="param-row">
+            <label>Confidence</label>
+            <span class="val" id="val-conf">0.50</span>
+          </div>
+          <input type="range" id="param-conf" min="0.1" max="0.9" value="0.5" step="0.05">
+          <div class="param-row">
+            <label>Salute alert</label>
+            <span class="val" id="val-alert">80%</span>
+          </div>
+          <input type="range" id="param-alert" min="0.3" max="1.0" value="0.8" step="0.05">
+          <div class="param-row">
+            <label>Both-arms diff</label>
+            <span class="val" id="val-bothdiff">10&deg;</span>
+          </div>
+          <input type="range" id="param-bothdiff" min="0" max="30" value="10" step="1">
+        </div>
+
+        <div class="param-group">
+          <h4>Display</h4>
+          <div class="toggle-row-param">
+            <label>Show skeleton</label>
+            <div class="toggle-switch">
+              <input type="checkbox" id="opt-skeleton" checked>
+              <span class="toggle-slider"></span>
+            </div>
+          </div>
+          <div class="toggle-row-param">
+            <label>Show keypoints</label>
+            <div class="toggle-switch">
+              <input type="checkbox" id="opt-keypoints" checked>
+              <span class="toggle-slider"></span>
+            </div>
+          </div>
+          <div class="toggle-row-param">
+            <label>Show angles</label>
+            <div class="toggle-switch">
+              <input type="checkbox" id="opt-angles" checked>
+              <span class="toggle-slider"></span>
+            </div>
+          </div>
+          <div class="toggle-row-param">
+            <label>Show probability</label>
+            <div class="toggle-switch">
+              <input type="checkbox" id="opt-prob" checked>
+              <span class="toggle-slider"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results panel -->
+    <div class="results-panel hidden" id="results-panel">
+      <h3>Detection Results</h3>
+      <div id="results-content"></div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p class="mono">All processing happens on your device. No data leaves your browser.</p>
+    <p>A workshop tool by Artificial Nouveau</p>
+  </footer>
+
+  <script type="module">
+    // =========================================================================
+    // MediaPipe Pose Landmarker setup
+    // =========================================================================
+    import {
+      PoseLandmarker,
+      FilesetResolver,
+      DrawingUtils
+    } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+    let poseLandmarker = null;
+    let runningMode = "IMAGE";
+    let webcamRunning = false;
+    let animFrameId = null;
+    let currentVideoEl = null;
+
+    // MediaPipe landmark indices
+    const MP = {
+      NOSE: 0,
+      LEFT_EYE: 2, RIGHT_EYE: 5,
+      LEFT_EAR: 7, RIGHT_EAR: 8,
+      LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,
+      LEFT_ELBOW: 13, RIGHT_ELBOW: 14,
+      LEFT_WRIST: 15, RIGHT_WRIST: 16,
+      LEFT_HIP: 23, RIGHT_HIP: 24,
+      LEFT_KNEE: 25, RIGHT_KNEE: 26,
+      LEFT_ANKLE: 27, RIGHT_ANKLE: 28
+    };
+
+    const SKELETON = [
+      [MP.NOSE, MP.LEFT_EYE], [MP.NOSE, MP.RIGHT_EYE],
+      [MP.LEFT_EYE, MP.LEFT_EAR], [MP.RIGHT_EYE, MP.RIGHT_EAR],
+      [MP.LEFT_SHOULDER, MP.RIGHT_SHOULDER],
+      [MP.LEFT_SHOULDER, MP.LEFT_ELBOW], [MP.LEFT_ELBOW, MP.LEFT_WRIST],
+      [MP.RIGHT_SHOULDER, MP.RIGHT_ELBOW], [MP.RIGHT_ELBOW, MP.RIGHT_WRIST],
+      [MP.LEFT_SHOULDER, MP.LEFT_HIP], [MP.RIGHT_SHOULDER, MP.RIGHT_HIP],
+      [MP.LEFT_HIP, MP.RIGHT_HIP],
+      [MP.LEFT_HIP, MP.LEFT_KNEE], [MP.LEFT_KNEE, MP.LEFT_ANKLE],
+      [MP.RIGHT_HIP, MP.RIGHT_KNEE], [MP.RIGHT_KNEE, MP.RIGHT_ANKLE]
+    ];
+
+    // =========================================================================
+    // Parameters (read from sliders)
+    // =========================================================================
+    function getParams() {
+      return {
+        extMin: +document.getElementById('param-ext-min').value,
+        extFull: +document.getElementById('param-ext-full').value,
+        horLow: +document.getElementById('param-hor-low').value,
+        horHigh: +document.getElementById('param-hor-high').value,
+        horMax: +document.getElementById('param-hor-max').value,
+        conf: +document.getElementById('param-conf').value,
+        alert: +document.getElementById('param-alert').value,
+        bothDiff: +document.getElementById('param-bothdiff').value,
+        showSkeleton: document.getElementById('opt-skeleton').checked,
+        showKeypoints: document.getElementById('opt-keypoints').checked,
+        showAngles: document.getElementById('opt-angles').checked,
+        showProb: document.getElementById('opt-prob').checked,
+      };
+    }
+
+    // =========================================================================
+    // Salute probability computation (matches the notebook logic)
+    // =========================================================================
+    function getSaluteProbability(landmarks, arm, params) {
+      const p = params;
+      let shoulder, elbow, wrist;
+      if (arm === "right") {
+        shoulder = landmarks[MP.RIGHT_SHOULDER];
+        elbow = landmarks[MP.RIGHT_ELBOW];
+        wrist = landmarks[MP.RIGHT_WRIST];
+      } else {
+        shoulder = landmarks[MP.LEFT_SHOULDER];
+        elbow = landmarks[MP.LEFT_ELBOW];
+        wrist = landmarks[MP.LEFT_WRIST];
+      }
+
+      const confS = shoulder.visibility ?? 1;
+      const confE = elbow.visibility ?? 1;
+      const confW = wrist.visibility ?? 1;
+
+      if (confS < p.conf || confE < p.conf || confW < p.conf) {
+        return { score: 0, extension: 0, horizon: 0 };
+      }
+
+      // Extension angle (elbow angle: shoulder-elbow-wrist)
+      const v1 = { x: shoulder.x - elbow.x, y: shoulder.y - elbow.y };
+      const v2 = { x: wrist.x - elbow.x, y: wrist.y - elbow.y };
+      const norm1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+      const norm2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+      let extensionAngle = 0;
+      if (norm1 > 0 && norm2 > 0) {
+        let cosA = (v1.x * v2.x + v1.y * v2.y) / (norm1 * norm2);
+        cosA = Math.max(-1, Math.min(1, cosA));
+        extensionAngle = Math.acos(cosA) * 180 / Math.PI;
+      }
+
+      // Horizon angle (upper arm angle relative to horizontal)
+      const dx = Math.abs(elbow.x - shoulder.x);
+      const dy = shoulder.y - elbow.y; // In normalized coords, smaller y = higher
+      const horizonAngle = (dx !== 0 || dy !== 0) ? Math.atan2(dy, dx) * 180 / Math.PI : 0;
+
+      // Wrist above shoulder check
+      const aboveScore = wrist.y < shoulder.y ? 1.0 : 0.0;
+
+      // Extension score
+      let extensionScore;
+      if (extensionAngle < p.extMin) {
+        extensionScore = 0;
+      } else if (extensionAngle < p.extFull) {
+        extensionScore = (extensionAngle - p.extMin) / (p.extFull - p.extMin);
+      } else {
+        extensionScore = 1;
+      }
+
+      // Horizon score
+      let horizonScore;
+      if (horizonAngle < p.horLow) {
+        horizonScore = horizonAngle / p.horLow;
+      } else if (horizonAngle <= p.horHigh) {
+        horizonScore = 1;
+      } else if (horizonAngle <= p.horMax) {
+        horizonScore = Math.max(0, (p.horMax - horizonAngle) / (p.horMax - p.horHigh));
+      } else {
+        horizonScore = 0;
+      }
+
+      const confProd = confS * confE * confW;
+      let finalScore = ((extensionScore + horizonScore) / 2) * aboveScore * confProd;
+      finalScore = Math.max(0, Math.min(1, finalScore));
+
+      return { score: finalScore, extension: extensionAngle, horizon: horizonAngle };
+    }
+
+    // =========================================================================
+    // Drawing functions
+    // =========================================================================
+    function drawResults(canvas, sourceElement, results) {
+      const ctx = canvas.getContext('2d');
+      const params = getParams();
+
+      // Draw source image/frame
+      canvas.width = sourceElement.videoWidth || sourceElement.naturalWidth || sourceElement.width;
+      canvas.height = sourceElement.videoHeight || sourceElement.naturalHeight || sourceElement.height;
+      ctx.drawImage(sourceElement, 0, 0, canvas.width, canvas.height);
+
+      const w = canvas.width;
+      const h = canvas.height;
+
+      if (!results || !results.landmarks || results.landmarks.length === 0) {
+        updateResultsPanel([]);
+        return;
+      }
+
+      const personResults = [];
+
+      for (let pIdx = 0; pIdx < results.landmarks.length; pIdx++) {
+        const lm = results.landmarks[pIdx];
+
+        // Draw skeleton
+        if (params.showSkeleton) {
+          ctx.strokeStyle = 'rgba(0, 255, 255, 0.7)';
+          ctx.lineWidth = 2;
+          for (const [a, b] of SKELETON) {
+            const la = lm[a], lb = lm[b];
+            if ((la.visibility ?? 0) > params.conf && (lb.visibility ?? 0) > params.conf) {
+              ctx.beginPath();
+              ctx.moveTo(la.x * w, la.y * h);
+              ctx.lineTo(lb.x * w, lb.y * h);
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Draw keypoints
+        if (params.showKeypoints) {
+          for (let i = 0; i < lm.length; i++) {
+            const kp = lm[i];
+            if ((kp.visibility ?? 0) > params.conf) {
+              ctx.beginPath();
+              ctx.arc(kp.x * w, kp.y * h, 4, 0, 2 * Math.PI);
+              ctx.fillStyle = '#00ff66';
+              ctx.fill();
+            }
+          }
+        }
+
+        // Compute salute probabilities
+        const right = getSaluteProbability(lm, "right", params);
+        const left = getSaluteProbability(lm, "left", params);
+
+        // Both-arms check
+        let rightScore = right.score;
+        let leftScore = left.score;
+        let bothArmsSimilar = false;
+        if (Math.abs(right.extension - left.extension) < params.bothDiff) {
+          rightScore = 0;
+          leftScore = 0;
+          bothArmsSimilar = true;
+        }
+
+        // Draw annotations for right arm
+        const rightWrist = lm[MP.RIGHT_WRIST];
+        if ((rightWrist.visibility ?? 0) > params.conf) {
+          const rx = rightWrist.x * w;
+          const ry = rightWrist.y * h;
+          const textColor = rightScore >= params.alert ? '#ffffff' : '#ff4a4a';
+          ctx.font = 'bold 14px monospace';
+          ctx.fillStyle = textColor;
+          ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+          ctx.lineWidth = 3;
+          let yOff = 0;
+          if (params.showProb) {
+            const t = `R: ${(rightScore * 100).toFixed(1)}%`;
+            ctx.strokeText(t, rx, ry + yOff);
+            ctx.fillText(t, rx, ry + yOff);
+            yOff += 18;
+          }
+          if (params.showAngles) {
+            const t1 = `E: ${right.extension.toFixed(1)}°`;
+            const t2 = `H: ${right.horizon.toFixed(1)}°`;
+            ctx.strokeText(t1, rx, ry + yOff); ctx.fillText(t1, rx, ry + yOff); yOff += 18;
+            ctx.strokeText(t2, rx, ry + yOff); ctx.fillText(t2, rx, ry + yOff); yOff += 18;
+          }
+          if (rightScore >= params.alert) {
+            ctx.font = 'bold 20px monospace';
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = 'rgba(255,0,0,0.8)';
+            ctx.lineWidth = 4;
+            ctx.strokeText('SALUTE DETECTED', rx - 20, ry + yOff + 4);
+            ctx.fillText('SALUTE DETECTED', rx - 20, ry + yOff + 4);
+          }
+        }
+
+        // Draw annotations for left arm
+        const leftWrist = lm[MP.LEFT_WRIST];
+        if ((leftWrist.visibility ?? 0) > params.conf) {
+          const lx = leftWrist.x * w - 60;
+          const ly = leftWrist.y * h;
+          const textColor = leftScore >= params.alert ? '#ffffff' : '#4a9eff';
+          ctx.font = 'bold 14px monospace';
+          ctx.fillStyle = textColor;
+          ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+          ctx.lineWidth = 3;
+          let yOff = 0;
+          if (params.showProb) {
+            const t = `L: ${(leftScore * 100).toFixed(1)}%`;
+            ctx.strokeText(t, lx, ly + yOff);
+            ctx.fillText(t, lx, ly + yOff);
+            yOff += 18;
+          }
+          if (params.showAngles) {
+            const t1 = `E: ${left.extension.toFixed(1)}°`;
+            const t2 = `H: ${left.horizon.toFixed(1)}°`;
+            ctx.strokeText(t1, lx, ly + yOff); ctx.fillText(t1, lx, ly + yOff); yOff += 18;
+            ctx.strokeText(t2, lx, ly + yOff); ctx.fillText(t2, lx, ly + yOff); yOff += 18;
+          }
+          if (leftScore >= params.alert) {
+            ctx.font = 'bold 20px monospace';
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = 'rgba(255,0,0,0.8)';
+            ctx.lineWidth = 4;
+            ctx.strokeText('SALUTE DETECTED', lx - 20, ly + yOff + 4);
+            ctx.fillText('SALUTE DETECTED', lx - 20, ly + yOff + 4);
+          }
+        }
+
+        personResults.push({
+          index: pIdx,
+          right: { score: rightScore, extension: right.extension, horizon: right.horizon },
+          left: { score: leftScore, extension: left.extension, horizon: left.horizon },
+          bothArmsSimilar
+        });
+      }
+
+      updateResultsPanel(personResults);
+    }
+
+    function updateResultsPanel(personResults) {
+      const panel = document.getElementById('results-panel');
+      const content = document.getElementById('results-content');
+      const params = getParams();
+
+      if (personResults.length === 0) {
+        panel.classList.add('hidden');
+        return;
+      }
+
+      panel.classList.remove('hidden');
+      let html = '';
+
+      for (const pr of personResults) {
+        const isSalute = pr.right.score >= params.alert || pr.left.score >= params.alert;
+        html += `<div class="person-result ${isSalute ? 'salute-detected' : ''}">`;
+        html += `<div class="person-label">Person ${pr.index + 1}${pr.bothArmsSimilar ? ' — Both arms similar (not a salute)' : ''}</div>`;
+        html += `<div class="arm-stats">`;
+        html += `<div class="arm-stat">
+          <div class="arm-label">Right Arm</div>
+          <div class="arm-value ${pr.right.score >= params.alert ? 'high' : ''}">P: ${(pr.right.score * 100).toFixed(1)}%</div>
+          <div class="arm-value">E: ${pr.right.extension.toFixed(1)}° / H: ${pr.right.horizon.toFixed(1)}°</div>
+        </div>`;
+        html += `<div class="arm-stat">
+          <div class="arm-label">Left Arm</div>
+          <div class="arm-value ${pr.left.score >= params.alert ? 'high' : ''}">P: ${(pr.left.score * 100).toFixed(1)}%</div>
+          <div class="arm-value">E: ${pr.left.extension.toFixed(1)}° / H: ${pr.left.horizon.toFixed(1)}°</div>
+        </div>`;
+        html += `</div>`;
+        if (isSalute) {
+          html += `<div class="salute-alert">SALUTE DETECTED</div>`;
+        }
+        html += `</div>`;
+      }
+
+      content.innerHTML = html;
+    }
+
+    // =========================================================================
+    // Initialize MediaPipe
+    // =========================================================================
+    async function initPoseLandmarker() {
+      const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+      );
+      poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
+          delegate: "GPU"
+        },
+        runningMode: "IMAGE",
+        numPoses: 5
+      });
+      runningMode = "IMAGE";
+      document.getElementById('loading-overlay').classList.add('hidden');
+    }
+
+    async function ensureMode(mode) {
+      if (runningMode !== mode) {
+        runningMode = mode;
+        await poseLandmarker.setOptions({ runningMode: mode });
+      }
+    }
+
+    // =========================================================================
+    // Process image
+    // =========================================================================
+    let currentImage = null;
+
+    async function processImage(imgEl) {
+      if (!poseLandmarker) return;
+      await ensureMode("IMAGE");
+      const canvas = document.getElementById('output-canvas');
+      const results = poseLandmarker.detect(imgEl);
+      drawResults(canvas, imgEl, results);
+    }
+
+    // Re-process when params change (for static images)
+    function reprocessIfImage() {
+      if (currentImage && !webcamRunning && !currentVideoEl) {
+        processImage(currentImage);
+      }
+    }
+
+    // =========================================================================
+    // Process video
+    // =========================================================================
+    let videoElement = null;
+    let videoPlaying = false;
+
+    async function processVideoFrame() {
+      if (!videoElement || !poseLandmarker) return;
+      await ensureMode("VIDEO");
+      const canvas = document.getElementById('output-canvas');
+      const timestamp = videoElement.currentTime * 1000;
+      const results = poseLandmarker.detectForVideo(videoElement, timestamp);
+      drawResults(canvas, videoElement, results);
+    }
+
+    function videoLoop() {
+      if (!videoPlaying) return;
+      processVideoFrame();
+      animFrameId = requestAnimationFrame(videoLoop);
+    }
+
+    // =========================================================================
+    // Webcam
+    // =========================================================================
+    async function startWebcam() {
+      if (!poseLandmarker) return;
+      const video = document.getElementById('webcam-video');
+      const overlay = document.getElementById('webcam-overlay');
+      const canvas = document.getElementById('output-canvas');
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 480 } });
+        video.srcObject = stream;
+        video.classList.remove('hidden');
+        canvas.classList.add('hidden');
+        document.getElementById('webcam-start-btn').classList.add('hidden');
+        document.getElementById('webcam-stop-btn').classList.remove('hidden');
+        webcamRunning = true;
+        currentVideoEl = null;
+        currentImage = null;
+
+        await ensureMode("VIDEO");
+
+        video.addEventListener('loadeddata', function onLoaded() {
+          video.removeEventListener('loadeddata', onLoaded);
+          webcamLoop();
+        });
+      } catch (err) {
+        alert("Could not access webcam: " + err.message);
+      }
+    }
+
+    function webcamLoop() {
+      if (!webcamRunning) return;
+      const video = document.getElementById('webcam-video');
+      if (video.readyState >= 2) {
+        const overlay = document.getElementById('webcam-overlay');
+        overlay.width = video.videoWidth;
+        overlay.height = video.videoHeight;
+        overlay.classList.remove('hidden');
+
+        const timestamp = performance.now();
+        const results = poseLandmarker.detectForVideo(video, timestamp);
+        drawResults(overlay, video, results);
+      }
+      animFrameId = requestAnimationFrame(webcamLoop);
+    }
+
+    function stopWebcam() {
+      webcamRunning = false;
+      if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+      const video = document.getElementById('webcam-video');
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(t => t.stop());
+        video.srcObject = null;
+      }
+      video.classList.add('hidden');
+      document.getElementById('webcam-overlay').classList.add('hidden');
+      document.getElementById('output-canvas').classList.remove('hidden');
+      document.getElementById('webcam-start-btn').classList.remove('hidden');
+      document.getElementById('webcam-stop-btn').classList.add('hidden');
+    }
+
+    // =========================================================================
+    // YouTube thumbnail fetch
+    // =========================================================================
+    function extractYouTubeId(url) {
+      const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+      ];
+      for (const p of patterns) {
+        const m = url.match(p);
+        if (m) return m[1];
+      }
+      return null;
+    }
+
+    async function fetchYouTubeThumbnail() {
+      const url = document.getElementById('yt-url').value.trim();
+      const vid = extractYouTubeId(url);
+      if (!vid) {
+        alert("Could not extract a YouTube video ID. Please check the URL.");
+        return;
+      }
+
+      // Try multiple thumbnail resolutions
+      const thumbUrls = [
+        `https://img.youtube.com/vi/${vid}/maxresdefault.jpg`,
+        `https://img.youtube.com/vi/${vid}/hqdefault.jpg`,
+        `https://img.youtube.com/vi/${vid}/0.jpg`
+      ];
+
+      for (const thumbUrl of thumbUrls) {
+        try {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          const loaded = await new Promise((resolve, reject) => {
+            img.onload = () => {
+              // YouTube returns a 120x90 default image if the resolution doesn't exist
+              if (img.naturalWidth > 200) resolve(true);
+              else resolve(false);
+            };
+            img.onerror = () => resolve(false);
+            img.src = thumbUrl;
+          });
+          if (loaded) {
+            currentImage = img;
+            currentVideoEl = null;
+            stopWebcamIfRunning();
+            hideVideoControls();
+            document.getElementById('output-canvas').classList.remove('hidden');
+            await processImage(img);
+            return;
+          }
+        } catch (e) { /* try next */ }
+      }
+      alert("Could not load YouTube thumbnail. The video may be private or the URL incorrect.");
+    }
+
+    // =========================================================================
+    // Event handlers
+    // =========================================================================
+    function stopWebcamIfRunning() {
+      if (webcamRunning) stopWebcam();
+    }
+
+    function hideVideoControls() {
+      document.getElementById('video-controls').classList.add('hidden');
+      videoPlaying = false;
+      if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+    }
+
+    // Source tabs
+    document.querySelectorAll('.source-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.source-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`panel-${tab.dataset.source}`).classList.add('active');
+      });
+    });
+
+    // Image upload
+    document.getElementById('file-input-image').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      stopWebcamIfRunning();
+      hideVideoControls();
+      document.getElementById('upload-area-image').classList.add('has-file');
+      document.getElementById('output-canvas').classList.remove('hidden');
+      const img = new Image();
+      img.onload = async () => {
+        currentImage = img;
+        currentVideoEl = null;
+        await processImage(img);
+      };
+      img.src = URL.createObjectURL(file);
+    });
+
+    // Video upload
+    document.getElementById('file-input-video').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      stopWebcamIfRunning();
+      currentImage = null;
+      document.getElementById('upload-area-video').classList.add('has-file');
+      document.getElementById('output-canvas').classList.remove('hidden');
+
+      // Create a hidden video element
+      if (videoElement) {
+        videoElement.pause();
+        videoElement.remove();
+      }
+      videoElement = document.createElement('video');
+      videoElement.src = URL.createObjectURL(file);
+      videoElement.muted = true;
+      videoElement.playsInline = true;
+      videoElement.style.display = 'none';
+      document.body.appendChild(videoElement);
+      currentVideoEl = videoElement;
+
+      videoElement.addEventListener('loadeddata', async () => {
+        document.getElementById('video-controls').classList.remove('hidden');
+        const progress = document.getElementById('video-progress');
+        progress.max = Math.floor(videoElement.duration * 100);
+
+        // Process first frame
+        videoElement.currentTime = 0;
+        videoElement.addEventListener('seeked', async function onSeeked() {
+          videoElement.removeEventListener('seeked', onSeeked);
+          await processVideoFrame();
+        });
+      });
+    });
+
+    // Video controls
+    document.getElementById('vid-play-btn').addEventListener('click', async () => {
+      if (!videoElement) return;
+      if (videoPlaying) {
+        videoPlaying = false;
+        videoElement.pause();
+        document.getElementById('vid-play-btn').textContent = 'Play';
+      } else {
+        videoPlaying = true;
+        await ensureMode("VIDEO");
+        videoElement.play();
+        document.getElementById('vid-play-btn').textContent = 'Pause';
+        videoLoop();
+      }
+    });
+
+    document.getElementById('vid-step-btn').addEventListener('click', async () => {
+      if (!videoElement) return;
+      videoPlaying = false;
+      videoElement.pause();
+      document.getElementById('vid-play-btn').textContent = 'Play';
+      videoElement.currentTime = Math.min(videoElement.currentTime + 1 / 30, videoElement.duration);
+      videoElement.addEventListener('seeked', async function onSeeked() {
+        videoElement.removeEventListener('seeked', onSeeked);
+        await processVideoFrame();
+      });
+    });
+
+    document.getElementById('video-progress').addEventListener('input', async (e) => {
+      if (!videoElement) return;
+      videoElement.currentTime = +e.target.value / 100;
+      videoElement.addEventListener('seeked', async function onSeeked() {
+        videoElement.removeEventListener('seeked', onSeeked);
+        await processVideoFrame();
+      });
+    });
+
+    // Update progress bar during playback
+    function updateProgressBar() {
+      if (videoElement && videoPlaying) {
+        const progress = document.getElementById('video-progress');
+        progress.value = Math.floor(videoElement.currentTime * 100);
+        const mins = Math.floor(videoElement.currentTime / 60);
+        const secs = Math.floor(videoElement.currentTime % 60).toString().padStart(2, '0');
+        document.getElementById('frame-info').textContent = `${mins}:${secs}`;
+      }
+      requestAnimationFrame(updateProgressBar);
+    }
+    requestAnimationFrame(updateProgressBar);
+
+    // Webcam
+    document.getElementById('webcam-start-btn').addEventListener('click', startWebcam);
+    document.getElementById('webcam-stop-btn').addEventListener('click', stopWebcam);
+
+    // YouTube
+    document.getElementById('yt-fetch-btn').addEventListener('click', fetchYouTubeThumbnail);
+    document.getElementById('yt-url').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') fetchYouTubeThumbnail();
+    });
+
+    // Parameter sliders — update display values and reprocess
+    const sliderConfigs = [
+      { id: 'param-ext-min', valId: 'val-ext-min', suffix: '°' },
+      { id: 'param-ext-full', valId: 'val-ext-full', suffix: '°' },
+      { id: 'param-hor-low', valId: 'val-hor-low', suffix: '°' },
+      { id: 'param-hor-high', valId: 'val-hor-high', suffix: '°' },
+      { id: 'param-hor-max', valId: 'val-hor-max', suffix: '°' },
+      { id: 'param-conf', valId: 'val-conf', suffix: '', fmt: v => (+v).toFixed(2) },
+      { id: 'param-alert', valId: 'val-alert', suffix: '', fmt: v => Math.round(v * 100) + '%' },
+      { id: 'param-bothdiff', valId: 'val-bothdiff', suffix: '°' },
+    ];
+
+    for (const sc of sliderConfigs) {
+      const slider = document.getElementById(sc.id);
+      const valEl = document.getElementById(sc.valId);
+      slider.addEventListener('input', () => {
+        const v = slider.value;
+        valEl.textContent = sc.fmt ? sc.fmt(v) : v + sc.suffix;
+        reprocessIfImage();
+      });
+    }
+
+    // Toggle switches reprocess
+    ['opt-skeleton', 'opt-keypoints', 'opt-angles', 'opt-prob'].forEach(id => {
+      document.getElementById(id).addEventListener('change', reprocessIfImage);
+    });
+
+    // =========================================================================
+    // Initialize
+    // =========================================================================
+    initPoseLandmarker().catch(err => {
+      console.error("Failed to load pose model:", err);
+      document.querySelector('.loader-content p').textContent = "Failed to load model. Please refresh.";
+    });
+  </script>
+</body>
+</html>
