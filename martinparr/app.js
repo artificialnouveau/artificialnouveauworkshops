@@ -1,12 +1,11 @@
-const FACE_SIZE = 300; // output face size in pixels
+const FACE_SIZE = 300;
 const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.14/model/";
 
 const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
 
 let modelsLoaded = false;
-let allEntries = []; // { img, file?, url?, faces[], included }
-let alignedFaces = []; // { canvas, landmarks } for each detected face
+let allEntries = []; // { img, faces[], included }
+let alignedFaces = []; // canvas elements for each aligned face
 
 // ── Initialise ──────────────────────────────────────────────
 
@@ -14,32 +13,66 @@ async function init() {
   const status = $("#status");
 
   try {
-    await Promise.all([
+    // Load models and images in parallel
+    const modelPromise = Promise.all([
       faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
       faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
     ]);
-    modelsLoaded = true;
-    status.textContent = "Models loaded — upload photos to get started";
-    status.classList.add("ready");
 
-    // Check if pre-downloaded images are available (local dev only)
-    try {
-      const resp = await fetch("./image-list.json");
-      if (resp.ok) {
-        const list = await resp.json();
-        if (list.length > 0) {
-          $("#load-preset-btn").disabled = false;
-          status.textContent = `Models loaded — ${list.length} Instagram photos available, or upload your own`;
-        }
-      }
-    } catch {}
+    // Start loading images immediately
+    status.textContent = "Loading models and images…";
+    const imagePromise = loadPresetImages();
+
+    await modelPromise;
+    modelsLoaded = true;
+
+    await imagePromise;
+
+    if (allEntries.length > 0) {
+      status.textContent = `Ready — ${allEntries.length} photos loaded. Click "Analyze All Images" to detect faces.`;
+      status.classList.add("ready");
+      $("#analyze-btn").disabled = false;
+    } else {
+      status.textContent = "Models loaded — upload photos to get started";
+      status.classList.add("ready");
+    }
 
     $("#drop-zone").classList.remove("hidden");
     setupDragDrop();
   } catch (err) {
-    status.textContent = "Error loading models: " + err.message;
+    status.textContent = "Error loading: " + err.message;
     status.classList.add("error");
     console.error(err);
+  }
+}
+
+// ── Load preset images from image-list.json ─────────────────
+
+async function loadPresetImages() {
+  try {
+    const resp = await fetch("./image-list.json");
+    if (!resp.ok) return;
+    const imageNames = await resp.json();
+    if (!imageNames.length) return;
+
+    showProgress(0);
+
+    for (let i = 0; i < imageNames.length; i++) {
+      const url = `./images/${imageNames[i]}`;
+      try {
+        const img = await loadImage(url);
+        allEntries.push({ img, faces: [], included: true });
+      } catch {
+        console.warn("Failed to load", url);
+      }
+      showProgress((i + 1) / imageNames.length);
+    }
+
+    hideProgress();
+    renderGallery();
+    updateButtons();
+  } catch {
+    // image-list.json not available — that's fine
   }
 }
 
@@ -77,50 +110,6 @@ function setupDragDrop() {
   });
 }
 
-// ── Load preset images from image-list.json ─────────────────
-
-async function loadPresetImages() {
-  const status = $("#status");
-  const btn = $("#load-preset-btn");
-  btn.disabled = true;
-  status.textContent = "Loading image list…";
-  status.className = "status";
-
-  try {
-    const resp = await fetch("./image-list.json");
-    if (!resp.ok) throw new Error("image-list.json not found. Run download_images.py first.");
-    const imageNames = await resp.json();
-
-    if (!imageNames.length) {
-      throw new Error("image-list.json is empty.");
-    }
-
-    status.textContent = `Loading ${imageNames.length} images…`;
-    showProgress(0);
-
-    for (let i = 0; i < imageNames.length; i++) {
-      const url = `./images/${imageNames[i]}`;
-      try {
-        const img = await loadImage(url);
-        allEntries.push({ img, url, faces: [], included: true });
-      } catch {
-        console.warn("Failed to load", url);
-      }
-      showProgress((i + 1) / imageNames.length);
-    }
-
-    hideProgress();
-    renderGallery();
-    await detectAllFaces();
-  } catch (err) {
-    status.textContent = err.message;
-    status.classList.add("error");
-    btn.disabled = false;
-  }
-}
-
-// ── Add user-uploaded files ─────────────────────────────────
-
 async function addFiles(files) {
   const status = $("#status");
   status.textContent = `Loading ${files.length} file(s)…`;
@@ -129,13 +118,15 @@ async function addFiles(files) {
 
   for (let i = 0; i < files.length; i++) {
     const img = await loadImageFromFile(files[i]);
-    allEntries.push({ img, file: files[i], faces: [], included: true });
+    allEntries.push({ img, faces: [], included: true });
     showProgress((i + 1) / files.length);
   }
 
   hideProgress();
   renderGallery();
-  await detectAllFaces();
+  updateButtons();
+  status.textContent = `${allEntries.length} photos loaded. Click "Analyze All Images" to detect faces.`;
+  status.classList.add("ready");
 }
 
 // ── Image loading helpers ───────────────────────────────────
@@ -166,7 +157,7 @@ function loadImageFromFile(file) {
 function renderGallery() {
   const gallery = $("#gallery");
   gallery.innerHTML = "";
-  $("#gallery-title").classList.remove("hidden");
+  $("#gallery-title").classList.toggle("hidden", allEntries.length === 0);
 
   allEntries.forEach((entry, idx) => {
     const div = document.createElement("div");
@@ -183,7 +174,7 @@ function renderGallery() {
       badge.className = "face-count";
       badge.textContent = `${entry.faces.length} face${entry.faces.length > 1 ? "s" : ""}`;
       div.appendChild(badge);
-    } else if (entry.faces._detected) {
+    } else if (entry._detected) {
       const badge = document.createElement("span");
       badge.className = "face-count zero";
       badge.textContent = "0 faces";
@@ -197,21 +188,24 @@ function renderGallery() {
 
     gallery.appendChild(div);
   });
-
-  updateButtons();
 }
 
 function updateButtons() {
-  const hasFaces = alignedFaces.length > 0;
   const hasEntries = allEntries.length > 0;
-  $("#generate-btn").disabled = !hasFaces;
+  $("#analyze-btn").disabled = !hasEntries || !modelsLoaded;
   $("#clear-btn").disabled = !hasEntries;
 }
 
-// ── Face detection ──────────────────────────────────────────
+// ── Analyze All Images: detect faces + generate average ─────
 
-async function detectAllFaces() {
+async function analyzeAll() {
+  if (!modelsLoaded || allEntries.length === 0) return;
+
   const status = $("#status");
+  const btn = $("#analyze-btn");
+  btn.disabled = true;
+
+  // Step 1: Detect faces
   status.textContent = "Detecting faces…";
   status.className = "status";
   showProgress(0);
@@ -226,7 +220,7 @@ async function detectAllFaces() {
       .withFaceLandmarks();
 
     entry.faces = detections;
-    entry.faces._detected = true;
+    entry._detected = true;
 
     for (const det of detections) {
       const aligned = alignFace(entry.img, det.landmarks);
@@ -241,11 +235,17 @@ async function detectAllFaces() {
   renderGallery();
   renderFaceStrip();
 
-  status.textContent = `Found ${totalFaces} face(s) in ${allEntries.length} photo(s)`;
+  status.textContent = `Found ${totalFaces} face(s) in ${allEntries.length} photo(s). Generating average…`;
+
+  // Step 2: Generate average face
+  generateAverageFace();
+
+  status.textContent = `Done — averaged ${totalFaces} face(s) from ${allEntries.length} photo(s)`;
   status.classList.add("ready");
+  btn.disabled = false;
 }
 
-// ── Face alignment using affine transform ───────────────────
+// ── Face alignment using similarity transform ───────────────
 
 function alignFace(img, landmarks) {
   const pts = landmarks.positions;
@@ -253,9 +253,6 @@ function alignFace(img, landmarks) {
   // Eye centres (landmarks 36-41 = left eye, 42-47 = right eye)
   const leftEye = avgPoint(pts.slice(36, 42));
   const rightEye = avgPoint(pts.slice(42, 48));
-  const nose = pts[30]; // tip of nose
-  const mouthLeft = pts[48];
-  const mouthRight = pts[54];
 
   // Target positions in the output (normalised to FACE_SIZE)
   const targetLeftEye = { x: FACE_SIZE * 0.3, y: FACE_SIZE * 0.35 };
@@ -281,7 +278,6 @@ function alignFace(img, landmarks) {
   canvas.height = FACE_SIZE;
   const ctx = canvas.getContext("2d");
 
-  // Transform: translate to target left eye, then rotate+scale around source left eye
   ctx.save();
   ctx.translate(targetLeftEye.x, targetLeftEye.y);
   ctx.rotate(rot);
@@ -294,14 +290,9 @@ function alignFace(img, landmarks) {
 }
 
 function avgPoint(points) {
-  const n = points.length;
-  let x = 0,
-    y = 0;
-  for (const p of points) {
-    x += p.x;
-    y += p.y;
-  }
-  return { x: x / n, y: y / n };
+  let x = 0, y = 0;
+  for (const p of points) { x += p.x; y += p.y; }
+  return { x: x / points.length, y: y / points.length };
 }
 
 // ── Render face strip ───────────────────────────────────────
@@ -331,7 +322,6 @@ function renderFaceStrip() {
 // ── Generate average face ───────────────────────────────────
 
 function generateAverageFace() {
-  // Only use faces from included entries
   const includedFaces = [];
   let faceIdx = 0;
   for (const entry of allEntries) {
@@ -344,7 +334,7 @@ function generateAverageFace() {
   }
 
   if (includedFaces.length === 0) {
-    $("#status").textContent = "No included faces to average";
+    $("#status").textContent = "No faces found in included photos";
     $("#status").className = "status error";
     return;
   }
@@ -354,7 +344,6 @@ function generateAverageFace() {
   resultCanvas.height = FACE_SIZE;
   const ctx = resultCanvas.getContext("2d");
 
-  // Accumulate pixel values
   const accum = new Float64Array(FACE_SIZE * FACE_SIZE * 4);
   const count = includedFaces.length;
 
@@ -366,12 +355,10 @@ function generateAverageFace() {
     }
   }
 
-  // Write average
   const output = ctx.createImageData(FACE_SIZE, FACE_SIZE);
   for (let i = 0; i < accum.length; i++) {
     output.data[i] = Math.round(accum[i] / count);
   }
-  // Force full opacity
   for (let i = 3; i < output.data.length; i += 4) {
     output.data[i] = 255;
   }
@@ -379,8 +366,6 @@ function generateAverageFace() {
 
   $("#result-section").classList.remove("hidden");
   $("#result-meta").textContent = `Averaged ${count} face(s) from ${allEntries.filter((e) => e.included).length} photo(s)`;
-  $("#status").textContent = "Average face generated!";
-  $("#status").className = "status ready";
 }
 
 // ── Clear all ───────────────────────────────────────────────
@@ -393,9 +378,8 @@ function clearAll() {
   $("#face-strip").innerHTML = "";
   $("#faces-section").classList.add("hidden");
   $("#result-section").classList.add("hidden");
-  $("#load-preset-btn").disabled = false;
   updateButtons();
-  $("#status").textContent = "Models loaded — load photos or drag & drop your own";
+  $("#status").textContent = "Cleared — upload photos to start again";
   $("#status").className = "status ready";
 }
 
@@ -417,8 +401,6 @@ function hideProgress() {
 
 document.addEventListener("DOMContentLoaded", () => {
   init();
-
-  $("#load-preset-btn").addEventListener("click", loadPresetImages);
-  $("#generate-btn").addEventListener("click", generateAverageFace);
+  $("#analyze-btn").addEventListener("click", analyzeAll);
   $("#clear-btn").addEventListener("click", clearAll);
 });
