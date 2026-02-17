@@ -1,4 +1,5 @@
 const FACE_SIZE = 300;
+const CONFIDENCE_THRESHOLD = 0.7; // minimum face detection confidence (0-1)
 const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.14/model/";
 
 const $ = (sel) => document.querySelector(sel);
@@ -223,10 +224,10 @@ async function analyzeAll() {
       .withFaceLandmarks()
       .withAgeAndGender();
 
-    entry.faces = detections;
+    entry.faces = detections.filter((d) => d.detection.score >= CONFIDENCE_THRESHOLD);
     entry._detected = true;
 
-    for (const det of detections) {
+    for (const det of entry.faces) {
       const aligned = alignFace(entry.img, det.landmarks);
       alignedFaces.push(aligned);
       allAges.push(Math.round(det.age));
@@ -334,7 +335,25 @@ function renderFaceStrip() {
 
   section.classList.remove("hidden");
 
-  for (const faceCanvas of alignedFaces) {
+  // Compute average pixel data for sorting by similarity
+  const avgData = computeAveragePixels(alignedFaces);
+
+  // Sort faces by pixel distance to average (most similar first)
+  const indexed = alignedFaces.map((canvas, i) => {
+    const ctx = canvas.getContext("2d");
+    const data = ctx.getImageData(0, 0, FACE_SIZE, FACE_SIZE).data;
+    let dist = 0;
+    for (let j = 0; j < data.length; j += 4) {
+      const dr = data[j] - avgData[j];
+      const dg = data[j + 1] - avgData[j + 1];
+      const db = data[j + 2] - avgData[j + 2];
+      dist += dr * dr + dg * dg + db * db;
+    }
+    return { canvas, dist };
+  });
+  indexed.sort((a, b) => a.dist - b.dist);
+
+  for (const { canvas: faceCanvas } of indexed) {
     const display = document.createElement("canvas");
     display.width = 80;
     display.height = 80;
@@ -342,6 +361,17 @@ function renderFaceStrip() {
     ctx.drawImage(faceCanvas, 0, 0, 80, 80);
     strip.appendChild(display);
   }
+}
+
+function computeAveragePixels(faces) {
+  const accum = new Float64Array(FACE_SIZE * FACE_SIZE * 4);
+  for (const canvas of faces) {
+    const data = canvas.getContext("2d").getImageData(0, 0, FACE_SIZE, FACE_SIZE).data;
+    for (let i = 0; i < data.length; i++) accum[i] += data[i];
+  }
+  const avg = new Uint8ClampedArray(accum.length);
+  for (let i = 0; i < accum.length; i++) avg[i] = Math.round(accum[i] / faces.length);
+  return avg;
 }
 
 // ── Generate average face ───────────────────────────────────
