@@ -265,7 +265,7 @@ async function analyzeAll() {
   // Step 2: Generate average face
   generateAverageFace();
 
-  status.textContent = `Done — averaged ${totalFaces} face(s) from ${allEntries.length} photo(s) | Estimated average age: ${avgAge}`;
+  status.textContent = `Done — ${totalFaces} faces from ${allEntries.length} photos | Average age: ${avgAge} years`;
   status.classList.add("ready");
   btn.disabled = false;
 }
