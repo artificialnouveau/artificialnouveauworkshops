@@ -274,6 +274,7 @@ def get_prediction(prediction_id):
 def health():
     return jsonify({
         "status": "ok",
+        "version": 3,
         "models_loaded": list(VERSIONS.keys()),
         "models_failed": ERRORS,
     })
