@@ -21,6 +21,7 @@ Render:
 import base64
 import io
 import os
+import traceback
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -29,6 +30,22 @@ import replicate
 
 app = Flask(__name__)
 CORS(app)
+
+
+# ── Global error handler — always return JSON, never HTML ────────────
+@app.errorhandler(Exception)
+def handle_error(e):
+    traceback.print_exc()
+    return jsonify({"error": str(e)}), 500
+
+@app.errorhandler(404)
+def handle_404(e):
+    return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(500)
+def handle_500(e):
+    return jsonify({"error": "Internal server error"}), 500
+
 
 # ── Replicate model identifiers ──────────────────────────────────────
 MODELS = {
@@ -43,7 +60,6 @@ MODELS = {
 
 def upload_data_uri(data_uri):
     """Convert a data URI to a Replicate file upload URL."""
-    # Parse data URI: data:image/jpeg;base64,/9j/4AAQ...
     header, b64data = data_uri.split(",", 1)
     mime = header.split(":")[1].split(";")[0]
     ext = mime.split("/")[1].replace("jpeg", "jpg")
@@ -66,11 +82,13 @@ def resolve_version(model_ref):
 # Resolve all versions at startup so requests are fast
 print("Resolving model versions...")
 VERSIONS = {}
+ERRORS = {}
 for key, ref in MODELS.items():
     try:
         VERSIONS[key] = resolve_version(ref)
         print(f"  {key}: {VERSIONS[key][:12]}...")
     except Exception as e:
+        ERRORS[key] = str(e)
         print(f"  {key}: FAILED — {e}")
 print("Done.\n")
 
@@ -79,7 +97,8 @@ def start_prediction(model_key, model_input):
     """Start an async prediction and return its ID immediately."""
     version = VERSIONS.get(model_key)
     if not version:
-        raise ValueError(f"Model {model_key} version not resolved")
+        err = ERRORS.get(model_key, "unknown error")
+        raise ValueError(f"Model '{model_key}' failed to load: {err}")
     prediction = replicate.predictions.create(
         version=version,
         input=model_input,
@@ -207,9 +226,15 @@ def get_prediction(prediction_id):
     return jsonify(result)
 
 
+# ── Debug / health ────────────────────────────────────────────────────
+
 @app.route("/health")
 def health():
-    return jsonify({"status": "ok"})
+    return jsonify({
+        "status": "ok",
+        "models_loaded": list(VERSIONS.keys()),
+        "models_failed": ERRORS,
+    })
 
 
 if __name__ == "__main__":
