@@ -631,6 +631,65 @@ footer .mono {
   margin-bottom: 12px;
 }
 
+/* ===== Result Image ===== */
+.result-image {
+  max-width: 100%;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+}
+
+/* ===== Slider ===== */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.slider-label {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.slider {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+/* ===== Image Gallery (PhotoMaker) ===== */
+.image-gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ===== 3D Viewer ===== */
+.viewer-container {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #111;
+}
+
+/* ===== Select ===== */
+select.text-input {
+  cursor: pointer;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
   #app-header h1 {

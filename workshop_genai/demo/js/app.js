@@ -1,12 +1,25 @@
 /**
- * app.js — 3-tab Generative AI workshop:
- *   Tab 1: Text to Image (AI Horde — free, no auth)
- *   Tab 2: Image to Image (Style Transfer via Magenta, runs locally)
- *   Tab 3: Image to Text (Captioning via BLIP, runs locally)
+ * app.js — 4-tab Generative AI Workshop (Replicate API via local proxy)
+ *   Tab 1: Text to Image (FLUX-schnell)
+ *   Tab 2: Image to Image (SDXL)
+ *   Tab 3: Image to Text (BLIP)
+ *   Tab 4: PhotoMaker (consistent characters)
  */
 
 /* ================================================================
-   TAB 1 — Text to Image (AI Horde — free, no login)
+   Utility — convert File to data URI
+   ================================================================ */
+function fileToDataURI(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ================================================================
+   TAB 1 — Text to Image (FLUX-schnell via Replicate)
    ================================================================ */
 const TextToImage = {
   init() {
@@ -29,92 +42,28 @@ const TextToImage = {
     const status = document.getElementById('txt2img-loading-status');
 
     loadingEl.classList.add('visible');
-    status.textContent = 'Submitting to AI Horde...';
-    fill.style.width = '10%';
+    status.textContent = 'Sending request to FLUX...';
+    fill.style.width = '30%';
 
     try {
-      // Step 1: Submit async generation request
-      const submitRes = await fetch('https://aihorde.net/api/v2/generate/async', {
+      const res = await fetch('/api/txt2img', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': '0000000000'
-        },
-        body: JSON.stringify({
-          prompt: prompt,
-          params: { width: 512, height: 512, steps: 25 },
-          nsfw: false,
-          models: ['stable_diffusion']
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
       });
 
-      if (!submitRes.ok) {
-        const errData = await submitRes.json().catch(() => ({}));
-        throw new Error(errData.message || `Submission failed (status ${submitRes.status})`);
-      }
-
-      const { id } = await submitRes.json();
-      fill.style.width = '20%';
-      status.textContent = 'Queued — waiting for a worker to pick this up...';
-
-      // Step 2: Poll for completion
-      let done = false;
-      let attempts = 0;
-      const maxAttempts = 60; // 2 minutes max
-
-      while (!done && attempts < maxAttempts) {
-        await new Promise(r => setTimeout(r, 2000));
-        attempts++;
-
-        const checkRes = await fetch(`https://aihorde.net/api/v2/generate/check/${id}`);
-        const checkData = await checkRes.json();
-
-        if (checkData.done) {
-          done = true;
-          break;
-        }
-
-        if (checkData.faulted) {
-          throw new Error('Generation failed on the worker. Please try again.');
-        }
-
-        const waitTime = checkData.wait_time || 0;
-        const queuePos = checkData.queue_position || 0;
-        const pct = checkData.processing ? 60 : Math.min(20 + attempts, 50);
-        fill.style.width = pct + '%';
-
-        if (checkData.processing) {
-          status.textContent = 'A worker is generating your image...';
-        } else if (queuePos > 0) {
-          status.textContent = `Queue position: ${queuePos} — estimated wait: ${waitTime}s`;
-        } else {
-          status.textContent = 'Waiting for worker...';
-        }
-      }
-
-      if (!done) {
-        throw new Error('Generation timed out after 2 minutes. The queue may be busy — try again.');
-      }
-
-      // Step 3: Fetch the result
       fill.style.width = '80%';
-      status.textContent = 'Downloading generated image...';
+      status.textContent = 'Processing response...';
 
-      const resultRes = await fetch(`https://aihorde.net/api/v2/generate/status/${id}`);
-      const resultData = await resultRes.json();
-
-      if (!resultData.generations || resultData.generations.length === 0) {
-        throw new Error('No image was returned. Please try again.');
-      }
-
-      const imgSrc = resultData.generations[0].img;
-      const imgEl = document.getElementById('img-generated');
-      // AI Horde returns either a URL or base64 string
-      imgEl.src = imgSrc.startsWith('http') ? imgSrc : `data:image/webp;base64,${imgSrc}`;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Generation failed');
+      if (!data.images || data.images.length === 0) throw new Error('No image returned');
 
       fill.style.width = '100%';
       status.textContent = 'Done!';
 
+      const imgEl = document.getElementById('txt2img-output');
+      imgEl.src = data.images[0];
       imgEl.onload = () => {
         setTimeout(() => loadingEl.classList.remove('visible'), 600);
         document.getElementById('txt2img-results').classList.remove('hidden');
@@ -133,255 +82,538 @@ const TextToImage = {
 };
 
 /* ================================================================
-   TAB 2 — Image to Image (Style Transfer via Magenta)
+   TAB 2 — Image to Image (SDXL via Replicate)
    ================================================================ */
 const ImageToImage = {
-  model: null,
-  contentImg: null,
-  styleImg: null,
+  imageDataURI: null,
 
   init() {
-    const contentInput = document.getElementById('file-content');
-    const styleInput = document.getElementById('file-style');
-    contentInput.addEventListener('change', e => this.handleUpload(e, 'content'));
-    styleInput.addEventListener('change', e => this.handleUpload(e, 'style'));
-    document.getElementById('upload-area-content').addEventListener('click', () => contentInput.click());
-    document.getElementById('upload-area-style').addEventListener('click', () => styleInput.click());
-    document.getElementById('btn-stylize').addEventListener('click', () => this.stylize());
-  },
+    const fileInput = document.getElementById('file-img2img');
+    const uploadArea = document.getElementById('upload-area-img2img');
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => this.handleUpload(e));
 
-  async handleUpload(e, type) {
-    const file = e.target.files[0];
-    if (!file) return;
+    const slider = document.getElementById('img2img-strength');
+    const valLabel = document.getElementById('img2img-strength-val');
+    slider.addEventListener('input', () => { valLabel.textContent = slider.value; });
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      this.showError(`"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`);
-      return;
-    }
-
-    // Validate file size (max 20MB)
-    if (file.size > 20 * 1024 * 1024) {
-      this.showError(`"${file.name}" is too large (${(file.size / 1e6).toFixed(1)} MB). Please use an image under 20 MB.`);
-      return;
-    }
-
-    try {
-      const img = await App.loadImage(file);
-      const canvasId = type === 'content' ? 'canvas-content' : 'canvas-style';
-      const canvas = document.getElementById(canvasId);
-      App.drawToCanvas(canvas, img, 300);
-      canvas.style.display = 'block';
-
-      if (type === 'content') {
-        this.contentImg = img;
-        document.getElementById('upload-area-content').classList.add('has-file');
-      } else {
-        this.styleImg = img;
-        document.getElementById('upload-area-style').classList.add('has-file');
-      }
-
-      this.hideError();
-      if (this.contentImg && this.styleImg) {
-        document.getElementById('btn-stylize').disabled = false;
-      }
-    } catch (err) {
-      this.showError(`Could not load "${file.name}". The file may be corrupted or in an unsupported format. Try a JPG or PNG instead.`);
-    }
-  },
-
-  showError(msg) {
-    let el = document.getElementById('img2img-error');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'img2img-error';
-      el.className = 'output-block mono';
-      el.style.cssText = 'border-left-color:var(--red); color:var(--red); margin-bottom:24px;';
-      document.getElementById('btn-stylize').before(el);
-    }
-    el.textContent = msg;
-    el.classList.remove('hidden');
-  },
-
-  hideError() {
-    const el = document.getElementById('img2img-error');
-    if (el) el.classList.add('hidden');
-  },
-
-  async loadModel() {
-    if (this.model) return this.model;
-    const loading = document.getElementById('img2img-loading');
-    const fill = document.getElementById('img2img-loading-fill');
-    const status = document.getElementById('img2img-loading-status');
-    loading.classList.add('visible');
-    status.textContent = 'Downloading style transfer model...';
-    fill.style.width = '30%';
-
-    try {
-      this.model = new mi.ArbitraryStyleTransferNetwork();
-      fill.style.width = '60%';
-      status.textContent = 'Initializing model...';
-      await this.model.initialize();
-      fill.style.width = '100%';
-      status.textContent = 'Model ready!';
-      setTimeout(() => loading.classList.remove('visible'), 1000);
-      return this.model;
-    } catch (err) {
-      status.textContent = 'Error loading model: ' + err.message;
-      fill.style.width = '0%';
-      throw err;
-    }
-  },
-
-  async stylize() {
-    const btn = document.getElementById('btn-stylize');
-    btn.disabled = true;
-    btn.textContent = 'Stylizing...';
-
-    try {
-      const model = await this.loadModel();
-
-      // Magenta stylize() returns an HTMLCanvasElement
-      const resultCanvas = await model.stylize(this.contentImg, this.styleImg);
-
-      const outputCanvas = document.getElementById('canvas-result');
-
-      // Handle both HTMLCanvasElement and ImageData returns
-      if (resultCanvas instanceof HTMLCanvasElement) {
-        outputCanvas.width = resultCanvas.width;
-        outputCanvas.height = resultCanvas.height;
-        outputCanvas.getContext('2d').drawImage(resultCanvas, 0, 0);
-      } else if (resultCanvas instanceof ImageData) {
-        outputCanvas.width = resultCanvas.width;
-        outputCanvas.height = resultCanvas.height;
-        outputCanvas.getContext('2d').putImageData(resultCanvas, 0, 0);
-      } else if (resultCanvas && resultCanvas.data) {
-        // Tensor-like object — convert to ImageData
-        const w = resultCanvas.width || this.contentImg.width;
-        const h = resultCanvas.height || this.contentImg.height;
-        outputCanvas.width = w;
-        outputCanvas.height = h;
-        const ctx = outputCanvas.getContext('2d');
-        const imgData = ctx.createImageData(w, h);
-        const src = resultCanvas.data;
-        for (let i = 0; i < w * h; i++) {
-          imgData.data[i * 4]     = Math.round(src[i * 3] * 255);
-          imgData.data[i * 4 + 1] = Math.round(src[i * 3 + 1] * 255);
-          imgData.data[i * 4 + 2] = Math.round(src[i * 3 + 2] * 255);
-          imgData.data[i * 4 + 3] = 255;
-        }
-        ctx.putImageData(imgData, 0, 0);
-      } else {
-        throw new Error('Unexpected output format from style transfer model.');
-      }
-
-      document.getElementById('img2img-results').classList.remove('hidden');
-    } catch (err) {
-      console.error('Style transfer error:', err);
-      this.showError('Style transfer failed: ' + err.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Stylize';
-    }
-  }
-};
-
-/* ================================================================
-   TAB 3 — Image to Text (Captioning via BLIP)
-   ================================================================ */
-const ImageToText = {
-  pipeline: null,
-  loading: false,
-
-  init() {
-    const captionInput = document.getElementById('file-caption');
-    captionInput.addEventListener('change', e => this.handleUpload(e));
-    document.getElementById('upload-area-caption').addEventListener('click', () => captionInput.click());
+    document.getElementById('btn-img2img').addEventListener('click', () => this.transform());
   },
 
   async handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
-      document.getElementById('img2txt-error-text').textContent =
-        `"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`;
-      document.getElementById('img2txt-error').classList.remove('hidden');
+      this.showError(`"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`);
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      this.showError(`"${file.name}" is too large (${(file.size / 1e6).toFixed(1)} MB). Please use an image under 20 MB.`);
       return;
     }
 
     try {
-      const img = await App.loadImage(file);
-      const canvas = document.getElementById('canvas-caption');
-      App.drawToCanvas(canvas, img, 500);
-      canvas.style.display = 'block';
-      document.getElementById('upload-area-caption').classList.add('has-file');
+      this.imageDataURI = await fileToDataURI(file);
 
-      document.getElementById('img2txt-results').classList.add('hidden');
-      document.getElementById('img2txt-error').classList.add('hidden');
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.getElementById('canvas-img2img-preview');
+        App.drawToCanvas(canvas, img, 400);
+        canvas.style.display = 'block';
+        document.getElementById('upload-area-img2img').classList.add('has-file');
+        document.getElementById('btn-img2img').disabled = false;
+      };
+      img.src = this.imageDataURI;
 
-      await this.caption(file);
+      this.hideError();
     } catch (err) {
-      document.getElementById('img2txt-error-text').textContent =
-        `Could not load "${file.name}". The file may be corrupted or unsupported. Try a JPG or PNG instead.`;
-      document.getElementById('img2txt-error').classList.remove('hidden');
+      this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
     }
   },
 
-  async caption(file) {
+  showError(msg) {
+    document.getElementById('img2img-error-text').textContent = msg;
+    document.getElementById('img2img-error').classList.remove('hidden');
+  },
+
+  hideError() {
+    document.getElementById('img2img-error').classList.add('hidden');
+  },
+
+  async transform() {
+    const btn = document.getElementById('btn-img2img');
+    const prompt = document.getElementById('img2img-prompt').value.trim();
+    const strength = parseFloat(document.getElementById('img2img-strength').value);
+
+    if (!this.imageDataURI) return;
+    if (!prompt) { this.showError('Please enter a prompt describing the transformation.'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Transforming...';
+
+    document.getElementById('img2img-results').classList.add('hidden');
+    this.hideError();
+
+    const loadingEl = document.getElementById('img2img-loading');
+    const fill = document.getElementById('img2img-loading-fill');
+    const status = document.getElementById('img2img-loading-status');
+
+    loadingEl.classList.add('visible');
+    status.textContent = 'Sending image to SDXL...';
+    fill.style.width = '30%';
+
+    try {
+      const res = await fetch('/api/img2img', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, image: this.imageDataURI, strength })
+      });
+
+      fill.style.width = '80%';
+      status.textContent = 'Processing response...';
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Transformation failed');
+      if (!data.images || data.images.length === 0) throw new Error('No image returned');
+
+      fill.style.width = '100%';
+      status.textContent = 'Done!';
+
+      document.getElementById('img2img-original').src = this.imageDataURI;
+      const outputEl = document.getElementById('img2img-output');
+      outputEl.src = data.images[0];
+      outputEl.onload = () => {
+        setTimeout(() => loadingEl.classList.remove('visible'), 600);
+        document.getElementById('img2img-results').classList.remove('hidden');
+      };
+
+    } catch (err) {
+      console.error('Image-to-image error:', err);
+      loadingEl.classList.remove('visible');
+      this.showError('Error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Transform';
+    }
+  }
+};
+
+/* ================================================================
+   TAB 3 — Image to Text (BLIP via Replicate)
+   ================================================================ */
+const ImageToText = {
+  imageDataURI: null,
+
+  init() {
+    const fileInput = document.getElementById('file-img2txt');
+    const uploadArea = document.getElementById('upload-area-img2txt');
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => this.handleUpload(e));
+  },
+
+  async handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.showError(`"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`);
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      this.showError(`"${file.name}" is too large. Please use an image under 20 MB.`);
+      return;
+    }
+
+    try {
+      this.imageDataURI = await fileToDataURI(file);
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.getElementById('canvas-img2txt-preview');
+        App.drawToCanvas(canvas, img, 500);
+        canvas.style.display = 'block';
+        document.getElementById('upload-area-img2txt').classList.add('has-file');
+      };
+      img.src = this.imageDataURI;
+
+      this.hideError();
+      document.getElementById('img2txt-results').classList.add('hidden');
+
+      // Auto-caption on upload
+      await this.caption();
+    } catch (err) {
+      this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
+    }
+  },
+
+  showError(msg) {
+    document.getElementById('img2txt-error-text').textContent = msg;
+    document.getElementById('img2txt-error').classList.remove('hidden');
+  },
+
+  hideError() {
+    document.getElementById('img2txt-error').classList.add('hidden');
+  },
+
+  async caption() {
+    if (!this.imageDataURI) return;
+
     const loadingEl = document.getElementById('img2txt-loading');
     const fill = document.getElementById('img2txt-loading-fill');
     const status = document.getElementById('img2txt-loading-status');
-    const pctEl = document.getElementById('img2txt-loading-pct');
+
+    loadingEl.classList.add('visible');
+    status.textContent = 'Sending image to BLIP...';
+    fill.style.width = '30%';
 
     try {
-      if (!this.pipeline) {
-        if (this.loading) return;
-        this.loading = true;
-        loadingEl.classList.add('visible');
-        status.textContent = 'Starting download...';
-        fill.style.width = '5%';
+      const res = await fetch('/api/img2txt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: this.imageDataURI })
+      });
 
-        this.pipeline = await window._loadCaptionPipeline((progress) => {
-          if (progress.status === 'progress' && progress.total) {
-            const pct = Math.round((progress.loaded / progress.total) * 100);
-            fill.style.width = pct + '%';
-            pctEl.textContent = pct + '%';
-            const mb = (progress.loaded / 1e6).toFixed(1);
-            const totalMb = (progress.total / 1e6).toFixed(1);
-            status.textContent = `${progress.file || 'model'}: ${mb} / ${totalMb} MB`;
-          } else if (progress.status === 'done') {
-            status.textContent = 'Model loaded!';
-          }
-        });
+      fill.style.width = '80%';
+      status.textContent = 'Processing response...';
 
-        fill.style.width = '100%';
-        this.loading = false;
-        setTimeout(() => loadingEl.classList.remove('visible'), 800);
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Captioning failed');
 
-      // Run captioning
-      loadingEl.classList.add('visible');
       fill.style.width = '100%';
-      status.textContent = 'Generating caption...';
+      status.textContent = 'Done!';
 
-      const imageUrl = URL.createObjectURL(file);
-      const output = await this.pipeline(imageUrl);
-      URL.revokeObjectURL(imageUrl);
-
-      loadingEl.classList.remove('visible');
-
-      const caption = output[0]?.generated_text || 'No caption generated.';
-      document.getElementById('img2txt-caption').textContent = caption;
+      document.getElementById('img2txt-caption').textContent = data.caption || 'No caption generated.';
+      setTimeout(() => loadingEl.classList.remove('visible'), 600);
       document.getElementById('img2txt-results').classList.remove('hidden');
 
     } catch (err) {
-      console.error('Captioning error:', err);
-      this.loading = false;
+      console.error('Image-to-text error:', err);
       loadingEl.classList.remove('visible');
-      document.getElementById('img2txt-error-text').textContent = 'Error: ' + err.message;
-      document.getElementById('img2txt-error').classList.remove('hidden');
+      this.showError('Error: ' + err.message);
+    }
+  }
+};
+
+/* ================================================================
+   TAB 4 — PhotoMaker (consistent characters via Replicate)
+   ================================================================ */
+const PhotoMaker = {
+  imageDataURI: null,
+
+  init() {
+    const fileInput = document.getElementById('file-photomaker');
+    const uploadArea = document.getElementById('upload-area-photomaker');
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => this.handleUpload(e));
+
+    document.getElementById('btn-photomaker').addEventListener('click', () => this.generate());
+  },
+
+  async handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.showError(`"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`);
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      this.showError(`"${file.name}" is too large. Please use an image under 20 MB.`);
+      return;
+    }
+
+    try {
+      this.imageDataURI = await fileToDataURI(file);
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.getElementById('canvas-photomaker-preview');
+        App.drawToCanvas(canvas, img, 300);
+        canvas.style.display = 'block';
+        document.getElementById('upload-area-photomaker').classList.add('has-file');
+        document.getElementById('btn-photomaker').disabled = false;
+      };
+      img.src = this.imageDataURI;
+
+      this.hideError();
+    } catch (err) {
+      this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
+    }
+  },
+
+  showError(msg) {
+    document.getElementById('photomaker-error-text').textContent = msg;
+    document.getElementById('photomaker-error').classList.remove('hidden');
+  },
+
+  hideError() {
+    document.getElementById('photomaker-error').classList.add('hidden');
+  },
+
+  async generate() {
+    const btn = document.getElementById('btn-photomaker');
+    const prompt = document.getElementById('photomaker-prompt').value.trim();
+    const style = document.getElementById('photomaker-style').value;
+
+    if (!this.imageDataURI) return;
+    if (!prompt) { this.showError('Please enter a prompt describing the scene.'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+
+    document.getElementById('photomaker-results').classList.add('hidden');
+    this.hideError();
+
+    const loadingEl = document.getElementById('photomaker-loading');
+    const fill = document.getElementById('photomaker-loading-fill');
+    const status = document.getElementById('photomaker-loading-status');
+
+    loadingEl.classList.add('visible');
+    status.textContent = 'Sending to PhotoMaker...';
+    fill.style.width = '20%';
+
+    try {
+      const res = await fetch('/api/photomaker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          image: this.imageDataURI,
+          style,
+          num_outputs: 2
+        })
+      });
+
+      fill.style.width = '80%';
+      status.textContent = 'Processing response...';
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Generation failed');
+      if (!data.images || data.images.length === 0) throw new Error('No images returned');
+
+      fill.style.width = '100%';
+      status.textContent = 'Done!';
+
+      const gallery = document.getElementById('photomaker-gallery');
+      gallery.innerHTML = '';
+      data.images.forEach(url => {
+        const img = document.createElement('img');
+        img.src = url;
+        img.className = 'result-image';
+        gallery.appendChild(img);
+      });
+
+      setTimeout(() => loadingEl.classList.remove('visible'), 600);
+      document.getElementById('photomaker-results').classList.remove('hidden');
+
+    } catch (err) {
+      console.error('PhotoMaker error:', err);
+      loadingEl.classList.remove('visible');
+      this.showError('Error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate Character';
+    }
+  }
+};
+
+/* ================================================================
+   TAB 5 — Image to 3D (Hunyuan3D-2 via Replicate)
+   ================================================================ */
+const ImageTo3D = {
+  imageDataURI: null,
+
+  init() {
+    const fileInput = document.getElementById('file-img3d');
+    const uploadArea = document.getElementById('upload-area-img3d');
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => this.handleUpload(e));
+
+    document.getElementById('btn-img3d').addEventListener('click', () => this.generate());
+  },
+
+  async handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.showError(`"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`);
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      this.showError(`"${file.name}" is too large. Please use an image under 20 MB.`);
+      return;
+    }
+
+    try {
+      this.imageDataURI = await fileToDataURI(file);
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.getElementById('canvas-img3d-preview');
+        App.drawToCanvas(canvas, img, 400);
+        canvas.style.display = 'block';
+        document.getElementById('upload-area-img3d').classList.add('has-file');
+        document.getElementById('btn-img3d').disabled = false;
+      };
+      img.src = this.imageDataURI;
+
+      this.hideError();
+    } catch (err) {
+      this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
+    }
+  },
+
+  showError(msg) {
+    document.getElementById('img3d-error-text').textContent = msg;
+    document.getElementById('img3d-error').classList.remove('hidden');
+  },
+
+  hideError() {
+    document.getElementById('img3d-error').classList.add('hidden');
+  },
+
+  async generate() {
+    const btn = document.getElementById('btn-img3d');
+
+    if (!this.imageDataURI) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+
+    document.getElementById('img3d-results').classList.add('hidden');
+    this.hideError();
+
+    const loadingEl = document.getElementById('img3d-loading');
+    const fill = document.getElementById('img3d-loading-fill');
+    const status = document.getElementById('img3d-loading-status');
+
+    loadingEl.classList.add('visible');
+    status.textContent = 'Sending image to Hunyuan3D-2 (this may take 1-2 minutes)...';
+    fill.style.width = '20%';
+
+    try {
+      const res = await fetch('/api/img3d', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: this.imageDataURI })
+      });
+
+      fill.style.width = '80%';
+      status.textContent = 'Processing response...';
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '3D generation failed');
+      if (!data.mesh) throw new Error('No 3D model returned');
+
+      fill.style.width = '100%';
+      status.textContent = 'Done!';
+
+      const viewer = document.getElementById('img3d-viewer');
+      viewer.setAttribute('src', data.mesh);
+
+      const downloadLink = document.getElementById('img3d-download');
+      downloadLink.href = data.mesh;
+
+      setTimeout(() => loadingEl.classList.remove('visible'), 600);
+      document.getElementById('img3d-results').classList.remove('hidden');
+
+    } catch (err) {
+      console.error('Image-to-3D error:', err);
+      loadingEl.classList.remove('visible');
+      this.showError('Error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate 3D Model';
+    }
+  }
+};
+
+/* ================================================================
+   TAB 6 — Text to 3D (Shap-E via Replicate)
+   ================================================================ */
+const TextTo3D = {
+  init() {
+    document.getElementById('btn-txt3d').addEventListener('click', () => this.generate());
+  },
+
+  showError(msg) {
+    document.getElementById('txt3d-error-text').textContent = msg;
+    document.getElementById('txt3d-error').classList.remove('hidden');
+  },
+
+  hideError() {
+    document.getElementById('txt3d-error').classList.add('hidden');
+  },
+
+  async generate() {
+    const btn = document.getElementById('btn-txt3d');
+    const prompt = document.getElementById('txt3d-prompt').value.trim();
+    if (!prompt) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+
+    document.getElementById('txt3d-results').classList.add('hidden');
+    this.hideError();
+
+    const loadingEl = document.getElementById('txt3d-loading');
+    const fill = document.getElementById('txt3d-loading-fill');
+    const status = document.getElementById('txt3d-loading-status');
+
+    loadingEl.classList.add('visible');
+    status.textContent = 'Sending prompt to Shap-E (this may take a few minutes)...';
+    fill.style.width = '20%';
+
+    try {
+      const res = await fetch('/api/txt3d', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      fill.style.width = '80%';
+      status.textContent = 'Processing response...';
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '3D generation failed');
+      if (!data.files || data.files.length === 0) throw new Error('No output returned');
+
+      fill.style.width = '100%';
+      status.textContent = 'Done!';
+
+      const gallery = document.getElementById('txt3d-gallery');
+      gallery.innerHTML = '';
+
+      data.files.forEach(url => {
+        if (url.endsWith('.glb') || url.endsWith('.obj') || url.endsWith('.ply')) {
+          // 3D mesh file — show with model-viewer + download link
+          const container = document.createElement('div');
+          container.innerHTML = `
+            <model-viewer src="${url}" alt="Generated 3D model" auto-rotate camera-controls shadow-intensity="1" style="width:100%; height:350px; background:#111; border-radius:8px;"></model-viewer>
+            <a href="${url}" class="btn-secondary" style="display:inline-block; margin-top:8px;" download>Download Model</a>
+          `;
+          gallery.appendChild(container);
+        } else {
+          // GIF/image preview
+          const img = document.createElement('img');
+          img.src = url;
+          img.className = 'result-image';
+          gallery.appendChild(img);
+        }
+      });
+
+      setTimeout(() => loadingEl.classList.remove('visible'), 600);
+      document.getElementById('txt3d-results').classList.remove('hidden');
+
+    } catch (err) {
+      console.error('Text-to-3D error:', err);
+      loadingEl.classList.remove('visible');
+      this.showError('Error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate 3D Model';
     }
   }
 };
@@ -392,10 +624,13 @@ const ImageToText = {
 const App = {
   currentStep: 1,
 
-  async init() {
+  init() {
     TextToImage.init();
     ImageToImage.init();
     ImageToText.init();
+    PhotoMaker.init();
+    ImageTo3D.init();
+    TextTo3D.init();
     this.setupNav();
     this.hideLoader();
   },
@@ -422,15 +657,6 @@ const App = {
     document.getElementById(`step-${n}`).classList.add('active');
     document.querySelector(`.step-tab[data-step="${n}"]`).classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  },
-
-  loadImage(file) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = URL.createObjectURL(file);
-    });
   },
 
   drawToCanvas(canvas, img, maxWidth = 400) {

@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Generative AI Workshop</title>
   <link rel="stylesheet" href="css/style.css">
-
-  <!-- TensorFlow.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
-  <!-- Magenta.js (Arbitrary Style Transfer) -->
-  <script src="https://cdn.jsdelivr.net/npm/@magenta/image@0.2.1/dist/magentaimage.js"></script>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 </head>
 <body>
   <!-- Loading overlay -->
@@ -32,6 +28,9 @@
     <button class="step-tab active" data-step="1">Text to Image</button>
     <button class="step-tab" data-step="2">Image to Image</button>
     <button class="step-tab" data-step="3">Image to Text</button>
+    <button class="step-tab" data-step="4">PhotoMaker</button>
+    <button class="step-tab" data-step="5">Image to 3D</button>
+    <button class="step-tab" data-step="6">Text to 3D</button>
   </nav>
 
   <!-- ============ Tab 1: Text to Image ============ -->
@@ -39,29 +38,28 @@
     <div class="step-intro">
       <h2>Text to Image</h2>
       <span class="step-badge">Text → Image</span>
-      <p>Type a text prompt and a Stable Diffusion model will generate an image. Powered by <strong>AI Horde</strong> — free, no login required.</p>
+      <p>Type a text prompt and FLUX will generate an image in seconds.</p>
     </div>
 
     <div class="explainer-block" style="border-left-color:#c084fc">
       <h3 style="color:#c084fc">How it works</h3>
-      <p><strong>Stable Diffusion</strong> is a <em>latent diffusion model</em> that starts from random noise and gradually removes it, guided by your text prompt. It uses a <strong>CLIP text encoder</strong> to understand the prompt, a <strong>UNet</strong> to denoise, and a <strong>VAE decoder</strong> to produce the final image. Generation is handled by volunteer GPU workers and typically takes 15–60 seconds.</p>
+      <p><strong>FLUX</strong> by Black Forest Labs is a state-of-the-art text-to-image model. It uses a <em>flow matching</em> approach (an evolution of diffusion models) to generate high-quality images from text descriptions. The <strong>schnell</strong> variant is optimised for speed — generating images in just 1–4 steps.</p>
     </div>
 
-    <textarea class="text-input" id="txt2img-prompt" placeholder="Describe the image you want to generate...">a photo of a cat wearing a tiny hat</textarea>
+    <textarea class="text-input" id="txt2img-prompt" placeholder="Describe the image you want to generate...">a photo of a cat wearing a tiny hat, studio lighting</textarea>
+
+    <button class="btn-primary" id="btn-generate">Generate Image</button>
 
     <div class="loading-bar" id="txt2img-loading">
       <div class="loading-label">
-        <span id="txt2img-loading-text">Generating image<span class="loading-dots"></span></span>
+        <span>Generating image<span class="loading-dots"></span></span>
       </div>
       <div class="loading-track"><div class="loading-fill" id="txt2img-loading-fill"></div></div>
       <div class="loading-steps" id="txt2img-loading-status"></div>
     </div>
 
-    <button class="btn-primary" id="btn-generate">Generate Image</button>
-
     <div id="txt2img-results" class="results hidden">
-      <h3 style="text-align:center; font-family:var(--mono); color:var(--text-dim); margin-bottom:12px;">Generated Image</h3>
-      <img id="img-generated" style="display:block; max-width:100%; border-radius:var(--radius); margin:0 auto;">
+      <img id="txt2img-output" class="result-image">
     </div>
 
     <div id="txt2img-error" class="results hidden">
@@ -69,97 +67,97 @@
     </div>
   </section>
 
-  <!-- ============ Tab 2: Image to Image (Style Transfer) ============ -->
+  <!-- ============ Tab 2: Image to Image ============ -->
   <section id="step-2" class="step">
     <div class="step-intro">
       <h2>Image to Image</h2>
       <span class="step-badge">Image → Image</span>
-      <p>Upload a content image and a style image. The neural network will blend the style onto your content — all in your browser.</p>
+      <p>Upload an image and describe how you want it transformed. The model will reimagine your image based on your prompt.</p>
     </div>
 
     <div class="explainer-block">
       <h3>How it works</h3>
-      <p>A <strong>neural style transfer</strong> model separates the <em>content</em> (shapes, objects) from the <em>style</em> (colours, textures, brushstrokes) of two images, then recombines them. This uses the <strong>Magenta Arbitrary Style Transfer</strong> model (~10 MB) and runs entirely on your device.</p>
+      <p><strong>Image-to-image generation</strong> takes your uploaded image and uses it as a starting point instead of random noise. The model then "pushes" the image toward your text prompt. The <strong>strength</strong> slider controls how much the original is changed — low values keep close to the original, high values allow more creative freedom.</p>
     </div>
 
-    <div class="mirror-row">
-      <div class="mirror-card">
-        <h3>Content Image</h3>
-        <div class="upload-area" id="upload-area-content">
-          <label for="file-content" class="upload-label">
-            <span class="upload-icon">+</span>
-            <span>Upload content image</span>
-          </label>
-          <input type="file" id="file-content" accept="image/*">
-        </div>
-        <canvas id="canvas-content"></canvas>
-      </div>
-      <div class="mirror-card">
-        <h3>Style Image</h3>
-        <div class="upload-area" id="upload-area-style">
-          <label for="file-style" class="upload-label">
-            <span class="upload-icon">+</span>
-            <span>Upload style image</span>
-          </label>
-          <input type="file" id="file-style" accept="image/*">
-        </div>
-        <canvas id="canvas-style"></canvas>
-      </div>
+    <div class="upload-area" id="upload-area-img2img">
+      <label class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a source image</span>
+      </label>
+      <input type="file" id="file-img2img" accept="image/*">
     </div>
+
+    <canvas id="canvas-img2img-preview" style="display:none; margin:0 auto 16px;"></canvas>
+
+    <textarea class="text-input" id="img2img-prompt" placeholder="Describe how to transform the image...">a watercolor painting</textarea>
+
+    <div class="slider-row">
+      <label class="slider-label">Strength: <span id="img2img-strength-val">0.7</span></label>
+      <input type="range" id="img2img-strength" min="0.1" max="1.0" step="0.05" value="0.7" class="slider">
+    </div>
+
+    <button class="btn-primary" id="btn-img2img" disabled>Transform</button>
 
     <div class="loading-bar" id="img2img-loading">
       <div class="loading-label">
-        <span>Loading style transfer model<span class="loading-dots"></span></span>
-        <span id="img2img-loading-pct"></span>
+        <span>Transforming image<span class="loading-dots"></span></span>
       </div>
       <div class="loading-track"><div class="loading-fill" id="img2img-loading-fill"></div></div>
       <div class="loading-steps" id="img2img-loading-status"></div>
     </div>
 
-    <button class="btn-primary" id="btn-stylize" disabled>Stylize</button>
-
     <div id="img2img-results" class="results hidden">
-      <h3 style="text-align:center; font-family:var(--mono); color:var(--text-dim); margin-bottom:12px;">Result</h3>
-      <canvas id="canvas-result" style="margin:0 auto;"></canvas>
+      <div class="mirror-row">
+        <div class="mirror-card">
+          <h3>Original</h3>
+          <img id="img2img-original" class="result-image">
+        </div>
+        <div class="mirror-card">
+          <h3>Transformed</h3>
+          <img id="img2img-output" class="result-image">
+        </div>
+      </div>
+    </div>
+
+    <div id="img2img-error" class="results hidden">
+      <div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="img2img-error-text"></div>
     </div>
   </section>
 
-  <!-- ============ Tab 3: Image to Text (Captioning) ============ -->
+  <!-- ============ Tab 3: Image to Text ============ -->
   <section id="step-3" class="step">
     <div class="step-intro">
       <h2>Image to Text</h2>
       <span class="step-badge">Image → Text</span>
-      <p>Upload any image and a vision-language model will describe what it sees — generating a natural language caption from pixels.</p>
+      <p>Upload any image and a vision-language model will describe what it sees.</p>
     </div>
 
     <div class="explainer-block" style="border-left-color:var(--green)">
       <h3 style="color:var(--green)">How it works</h3>
-      <p>This uses <strong>BLIP (vit-gpt2)</strong>, a vision-language model combining a <em>Vision Transformer</em> (to understand the image) with <em>GPT-2</em> (to generate text). The ~300 MB model downloads on first use and runs entirely in your browser. Once cached, it loads instantly.</p>
+      <p><strong>BLIP</strong> (Bootstrapping Language-Image Pre-training) combines a <em>Vision Transformer</em> to understand the image with a <em>language model</em> to generate text. It was trained on millions of image-caption pairs, learning to describe what it sees in natural language.</p>
     </div>
 
-    <div class="upload-area" id="upload-area-caption">
-      <label for="file-caption" class="upload-label">
+    <div class="upload-area" id="upload-area-img2txt">
+      <label class="upload-label">
         <span class="upload-icon">+</span>
         <span>Upload an image to caption</span>
       </label>
-      <input type="file" id="file-caption" accept="image/*">
+      <input type="file" id="file-img2txt" accept="image/*">
     </div>
 
-    <canvas id="canvas-caption" style="margin:0 auto 24px; display:none;"></canvas>
+    <canvas id="canvas-img2txt-preview" style="display:none; margin:0 auto 16px;"></canvas>
 
     <div class="loading-bar" id="img2txt-loading">
       <div class="loading-label">
-        <span>Downloading captioning model<span class="loading-dots"></span></span>
-        <span id="img2txt-loading-pct"></span>
+        <span>Generating caption<span class="loading-dots"></span></span>
       </div>
       <div class="loading-track"><div class="loading-fill" id="img2txt-loading-fill"></div></div>
       <div class="loading-steps" id="img2txt-loading-status"></div>
     </div>
 
     <div id="img2txt-results" class="results hidden">
-      <div class="output-block mono" id="img2txt-caption">
-        Caption will appear here...
-      </div>
+      <div class="output-block mono" id="img2txt-caption"></div>
     </div>
 
     <div id="img2txt-error" class="results hidden">
@@ -167,24 +165,151 @@
     </div>
   </section>
 
+  <!-- ============ Tab 4: PhotoMaker ============ -->
+  <section id="step-4" class="step">
+    <div class="step-intro">
+      <h2>PhotoMaker</h2>
+      <span class="step-badge">Face → Character</span>
+      <p>Upload a photo of a face, then describe a scene. The model generates new images of that person in any context you describe.</p>
+    </div>
+
+    <div class="explainer-block" style="border-left-color:#fb923c">
+      <h3 style="color:#fb923c">How it works</h3>
+      <p><strong>PhotoMaker</strong> by TencentARC extracts identity features from your uploaded face photo and injects them into the image generation process. This allows it to create <em>consistent characters</em> — new images that look like the same person in completely different scenes, outfits, and styles.</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-photomaker">
+      <label class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a face photo</span>
+      </label>
+      <input type="file" id="file-photomaker" accept="image/*">
+    </div>
+
+    <canvas id="canvas-photomaker-preview" style="display:none; margin:0 auto 16px;"></canvas>
+
+    <textarea class="text-input" id="photomaker-prompt" placeholder="Describe the scene (the person will be placed in it)...">wearing an astronaut suit, on the surface of Mars, cinematic lighting</textarea>
+
+    <div class="slider-row">
+      <label class="slider-label">Style:</label>
+      <select id="photomaker-style" class="text-input" style="min-height:auto;">
+        <option value="(No style)">No style</option>
+        <option value="Cinematic">Cinematic</option>
+        <option value="Disney Character">Disney Character</option>
+        <option value="Digital Art">Digital Art</option>
+        <option value="Photographic (Default)" selected>Photographic</option>
+        <option value="Fantasy art">Fantasy Art</option>
+        <option value="Neonpunk">Neonpunk</option>
+        <option value="Comic book">Comic Book</option>
+        <option value="Lowpoly">Low Poly</option>
+        <option value="Line art">Line Art</option>
+      </select>
+    </div>
+
+    <button class="btn-primary" id="btn-photomaker" disabled>Generate Character</button>
+
+    <div class="loading-bar" id="photomaker-loading">
+      <div class="loading-label">
+        <span>Generating character images<span class="loading-dots"></span></span>
+      </div>
+      <div class="loading-track"><div class="loading-fill" id="photomaker-loading-fill"></div></div>
+      <div class="loading-steps" id="photomaker-loading-status"></div>
+    </div>
+
+    <div id="photomaker-results" class="results hidden">
+      <div class="image-gallery" id="photomaker-gallery"></div>
+    </div>
+
+    <div id="photomaker-error" class="results hidden">
+      <div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="photomaker-error-text"></div>
+    </div>
+  </section>
+
+  <!-- ============ Tab 5: Image to 3D ============ -->
+  <section id="step-5" class="step">
+    <div class="step-intro">
+      <h2>Image to 3D</h2>
+      <span class="step-badge">Image → 3D Model</span>
+      <p>Upload an image of an object and the model will generate a textured 3D model you can rotate and inspect.</p>
+    </div>
+
+    <div class="explainer-block" style="border-left-color:#06b6d4">
+      <h3 style="color:#06b6d4">How it works</h3>
+      <p><strong>Hunyuan3D-2</strong> by Tencent uses a large-scale diffusion model to convert a 2D image into a 3D mesh. It first generates the 3D shape using <em>Hunyuan3D-DiT</em>, then synthesises high-quality textures with <em>Hunyuan3D-Paint</em>. The result is a production-ready GLB file with PBR materials.</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-img3d">
+      <label class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload an image of an object</span>
+      </label>
+      <input type="file" id="file-img3d" accept="image/*">
+    </div>
+
+    <canvas id="canvas-img3d-preview" style="display:none; margin:0 auto 16px;"></canvas>
+
+    <button class="btn-primary" id="btn-img3d" disabled>Generate 3D Model</button>
+
+    <div class="loading-bar" id="img3d-loading">
+      <div class="loading-label">
+        <span>Generating 3D model<span class="loading-dots"></span></span>
+      </div>
+      <div class="loading-track"><div class="loading-fill" id="img3d-loading-fill"></div></div>
+      <div class="loading-steps" id="img3d-loading-status"></div>
+    </div>
+
+    <div id="img3d-results" class="results hidden">
+      <div class="viewer-container">
+        <model-viewer id="img3d-viewer" alt="Generated 3D model" auto-rotate camera-controls shadow-intensity="1" style="width:100%; height:450px; background:#111; border-radius:8px;"></model-viewer>
+      </div>
+      <a id="img3d-download" class="btn-secondary" style="display:inline-block; margin-top:12px;" download="model.glb">Download GLB</a>
+    </div>
+
+    <div id="img3d-error" class="results hidden">
+      <div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="img3d-error-text"></div>
+    </div>
+  </section>
+
+  <!-- ============ Tab 6: Text to 3D ============ -->
+  <section id="step-6" class="step">
+    <div class="step-intro">
+      <h2>Text to 3D</h2>
+      <span class="step-badge">Text → 3D Model</span>
+      <p>Describe an object and the model will generate a 3D shape you can rotate and explore.</p>
+    </div>
+
+    <div class="explainer-block" style="border-left-color:#a78bfa">
+      <h3 style="color:#a78bfa">How it works</h3>
+      <p><strong>Shap-E</strong> by OpenAI generates 3D implicit functions conditioned on text descriptions. It produces <em>neural radiance fields</em> that are converted into textured meshes. While the quality is more stylised than photorealistic, it demonstrates how language can directly create 3D objects.</p>
+    </div>
+
+    <textarea class="text-input" id="txt3d-prompt" placeholder="Describe the 3D object you want to generate...">a shark</textarea>
+
+    <button class="btn-primary" id="btn-txt3d">Generate 3D Model</button>
+
+    <div class="loading-bar" id="txt3d-loading">
+      <div class="loading-label">
+        <span>Generating 3D model<span class="loading-dots"></span></span>
+      </div>
+      <div class="loading-track"><div class="loading-fill" id="txt3d-loading-fill"></div></div>
+      <div class="loading-steps" id="txt3d-loading-status"></div>
+    </div>
+
+    <div id="txt3d-results" class="results hidden">
+      <div class="image-gallery" id="txt3d-gallery"></div>
+    </div>
+
+    <div id="txt3d-error" class="results hidden">
+      <div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="txt3d-error-text"></div>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer>
-    <p class="mono">Image-to-Image and Image-to-Text run on your device. Text-to-Image uses the HuggingFace Inference API.</p>
+    <p class="mono">Powered by Replicate. Run server.py to start.</p>
     <p>A workshop tool by Artificial Nouveau</p>
   </footer>
 
-  <!-- Scripts -->
   <script src="js/app.js"></script>
-
-  <!-- Module script for Transformers.js (Image-to-Text) -->
-  <script type="module">
-    window._loadCaptionPipeline = async function(progressCallback) {
-      const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-      const captioner = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning', {
-        progress_callback: progressCallback
-      });
-      return captioner;
-    };
-  </script>
 </body>
 </html>
