@@ -598,6 +598,137 @@ footer .mono {
   margin-bottom: 4px;
 }
 
+/* ===== Step Badge ===== */
+.step-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--bg-card);
+  border: 1px solid #333;
+  border-radius: 20px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  margin-bottom: 12px;
+}
+
+/* ===== Webcam Container ===== */
+.webcam-container {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 24px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-card);
+  aspect-ratio: 4 / 3;
+}
+
+.webcam-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scaleX(-1);
+}
+
+.webcam-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+  pointer-events: none;
+}
+
+/* ===== Toggle Buttons ===== */
+.toggle-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+.btn-toggle {
+  padding: 8px 20px;
+  background: var(--bg-card);
+  border: 1px solid #333;
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle.active {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-toggle:hover {
+  background: var(--bg-hover);
+}
+
+/* ===== Training Controls (Step 2) ===== */
+.training-controls {
+  margin-bottom: 24px;
+}
+
+.class-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.class-name-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid #333;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+
+.class-name-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.btn-sample {
+  white-space: nowrap;
+  min-width: 160px;
+}
+
+/* ===== SAM Canvas ===== */
+.sam-canvas-wrap {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.sam-canvas {
+  display: block;
+  max-width: 100%;
+  border-radius: var(--radius);
+}
+
+.sam-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: crosshair;
+  border-radius: var(--radius);
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
   #app-header h1 {
