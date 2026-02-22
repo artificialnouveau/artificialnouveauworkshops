@@ -631,6 +631,18 @@ footer .mono {
   margin-bottom: 12px;
 }
 
+.time-estimate {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(74, 158, 255, 0.08);
+  border: 1px solid rgba(74, 158, 255, 0.25);
+  border-radius: 20px;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  margin-bottom: 8px;
+}
+
 /* ===== Result Image ===== */
 .result-image {
   max-width: 100%;
