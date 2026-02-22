@@ -416,7 +416,16 @@
     </div>
 
     <div id="pose-results" class="results hidden">
-      <img id="pose-output" class="result-image">
+      <div class="mirror-row">
+        <div class="mirror-card hidden" id="pose-skeleton-card">
+          <h3>Detected Pose</h3>
+          <img id="pose-skeleton" class="result-image">
+        </div>
+        <div class="mirror-card">
+          <h3>Generated</h3>
+          <img id="pose-output" class="result-image">
+        </div>
+      </div>
     </div>
 
     <div id="pose-error" class="results hidden">
