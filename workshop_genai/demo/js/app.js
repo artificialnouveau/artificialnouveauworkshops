@@ -1,10 +1,22 @@
 /**
- * app.js — 4-tab Generative AI Workshop (Replicate API via local proxy)
+ * app.js — 6-tab Generative AI Workshop (Replicate API via server proxy)
  *   Tab 1: Text to Image (FLUX-schnell)
  *   Tab 2: Image to Image (SDXL)
  *   Tab 3: Image to Text (BLIP)
  *   Tab 4: PhotoMaker (consistent characters)
+ *   Tab 5: Image to 3D (Hunyuan3D-2)
+ *   Tab 6: Text to 3D (Shap-E)
  */
+
+/* ================================================================
+   API Configuration
+   ================================================================
+   When running locally:  API_BASE = ''  (relative URLs)
+   When on GitHub Pages:  API_BASE = your Render deploy URL
+   ================================================================ */
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? ''
+  : 'https://genai-workshop-api.onrender.com';
 
 /* ================================================================
    Utility — convert File to data URI
@@ -46,7 +58,7 @@ const TextToImage = {
     fill.style.width = '30%';
 
     try {
-      const res = await fetch('/api/txt2img', {
+      const res = await fetch(`${API_BASE}/api/txt2img`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })
@@ -164,7 +176,7 @@ const ImageToImage = {
     fill.style.width = '30%';
 
     try {
-      const res = await fetch('/api/img2img', {
+      const res = await fetch(`${API_BASE}/api/img2img`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, image: this.imageDataURI, strength })
@@ -268,7 +280,7 @@ const ImageToText = {
     fill.style.width = '30%';
 
     try {
-      const res = await fetch('/api/img2txt', {
+      const res = await fetch(`${API_BASE}/api/img2txt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: this.imageDataURI })
@@ -374,7 +386,7 @@ const PhotoMaker = {
     fill.style.width = '20%';
 
     try {
-      const res = await fetch('/api/photomaker', {
+      const res = await fetch(`${API_BASE}/api/photomaker`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -494,7 +506,7 @@ const ImageTo3D = {
     fill.style.width = '20%';
 
     try {
-      const res = await fetch('/api/img3d', {
+      const res = await fetch(`${API_BASE}/api/img3d`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: this.imageDataURI })
@@ -567,7 +579,7 @@ const TextTo3D = {
     fill.style.width = '20%';
 
     try {
-      const res = await fetch('/api/txt3d', {
+      const res = await fetch(`${API_BASE}/api/txt3d`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })

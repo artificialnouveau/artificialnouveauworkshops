@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: genai-workshop-api
+    runtime: python
+    rootDir: workshop_genai/demo
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app
+    envVars:
+      - key: REPLICATE_API_TOKEN
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11.0"

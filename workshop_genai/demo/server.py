@@ -1,36 +1,26 @@
 """
-Workshop Proxy Server — serves static files + proxies to Replicate API.
+Workshop API Server — proxies requests to Replicate API.
 
-Setup:
-    pip install replicate
-
-Run:
+Local:
+    pip install flask flask-cors replicate
     export REPLICATE_API_TOKEN="r8_your_token_here"
     python server.py
 
-Then open http://localhost:8000 in your browser.
+Render:
+    Set REPLICATE_API_TOKEN in Render environment variables.
+    Start command: gunicorn server:app
 """
 
 import json
 import os
-import sys
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import urlparse
 
-try:
-    import replicate
-except ImportError:
-    print("Error: 'replicate' package not found. Install it with:")
-    print("  pip install replicate")
-    sys.exit(1)
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
-# Check for API token
-if not os.environ.get("REPLICATE_API_TOKEN"):
-    print("Error: REPLICATE_API_TOKEN environment variable not set.")
-    print("  export REPLICATE_API_TOKEN='r8_your_token_here'")
-    print("  Get your token at: https://replicate.com/account/api-tokens")
-    sys.exit(1)
+import replicate
 
+app = Flask(__name__)
+CORS(app)
 
 # ── Replicate model identifiers ──────────────────────────────────────
 MODELS = {
@@ -43,196 +33,141 @@ MODELS = {
 }
 
 
-class WorkshopHandler(SimpleHTTPRequestHandler):
-    """Serves static files and proxies API requests to Replicate."""
+@app.route("/api/txt2img", methods=["POST"])
+def txt2img():
+    body = request.get_json()
+    prompt = body.get("prompt", "").strip()
+    if not prompt:
+        return jsonify({"error": "Prompt is required"}), 400
 
-    def end_headers(self):
-        # CORS headers for local development
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        super().end_headers()
-
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.end_headers()
-
-    def do_POST(self):
-        content_length = int(self.headers.get("Content-Length", 0))
-        raw = self.rfile.read(content_length)
-
-        try:
-            body = json.loads(raw)
-        except json.JSONDecodeError:
-            self.send_json(400, {"error": "Invalid JSON"})
-            return
-
-        try:
-            if self.path == "/api/txt2img":
-                result = self.handle_txt2img(body)
-            elif self.path == "/api/img2img":
-                result = self.handle_img2img(body)
-            elif self.path == "/api/img2txt":
-                result = self.handle_img2txt(body)
-            elif self.path == "/api/photomaker":
-                result = self.handle_photomaker(body)
-            elif self.path == "/api/img3d":
-                result = self.handle_img3d(body)
-            elif self.path == "/api/txt3d":
-                result = self.handle_txt3d(body)
-            else:
-                self.send_json(404, {"error": "Unknown endpoint"})
-                return
-
-            self.send_json(200, result)
-
-        except Exception as e:
-            print(f"Error on {self.path}: {e}")
-            self.send_json(500, {"error": str(e)})
-
-    def send_json(self, status, data):
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
-
-    # ── Handlers ──────────────────────────────────────────────────────
-
-    def handle_txt2img(self, body):
-        prompt = body.get("prompt", "").strip()
-        if not prompt:
-            raise ValueError("Prompt is required")
-
-        output = replicate.run(
-            MODELS["txt2img"],
-            input={
-                "prompt": prompt,
-                "num_outputs": 1,
-                "output_format": "webp",
-            },
-        )
-        # flux-schnell returns a list of FileOutput objects
-        images = [str(url) for url in output]
-        return {"images": images}
-
-    def handle_img2img(self, body):
-        prompt = body.get("prompt", "").strip()
-        image = body.get("image")  # data URI from browser
-        strength = body.get("strength", 0.7)
-
-        if not image:
-            raise ValueError("Image is required")
-        if not prompt:
-            raise ValueError("Prompt is required")
-
-        output = replicate.run(
-            MODELS["img2img"],
-            input={
-                "prompt": prompt,
-                "image": image,
-                "prompt_strength": strength,
-                "num_outputs": 1,
-            },
-        )
-        images = [str(url) for url in output]
-        return {"images": images}
-
-    def handle_img2txt(self, body):
-        image = body.get("image")  # data URI from browser
-        if not image:
-            raise ValueError("Image is required")
-
-        output = replicate.run(
-            MODELS["img2txt"],
-            input={
-                "image": image,
-                "task": "image_captioning",
-            },
-        )
-        caption = str(output)
-        return {"caption": caption}
-
-    def handle_photomaker(self, body):
-        prompt = body.get("prompt", "").strip()
-        image = body.get("image")  # data URI from browser
-        style = body.get("style", "(No style)")
-        num_outputs = body.get("num_outputs", 2)
-
-        if not image:
-            raise ValueError("Face image is required")
-        if not prompt:
-            raise ValueError("Prompt is required")
-
-        # PhotoMaker requires "img" trigger word in the prompt
-        if "img" not in prompt.lower():
-            prompt = f"a photo of a person img, {prompt}"
-
-        output = replicate.run(
-            MODELS["photomaker"],
-            input={
-                "prompt": prompt,
-                "input_image": image,
-                "style_name": style,
-                "num_outputs": min(num_outputs, 4),
-            },
-        )
-        images = [str(url) for url in output]
-        return {"images": images}
-
-    def handle_img3d(self, body):
-        image = body.get("image")  # data URI from browser
-        if not image:
-            raise ValueError("Image is required")
-
-        output = replicate.run(
-            MODELS["img3d"],
-            input={
-                "image": image,
-                "steps": 50,
-                "guidance_scale": 5.5,
-                "octree_resolution": 256,
-                "remove_background": True,
-            },
-        )
-        # Returns {"mesh": "https://...glb"}
-        mesh_url = str(output.get("mesh", "")) if isinstance(output, dict) else str(output)
-        return {"mesh": mesh_url}
-
-    def handle_txt3d(self, body):
-        prompt = body.get("prompt", "").strip()
-        if not prompt:
-            raise ValueError("Prompt is required")
-
-        output = replicate.run(
-            MODELS["txt3d"],
-            input={
-                "prompt": prompt,
-                "batch_size": 1,
-                "render_mode": "nerf",
-                "render_size": 256,
-                "guidance_scale": 15,
-                "save_mesh": True,
-            },
-        )
-        # Returns a list of URIs (GIF previews and/or mesh files)
-        files = [str(url) for url in output]
-        return {"files": files}
+    output = replicate.run(
+        MODELS["txt2img"],
+        input={"prompt": prompt, "num_outputs": 1, "output_format": "webp"},
+    )
+    images = [str(url) for url in output]
+    return jsonify({"images": images})
 
 
-def main():
-    port = int(os.environ.get("PORT", 8000))
+@app.route("/api/img2img", methods=["POST"])
+def img2img():
+    body = request.get_json()
+    prompt = body.get("prompt", "").strip()
+    image = body.get("image")
+    strength = body.get("strength", 0.7)
 
-    print(f"\n  Workshop server running at: http://localhost:{port}")
-    print(f"  Replicate token: ...{os.environ['REPLICATE_API_TOKEN'][-4:]}")
-    print(f"  Press Ctrl+C to stop\n")
+    if not image:
+        return jsonify({"error": "Image is required"}), 400
+    if not prompt:
+        return jsonify({"error": "Prompt is required"}), 400
 
-    server = HTTPServer(("", port), WorkshopHandler)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nShutting down.")
-        server.shutdown()
+    output = replicate.run(
+        MODELS["img2img"],
+        input={
+            "prompt": prompt,
+            "image": image,
+            "prompt_strength": strength,
+            "num_outputs": 1,
+        },
+    )
+    images = [str(url) for url in output]
+    return jsonify({"images": images})
+
+
+@app.route("/api/img2txt", methods=["POST"])
+def img2txt():
+    body = request.get_json()
+    image = body.get("image")
+    if not image:
+        return jsonify({"error": "Image is required"}), 400
+
+    output = replicate.run(
+        MODELS["img2txt"],
+        input={"image": image, "task": "image_captioning"},
+    )
+    caption = str(output)
+    return jsonify({"caption": caption})
+
+
+@app.route("/api/photomaker", methods=["POST"])
+def photomaker():
+    body = request.get_json()
+    prompt = body.get("prompt", "").strip()
+    image = body.get("image")
+    style = body.get("style", "(No style)")
+    num_outputs = body.get("num_outputs", 2)
+
+    if not image:
+        return jsonify({"error": "Face image is required"}), 400
+    if not prompt:
+        return jsonify({"error": "Prompt is required"}), 400
+
+    # PhotoMaker requires "img" trigger word in the prompt
+    if "img" not in prompt.lower():
+        prompt = f"a photo of a person img, {prompt}"
+
+    output = replicate.run(
+        MODELS["photomaker"],
+        input={
+            "prompt": prompt,
+            "input_image": image,
+            "style_name": style,
+            "num_outputs": min(num_outputs, 4),
+        },
+    )
+    images = [str(url) for url in output]
+    return jsonify({"images": images})
+
+
+@app.route("/api/img3d", methods=["POST"])
+def img3d():
+    body = request.get_json()
+    image = body.get("image")
+    if not image:
+        return jsonify({"error": "Image is required"}), 400
+
+    output = replicate.run(
+        MODELS["img3d"],
+        input={
+            "image": image,
+            "steps": 50,
+            "guidance_scale": 5.5,
+            "octree_resolution": 256,
+            "remove_background": True,
+        },
+    )
+    mesh_url = str(output.get("mesh", "")) if isinstance(output, dict) else str(output)
+    return jsonify({"mesh": mesh_url})
+
+
+@app.route("/api/txt3d", methods=["POST"])
+def txt3d():
+    body = request.get_json()
+    prompt = body.get("prompt", "").strip()
+    if not prompt:
+        return jsonify({"error": "Prompt is required"}), 400
+
+    output = replicate.run(
+        MODELS["txt3d"],
+        input={
+            "prompt": prompt,
+            "batch_size": 1,
+            "render_mode": "nerf",
+            "render_size": 256,
+            "guidance_scale": 15,
+            "save_mesh": True,
+        },
+    )
+    files = [str(url) for url in output]
+    return jsonify({"files": files})
+
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"})
 
 
 if __name__ == "__main__":
-    main()
+    port = int(os.environ.get("PORT", 8000))
+    print(f"\n  Workshop server running at: http://localhost:{port}")
+    print(f"  Press Ctrl+C to stop\n")
+    app.run(host="0.0.0.0", port=port, debug=True)
