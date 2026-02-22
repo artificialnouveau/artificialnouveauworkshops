@@ -236,15 +236,6 @@
     </div>
   </div>
 
-  <!-- ============================================ -->
-  <!-- PART 3: CONCENTRATION OF POWER               -->
-  <!-- ============================================ -->
-
-  <div class="slide section-title" data-notes="Only a handful of corporations — OpenAI, Google, Meta, Stability AI — have the resources to build frontier models. This requires massive capital, compute, and data, creating an extreme power asymmetry. Decision-making about what AI can and can't do rests with a tiny unelected elite. Let's look at what it takes to build these systems.">
-    <h2>Concentration of <span class="yellow">Power</span></h2>
-    <div class="divider" style="background:var(--yellow)"></div>
-  </div>
-
   <div class="slide" data-notes="Training a generative model requires massive datasets and significant compute. These images show the training pipeline — from raw data collection through to the neural network learning patterns over many iterations.">
     <h2>Training Time</h2>
     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; max-width:1100px; width:100%">
@@ -297,6 +288,10 @@
     </div>
   </div>
 
+  <div class="slide" data-notes="A final video to reflect on. After everything we've discussed — the tools, the harms, the creativity, the exploitation — where do we go from here? Play the video and let it sink in before opening discussion.">
+    <iframe src="https://www.youtube-nocookie.com/embed/ZU767J6p96o" style="width:80%; max-width:700px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+
   <!-- ============================================ -->
   <!-- PART 4: EXTRACTION WITHOUT CONSENT            -->
   <!-- ============================================ -->
@@ -304,6 +299,31 @@
   <div class="slide section-title" data-notes="Training data was scraped from billions of people without permission or compensation. Artists, writers, and creators had their work taken to build systems that replace them. This mirrors colonial extraction logic — take from the many, profit for the few.">
     <h2>Extraction <span class="red">Without Consent</span></h2>
     <div class="divider" style="background:var(--red)"></div>
+  </div>
+
+  <div class="slide" data-notes="To understand the scale of extraction: companies like OpenAI, Google, and Meta built web scrapers that hoovered up the entire internet — text, images, code, music, personal data — without asking anyone. Common Crawl alone contains petabytes of web data. Books3 contained over 190,000 pirated books. LAION scraped billions of images from Flickr, DeviantArt, and personal blogs. This isn't incidental data collection — it's industrial-scale extraction of human creative output.">
+    <h2>Data Extraction</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">What Was Taken</h3>
+        <ul>
+          <li><strong>Text</strong> — books, articles, blog posts, forum discussions, personal websites</li>
+          <li><strong>Images</strong> — art, photography, medical scans, personal photos</li>
+          <li><strong>Code</strong> — open-source repositories, private snippets</li>
+          <li><strong>Audio</strong> — music, podcasts, voice recordings</li>
+        </ul>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">The Scale</h3>
+        <ul>
+          <li><strong>Common Crawl</strong> — petabytes of web data</li>
+          <li><strong>Books3</strong> — 190,000+ pirated books</li>
+          <li><strong>LAION-5B</strong> — 5 billion image-text pairs</li>
+          <li><strong>The Pile</strong> — 800GB of diverse text</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment" style="margin-top:20px; color:var(--red); font-size:1.2rem">No permission. No compensation. No opt-out.</p>
   </div>
 
   <div class="slide" data-notes="Many generative models were trained on data scraped from the internet without consent. Artists, photographers, and writers have found their work reproduced or closely imitated by AI systems — without credit, compensation, or permission. These are real examples of copyrighted works found in training datasets.">
@@ -463,9 +483,10 @@
 
   <div class="slide" data-notes="These are photos from my DEEPFAKE exhibition at Peckham Digital — an art project exploring the cultural implications of deepfake technology. Art can be a powerful way to make these issues tangible and accessible.">
     <h2>DEEPFAKE @ Peckham Digital</h2>
-    <div class="img-row">
-      <img src="img/slide39_Picture_6.jpg" class="medium">
-      <img src="img/slide39_Picture_8.jpg" class="medium">
+    <div style="display:flex; gap:20px; align-items:center; max-width:1100px; width:100%; justify-content:center">
+      <iframe src="https://player.vimeo.com/video/1082448682?badge=0&autopause=0&player_id=0&app_id=58479" style="width:400px; aspect-ratio:16/9; border:none; border-radius:8px; flex-shrink:0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" allowfullscreen></iframe>
+      <img src="img/slide39_Picture_6.jpg" style="max-height:280px; border-radius:8px; object-fit:contain">
+      <img src="img/slide39_Picture_8.jpg" style="max-height:280px; border-radius:8px; object-fit:contain">
     </div>
   </div>
 
@@ -1094,31 +1115,6 @@
     <iframe src="https://www.youtube-nocookie.com/embed/F4wGqCoFIDg" style="width:80%; max-width:700px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
   </div>
 
-  <!-- ——— SUB-GROUP: VOICE ——— -->
-
-  <div class="slide sub-section" data-notes="Last in our tools overview: voice synthesis. Cloning and generating human voices using AI.">
-    <h3>Voice Synthesis</h3>
-    <div class="sub-divider"></div>
-  </div>
-
-  <div class="slide" data-notes="Voice cloning has its own ecosystem of open-source tools. Tacotron2 from Google was one of the first high-quality text-to-speech models. Mozilla TTS is the open-source alternative. VITS and retrieval-based voice conversion are newer approaches that can clone a voice from very small amounts of sample audio. Play the demo.">
-    <h2>DeepFake Voices</h2>
-    <div class="two-col" style="max-width:950px; align-items:start">
-      <div>
-        <iframe src="https://www.youtube-nocookie.com/embed/zaplUvWyUKw" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      </div>
-      <div class="card">
-        <h3>Popular Resources</h3>
-        <ul>
-          <li>Tacotron / Tacotron2 (keithito)</li>
-          <li>Mozilla's TTS</li>
-          <li>VITS (jaywalnut310)</li>
-          <li>Retrieval-based Voice Conversion</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
   <!-- ============================================ -->
   <!-- PART 13: CONCLUSION                          -->
   <!-- ============================================ -->
@@ -1158,10 +1154,6 @@
     </div>
   </div>
 
-  <div class="slide" data-notes="A final video to reflect on. After everything we've discussed — the tools, the harms, the creativity, the exploitation — where do we go from here? Play the video and let it sink in before opening discussion.">
-    <iframe src="https://www.youtube-nocookie.com/embed/ZU767J6p96o" style="width:80%; max-width:700px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-  </div>
-
   <div class="slide title-slide" data-notes="Open the floor for questions. Encourage students to share their reactions — what surprised them? What concerned them? What excited them? Remind them that understanding these tools is the first step to using them responsibly.">
     <h1>Questions<span class="accent">?</span> Comments<span class="accent">?</span></h1>
   </div>
@@ -1169,6 +1161,12 @@
   <div class="slide title-slide" data-notes="Thank you everyone! If you have more questions, feel free to reach out. Remember: these tools are powerful — use them with intention and respect for others.">
     <h1>Thank You<span class="pink">!</span></h1>
     <p class="subtitle">Questions?</p>
+  </div>
+
+  <div class="slide section-title" data-notes="Time for the hands-on workshop. We'll be exploring our own generative selves — experimenting with these tools first-hand so you can understand both their power and their limitations.">
+    <h2><span class="green">Workshop</span></h2>
+    <div class="divider" style="background:var(--green)"></div>
+    <p style="color:var(--text); font-size:1.4rem; margin-top:16px">Owning Your Generative Self</p>
   </div>
 
   <!-- NAV -->
@@ -1277,13 +1275,7 @@
       presenterWin = window.open('', 'presenter', 'width=500,height=400,toolbar=no,menubar=no');
       var doc = presenterWin.document;
       doc.open();
-      doc.write('<!DOCTYPE html><html><head><title>Presenter Notes</title><style>body{background:#111;color:#e8e8e8;font-family:-apple-system,sans-serif;padding:20px;margin:0}.timer{font-size:3rem;font-family:monospace;color:#4a9eff;margin-bottom:8px}.slide-num{font-size:0.85rem;color:#777;margin-bottom:16px}.title{font-size:1.3rem;color:#fff;margin-bottom:16px;border-bottom:1px solid #333;padding-bottom:12px}.notes{font-size:1.1rem;line-height:1.8;color:#ccc;margin-bottom:24px;min-height:80px}.next-label{font-size:0.75rem;color:#777;margin-bottom:4px}.next-title{font-size:1rem;color:#999}button{padding:6px 16px;border:1px solid #444;background:transparent;color:#999;border-radius:4px;cursor:pointer;font-size:0.8rem;margin-right:8px}button:hover{border-color:#4a9eff;color:#4a9eff}.controls{margin-bottom:16px}</style></head><body><div class="timer" id="p-timer">00:00</div><div class="controls"><button id="p-reset">Reset Timer</button><button id="p-prev">&larr; Prev</button><button id="p-next-btn">Next &rarr;</button></div><div class="slide section-title" data-notes="Time for the hands-on workshop. We'll be exploring our own generative selves — experimenting with these tools first-hand so you can understand both their power and their limitations.">
-    <h2><span class="green">Workshop</span></h2>
-    <div class="divider" style="background:var(--green)"></div>
-    <p style="color:var(--text); font-size:1.4rem; margin-top:16px">Owning Your Generative Self</p>
-  </div>
-
-  <div class="slide-num" id="p-slide-num"></div><div class="title" id="p-title"></div><div class="notes" id="p-notes"></div><div class="next-label">NEXT SLIDE</div><div class="next-title" id="p-next"></div></body></html>');
+      doc.write('<!DOCTYPE html><html><head><title>Presenter Notes</title><style>body{background:#111;color:#e8e8e8;font-family:-apple-system,sans-serif;padding:20px;margin:0}.timer{font-size:3rem;font-family:monospace;color:#4a9eff;margin-bottom:8px}.slide-num{font-size:0.85rem;color:#777;margin-bottom:16px}.title{font-size:1.3rem;color:#fff;margin-bottom:16px;border-bottom:1px solid #333;padding-bottom:12px}.notes{font-size:1.1rem;line-height:1.8;color:#ccc;margin-bottom:24px;min-height:80px}.next-label{font-size:0.75rem;color:#777;margin-bottom:4px}.next-title{font-size:1rem;color:#999}button{padding:6px 16px;border:1px solid #444;background:transparent;color:#999;border-radius:4px;cursor:pointer;font-size:0.8rem;margin-right:8px}button:hover{border-color:#4a9eff;color:#4a9eff}.controls{margin-bottom:16px}</style></head><body><div class="timer" id="p-timer">00:00</div><div class="controls"><button id="p-reset">Reset Timer</button><button id="p-prev">&larr; Prev</button><button id="p-next-btn">Next &rarr;</button></div><div class="slide-num" id="p-slide-num"></div><div class="title" id="p-title"></div><div class="notes" id="p-notes"></div><div class="next-label">NEXT SLIDE</div><div class="next-title" id="p-next"></div></body></html>');
       doc.close();
       doc.getElementById('p-prev').addEventListener('click', function() { prev(); });
       doc.getElementById('p-next-btn').addEventListener('click', function() { next(); });
