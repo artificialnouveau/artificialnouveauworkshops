@@ -359,63 +359,6 @@
     </div>
   </div>
 
-  <div class="slide" data-notes="DeepFaceLab and Faceswap are the two main open-source face-swapping tools. DeepFaceLab is the power-user choice with extensive options. Faceswap is more beginner-friendly with a GUI. Both are free and on GitHub.">
-    <h2>DeepFake Faces</h2>
-    <div class="two-col" style="max-width:950px; align-items:start">
-      <div>
-        <iframe src="https://www.youtube-nocookie.com/embed/uAPUkgeiFVY?start=85" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        <video src="img/deepfake_faces_clip.mp4" controls style="width:100%; aspect-ratio:16/9; border-radius:8px; margin-top:12px"></video>
-      </div>
-      <div>
-        <div class="card" style="margin-bottom:12px">
-          <h3>DeepFaceLab</h3>
-          <p><a href="https://github.com/iperov/DeepFaceLab" target="_blank">GitHub: iperov/DeepFaceLab</a></p>
-          <p style="margin-top:6px">Wide variety of options, continually updated — the go-to choice for many users.</p>
-        </div>
-        <div class="card green-border">
-          <h3 style="color:var(--green)">Faceswap</h3>
-          <p><a href="https://github.com/deepfakes/faceswap" target="_blank">GitHub: deepfakes/faceswap</a></p>
-          <p style="margin-top:6px">Friendly GUI and supportive community, accessible for beginners.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="slide" data-notes="First Order Motion Model — takes a single portrait image and animates it using a driving video. You can make any photo move and talk like the person in the driving video. The key breakthrough was doing this without any face-specific training.">
-    <h2>DeepFake Bodies</h2>
-    <div class="two-col" style="max-width:950px; align-items:start">
-      <div>
-        <iframe src="https://www.youtube-nocookie.com/embed/PCBTZh41Ris?start=134" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      </div>
-      <div class="card">
-        <h3>First Order Model</h3>
-        <p><a href="https://github.com/AliaksandrSiarohin/first-order-model" target="_blank">GitHub: AliaksandrSiarohin/first-order-model</a></p>
-        <p style="margin-top:6px">Animates portrait images using a driving video.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="slide" data-notes="Voice synthesis has advanced rapidly. Tacotron/Tacotron2 was an early neural TTS model. Mozilla TTS made it open-source. VITS combines variational inference with adversarial training for high-quality speech. RVC allows voice cloning from just a few minutes of audio — this is what powers most deepfake voice content.">
-    <h2>DeepFake Voices</h2>
-    <div class="two-col" style="max-width:900px; align-items:start">
-      <div class="card">
-        <h3>Voice Synthesis</h3>
-        <p style="color:var(--dim); margin-top:8px">Generate realistic speech from text, or clone a voice from a short audio sample</p>
-      </div>
-      <div>
-        <div class="card" style="margin-bottom:12px">
-          <h3>Popular Resources</h3>
-          <ul>
-            <li><strong>Tacotron / Tacotron2</strong> — Neural text-to-speech</li>
-            <li><strong>Mozilla TTS</strong> — Open-source TTS engine</li>
-            <li><strong>VITS</strong> — High-quality end-to-end TTS</li>
-            <li><strong>RVC</strong> — Retrieval-based Voice Conversion</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ============================================ -->
   <!-- PART 4: RESOURCE APPROPRIATION                -->
   <!-- ============================================ -->
@@ -448,6 +391,100 @@
       </div>
     </div>
     <p class="fragment" style="margin-top:20px; color:var(--red); font-size:1.2rem">No permission. No compensation. No opt-out.</p>
+  </div>
+
+  <div class="slide" data-notes="Text extraction at scale. Books3 was a dataset of 190,000+ pirated books used to train Meta's LLaMA and other models — including works by Stephen King, Margaret Atwood, and Zadie Smith. The New York Times sued OpenAI in December 2023 after discovering ChatGPT could reproduce Times articles nearly verbatim. Reddit sold its entire archive of user posts to Google for $60 million in 2024 — 18 years of human conversations monetized without the users who wrote them seeing a cent. Stack Overflow's community of developers spent years building a knowledge base that was scraped to train coding assistants like GitHub Copilot — which now competes with Stack Overflow itself. The Authors Guild found that the vast majority of published books in the US appear in AI training sets without permission.">
+    <h2>Text</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">What Was Taken</h3>
+        <ul>
+          <li><strong>Books3</strong> — 190,000+ pirated books (Stephen King, Atwood, Zadie Smith)</li>
+          <li><strong>Reddit</strong> — entire archive sold to Google for $60M</li>
+          <li><strong>Stack Overflow</strong> — scraped to train Copilot, which now competes with it</li>
+          <li><strong>News articles</strong> — NYT sued OpenAI after verbatim reproduction</li>
+        </ul>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">Who Was Harmed</h3>
+        <ul>
+          <li>Authors whose books were pirated</li>
+          <li>Journalists whose reporting was absorbed</li>
+          <li>Reddit users — 18 years of posts monetized, $0 to writers</li>
+          <li>Developers who built Stack Overflow's knowledge base for free</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Image extraction. LAION-5B scraped 5 billion image-text pairs from the open web — including Flickr, DeviantArt, ArtStation, personal blogs, and even medical databases. Artists like Greg Rutkowski, Kim Jung Gi, and Sam Yang found their names were among the most-used prompts in Stable Diffusion — their distinctive styles were extracted and made reproducible by anyone. Getty Images sued Stability AI in 2023 after finding Getty-watermarked images in training data. The Stanford Internet Observatory found that LAION contained child sexual abuse material (CSAM). Photographers discovered their copyrighted images appearing in AI outputs with slight modifications. Concept artists at studios reported losing work because clients could now generate 'in the style of' their portfolio for free.">
+    <h2>Images</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">What Was Taken</h3>
+        <ul>
+          <li><strong>LAION-5B</strong> — 5 billion images from Flickr, DeviantArt, ArtStation</li>
+          <li><strong>Getty Images</strong> — watermarked photos found in training data</li>
+          <li><strong>Named artists</strong> — Greg Rutkowski, Kim Jung Gi among top prompts</li>
+          <li><strong>Medical images</strong> — patient scans scraped without consent</li>
+        </ul>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">Who Was Harmed</h3>
+        <ul>
+          <li>Artists whose styles became free prompts</li>
+          <li>Concept artists losing work to "in the style of" generation</li>
+          <li>Photographers whose copyrighted work was absorbed</li>
+          <li>Children — CSAM found in LAION dataset</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Code extraction. GitHub Copilot was trained on all public GitHub repositories — including code with restrictive licenses like GPL that require derivative works to be open-sourced. Microsoft/GitHub/OpenAI faced a class action lawsuit from developers who argued their copyrighted code was used without permission. Copilot has been caught reproducing exact code snippets, including license headers and copyright notices — proving it memorized rather than 'learned from' the training data. The irony: open-source developers shared their code freely for the commons, and a trillion-dollar company turned it into a paid product. Some developers have since moved to licenses that explicitly prohibit AI training.">
+    <h2>Code</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">What Was Taken</h3>
+        <ul>
+          <li><strong>All public GitHub repos</strong> — including GPL-licensed code</li>
+          <li>Copilot reproduces <strong>exact snippets</strong> with license headers</li>
+          <li>Code shared for the <strong>open-source commons</strong> turned into a paid product</li>
+        </ul>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">Who Was Harmed</h3>
+        <ul>
+          <li>Open-source developers — code shared freely, monetized by Microsoft</li>
+          <li>GPL authors — derivative works should be open, Copilot is not</li>
+          <li>Class action lawsuit filed against GitHub, Microsoft, OpenAI</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Audio extraction. OpenAI built Whisper by transcribing over 1 million hours of YouTube videos — employees internally acknowledged this likely violated YouTube's terms of service. Spotify has seen a flood of AI-generated music uploaded by bots to harvest streaming royalties, diluting payments to real musicians. Voice cloning services like ElevenLabs only need a few seconds of audio to clone a voice — and voices scraped from podcasts, audiobooks, and social media are being used without consent. Voice actors have found AI versions of their voices being sold commercially without their knowledge. The music industry is seeing AI-generated songs 'in the style of' specific artists — Drake and The Weeknd deepfake tracks went viral before being removed. Audiobook narrators are being replaced by AI voices trained on their own recordings.">
+    <h2>Audio</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">What Was Taken</h3>
+        <ul>
+          <li><strong>1M+ hours</strong> of YouTube transcribed by OpenAI's Whisper</li>
+          <li><strong>Podcasts &amp; audiobooks</strong> — voices cloned from seconds of audio</li>
+          <li><strong>Music</strong> — AI-generated Drake/Weeknd tracks went viral</li>
+          <li><strong>Voice actors</strong> — AI versions sold without their knowledge</li>
+        </ul>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">Who Was Harmed</h3>
+        <ul>
+          <li>Musicians — AI bots flood Spotify, diluting royalties</li>
+          <li>Voice actors — replaced by AI trained on their own recordings</li>
+          <li>Audiobook narrators — losing work to cloned voices</li>
+          <li>YouTubers — content transcribed without consent for GPT-4</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <div class="slide" data-notes="This is from a New York Times investigation published April 2024. In January 2020, Jared Kaplan published a paper showing that more data equals better AI — 'scale is all you need' became the rallying cry. By late 2021, OpenAI had exhausted every reputable English-language text source on the internet. They built Whisper to transcribe over 1 million hours of YouTube videos — even though employees knew it likely violated YouTube's rules. Google was doing the same thing with YouTube transcripts. Meta's VP of generative AI told executives they'd used almost every available English book, essay, poem and news article. Meta discussed buying Simon & Schuster outright just for the training data. One Meta lawyer warned of ethical concerns around taking artists' IP and was met with silence. Google quietly broadened its privacy policy on July 4th weekend 2023 to allow using Google Docs and Maps data for AI. Researchers estimate companies could exhaust all high-quality internet data by 2026.">
@@ -564,54 +601,60 @@
     <div class="divider" style="background:var(--orange)"></div>
   </div>
 
-  <div class="slide" data-notes="The 'democratization' narrative hides who actually benefits. These tools are framed as empowering individuals, but the real beneficiaries are corporations who can now replace skilled workers with automated pipelines. The people building these tools are not the people being displaced by them.">
-    <h2>The "Democratization" Myth</h2>
-    <div class="two-col" style="max-width:900px">
+  <div class="slide" data-notes="AI's invisible workforce. Sama (formerly Samasource) employed workers in Nairobi, Kenya to review horrific content — beheadings, child abuse, bestiality — for $2/hour so ChatGPT could have safety filters. TIME's 2023 investigation revealed workers developed PTSD, depression, and were offered minimal mental health support. When they organized for better conditions, contracts were terminated. Meanwhile, OpenAI's valuation went from $29 billion to $150 billion. Data annotators — often in India, the Philippines, Venezuela, and refugee camps — label millions of images, correct model outputs, and verify AI responses for pennies per task. Scale AI, Appen, and Remotasks pay as little as $1-3/hour. A University of Oxford study found that AI data work recreates colonial labor patterns: the Global South does the tedious, traumatic work; the Global North captures the value. These workers are deliberately kept invisible — they're classified as independent contractors with no benefits, no job security, and no credit.">
+    <h2>The Invisible <span class="orange">Workforce</span></h2>
+    <div class="three-col" style="max-width:1000px; gap:16px">
       <div class="card orange-border">
-        <h3 style="color:var(--orange)">The Promise</h3>
+        <h3 style="color:var(--orange)">Content Moderators</h3>
         <ul>
-          <li>"Anyone can create"</li>
-          <li>"Levelling the playing field"</li>
-          <li>"Empowering individuals"</li>
+          <li>$2/hour in Nairobi, Kenya</li>
+          <li>Review beheadings, CSAM, self-harm</li>
+          <li>PTSD and depression widespread</li>
+          <li>Contracts terminated when workers organized</li>
         </ul>
+        <p style="color:var(--dim); font-size:0.8rem; margin-top:8px">Source: TIME investigation, 2023</p>
       </div>
       <div class="card red-border fragment">
-        <h3 style="color:var(--red)">The Reality</h3>
+        <h3 style="color:var(--red)">Data Annotators</h3>
         <ul>
-          <li>Corporations replace skilled workers</li>
-          <li>Wealth concentrates upward</li>
-          <li>Workers have no say in the process</li>
-          <li>Collective bargaining power weakens</li>
+          <li>$1–3/hour in India, Philippines, Venezuela</li>
+          <li>Label millions of images & text</li>
+          <li>No benefits, no job security</li>
+          <li>Classified as "independent contractors"</li>
         </ul>
+        <p style="color:var(--dim); font-size:0.8rem; margin-top:8px">Scale AI, Appen, Remotasks</p>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">Mineral Miners</h3>
+        <ul>
+          <li>Cobalt mines in DRC — 40,000 children</li>
+          <li>Lithium extraction in Chile, Argentina</li>
+          <li>Rare earths in Myanmar, China</li>
+          <li>Powers the GPUs that run AI</li>
+        </ul>
+        <p style="color:var(--dim); font-size:0.8rem; margin-top:8px">Source: Amnesty International</p>
       </div>
     </div>
   </div>
 
-  <div class="slide" data-notes="These are just some of the industries already being displaced. Concept artists, illustrators, copywriters, translators, voice actors, journalists, customer service — all facing replacement or devaluation. The speed of displacement is unprecedented. Previous technological disruptions happened over decades; this is happening in months.">
-    <h2>Who Gets Displaced?</h2>
-    <div class="three-col" style="max-width:900px">
-      <div class="card"><h3>Creative Industries</h3>
+  <div class="slide" data-notes="The pattern is identical to colonial labor structures. In the Belgian Congo, rubber was extracted by coerced local labor while profits flowed to Brussels. Today, cobalt is mined by hand in the DRC — including by an estimated 40,000 children according to UNICEF — to make the batteries and chips that power AI infrastructure. The key numbers: Sama's content moderators earned roughly $2/hour while OpenAI's valuation grew from $29B to $150B. Data annotators on Remotasks earn $1-3/hour while Scale AI is valued at $14 billion. A cobalt miner in Kolwezi earns $2-3/day while Nvidia's market cap hit $3 trillion. The wealth ratio is staggering — the people doing the most dangerous and psychologically damaging work capture the smallest fraction of value. Oxford researchers call this 'digital colonialism': the same extraction patterns, the same geography, the same power dynamics.">
+    <h2>The <span class="red">Colonial</span> Pattern</h2>
+    <p style="color:var(--dim); margin-bottom:20px; font-size:1.1rem">The wealth flows up. The harm flows down.</p>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div class="card" style="border-left-color:var(--orange)">
+        <h3>The Workers</h3>
         <ul>
-          <li>Concept artists</li>
-          <li>Illustrators</li>
-          <li>Photographers</li>
-          <li>Voice actors</li>
+          <li>Content moderator in Kenya: <strong style="color:var(--orange)">$2/hour</strong></li>
+          <li>Data annotator in India: <strong style="color:var(--orange)">$1–3/hour</strong></li>
+          <li>Cobalt miner in DRC: <strong style="color:var(--orange)">$2–3/day</strong></li>
         </ul>
       </div>
-      <div class="card yellow-border fragment"><h3 style="color:var(--yellow)">Knowledge Work</h3>
+      <div class="card fragment" style="border-left-color:var(--green)">
+        <h3>The Companies</h3>
         <ul>
-          <li>Copywriters</li>
-          <li>Translators</li>
-          <li>Journalists</li>
-          <li>Paralegals</li>
-        </ul>
-      </div>
-      <div class="card pink-border fragment"><h3 style="color:var(--pink)">Service Work</h3>
-        <ul>
-          <li>Customer service</li>
-          <li>Data entry</li>
-          <li>Moderation</li>
-          <li>Tutoring</li>
+          <li>OpenAI valuation: <strong style="color:var(--green)">$150 billion</strong></li>
+          <li>Scale AI valuation: <strong style="color:var(--green)">$14 billion</strong></li>
+          <li>Nvidia market cap: <strong style="color:var(--green)">$3 trillion</strong></li>
         </ul>
       </div>
     </div>
@@ -657,7 +700,7 @@
 
   <div class="slide" data-notes="These are actual Midjourney outputs from a Rest of World investigation (2023). They prompted 'an Indian person', 'a Mexican person', 'a Nigerian person' — the results reduce entire cultures to the most stereotypical Western imagination of them. Every Indian person wears traditional clothing, every Mexican is in a sombrero or colorful shawl, every Nigerian is in bright traditional dress. Meanwhile 'an American person' produces casual, modern, diverse-looking white people. The models don't reflect reality — they reflect the internet's stereotypes, which are overwhelmingly produced by Western, English-speaking users. This is cultural flattening at scale. And then when Google tried to fix it with Gemini — adding a diversity filter that generated Black Nazi soldiers and Asian US founding fathers — the overcorrection revealed how superficial the fix was. You can't patch over structural bias with a diversity checkbox.">
     <h2>AI Stereotypes by Country</h2>
-    <div class="two-col" style="max-width:1000px; align-items:start">
+    <div class="two-col" style="max-width:90%; align-items:start; gap:24px">
       <div>
         <img src="img/midjourney_indian_person.jpg" style="width:100%; border-radius:8px; margin-bottom:8px">
         <p style="color:var(--dim); font-size:0.9rem; text-align:center">Midjourney: "an Indian person"</p>
@@ -702,6 +745,42 @@
           <li>The race isn't between nations — it's between <strong>corporations</strong></li>
         </ul>
       </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="This is the national framing in action. The US, China, and the Netherlands form a triangle that reveals how AI competition plays out geopolitically. The US framing: Trump signed an executive order to 'maintain American AI dominance'. The CHIPS Act allocated $52 billion — framed as national security. Sam Altman testified to Congress that the US must lead or 'authoritarian regimes' will. China's response: State Council declared AI a strategic priority in 2017. DeepSeek released open-source models rivalling GPT-4. After US chip bans, China is pushing hard for semiconductor self-sufficiency. The Netherlands is the hidden kingmaker: ASML in Veldhoven is the only company on Earth that makes EUV lithography machines — the equipment needed to manufacture the most advanced AI chips. Without ASML, neither Nvidia, TSMC, nor Samsung can make cutting-edge processors. The US pressured the Dutch government to restrict ASML exports to China — the Netherlands effectively became a weapon in the AI arms race. ASML's machines cost $380 million each and take 40 shipping containers to deliver. This is a chokepoint: one company in Brabant controls the bottleneck of the entire global AI supply chain. The pattern: governments frame it as national security, but the money flows to private corporations. Nvidia's market cap tripled. OpenAI went from nonprofit to $150B valuation. ASML's stock surged. The 'China threat' narrative justifies unchecked expansion and silences critics.">
+    <h2>The Geopolitical Triangle</h2>
+    <div class="three-col" style="max-width:1050px; align-items:start; gap:12px">
+      <div class="card" style="border-left-color:var(--accent); padding:16px 18px">
+        <h3 style="color:var(--accent); font-size:1.15rem">United States</h3>
+        <ul>
+          <li>"Maintain American AI dominance"</li>
+          <li><strong>CHIPS Act</strong> — $52B</li>
+          <li>Export controls on chips to China</li>
+          <li>Altman to Congress: "lead or <strong>authoritarian regimes</strong> will"</li>
+        </ul>
+      </div>
+      <div class="card red-border fragment" style="padding:16px 18px">
+        <h3 style="color:var(--red); font-size:1.15rem">China</h3>
+        <ul>
+          <li>AI strategy since <strong>2017</strong></li>
+          <li>Baidu, Alibaba, ByteDance</li>
+          <li><strong>DeepSeek</strong> — rivalling GPT-4</li>
+          <li>Self-sufficiency push after chip bans</li>
+        </ul>
+      </div>
+      <div class="card orange-border fragment" style="padding:16px 18px">
+        <h3 style="color:var(--orange); font-size:1.15rem">Netherlands</h3>
+        <ul>
+          <li><strong>ASML</strong> — only maker of EUV lithography machines</li>
+          <li>Without ASML, no advanced AI chips</li>
+          <li>US pressured Dutch export restrictions</li>
+          <li>One company in Brabant controls the <strong>global bottleneck</strong></li>
+        </ul>
+      </div>
+    </div>
+    <div class="card fragment" style="max-width:900px; margin-top:14px; border-left-color:var(--yellow)">
+      <p><strong class="yellow">The pattern:</strong> governments frame it as national security — but the money flows to <strong>private corporations</strong>. Nvidia's market cap tripled. OpenAI: nonprofit → $150B. ASML machines cost <strong>$380M each</strong>.</p>
     </div>
   </div>
 
@@ -889,6 +968,63 @@
   <div class="slide" data-notes="An even more provocative version — memorial deepfakes of saints and religious figures. This raises questions about cultural sensitivity, religious appropriation, and who has the authority to 'resurrect' historical or sacred figures.">
     <h2>Memorial Deepfakes <span class="dim">(Saints Version)</span></h2>
     <video src="img/slide49_ScreenRecording_10-17-2025_12-32-52_1.mp4" controls style="width:80%; max-width:700px; border-radius:8px"></video>
+  </div>
+
+  <div class="slide" data-notes="DeepFaceLab and Faceswap are the two main open-source face-swapping tools. DeepFaceLab is the power-user choice with extensive options. Faceswap is more beginner-friendly with a GUI. Both are free and on GitHub.">
+    <h2>DeepFake Faces</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <iframe src="https://www.youtube-nocookie.com/embed/uAPUkgeiFVY?start=85" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <video src="img/deepfake_faces_clip.mp4" controls style="width:100%; aspect-ratio:16/9; border-radius:8px; margin-top:12px"></video>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px">
+          <h3>DeepFaceLab</h3>
+          <p><a href="https://github.com/iperov/DeepFaceLab" target="_blank">GitHub: iperov/DeepFaceLab</a></p>
+          <p style="margin-top:6px">Wide variety of options, continually updated — the go-to choice for many users.</p>
+        </div>
+        <div class="card green-border">
+          <h3 style="color:var(--green)">Faceswap</h3>
+          <p><a href="https://github.com/deepfakes/faceswap" target="_blank">GitHub: deepfakes/faceswap</a></p>
+          <p style="margin-top:6px">Friendly GUI and supportive community, accessible for beginners.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="First Order Motion Model — takes a single portrait image and animates it using a driving video. You can make any photo move and talk like the person in the driving video. The key breakthrough was doing this without any face-specific training.">
+    <h2>DeepFake Bodies</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <iframe src="https://www.youtube-nocookie.com/embed/PCBTZh41Ris?start=134" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+      <div class="card">
+        <h3>First Order Model</h3>
+        <p><a href="https://github.com/AliaksandrSiarohin/first-order-model" target="_blank">GitHub: AliaksandrSiarohin/first-order-model</a></p>
+        <p style="margin-top:6px">Animates portrait images using a driving video.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Voice synthesis has advanced rapidly. Tacotron/Tacotron2 was an early neural TTS model. Mozilla TTS made it open-source. VITS combines variational inference with adversarial training for high-quality speech. RVC allows voice cloning from just a few minutes of audio — this is what powers most deepfake voice content.">
+    <h2>DeepFake Voices</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div class="card">
+        <h3>Voice Synthesis</h3>
+        <p style="color:var(--dim); margin-top:8px">Generate realistic speech from text, or clone a voice from a short audio sample</p>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px">
+          <h3>Popular Resources</h3>
+          <ul>
+            <li><strong>Tacotron / Tacotron2</strong> — Neural text-to-speech</li>
+            <li><strong>Mozilla TTS</strong> — Open-source TTS engine</li>
+            <li><strong>VITS</strong> — High-quality end-to-end TTS</li>
+            <li><strong>RVC</strong> — Retrieval-based Voice Conversion</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="slide" data-notes="Deepfakes in entertainment. Kendrick Lamar's 'The Heart Part 5' music video used deepfake technology to transform his face into OJ Simpson, Kanye West, Jussie Smollett, Will Smith, Kobe Bryant, and Nipsey Hussle. Here the artist chose to use deepfakes with a clear artistic intent — commentary on Black celebrity and public image. Is this a legitimate use?">
@@ -1372,6 +1508,60 @@
       <p style="font-family:var(--mono); font-size:1.05rem; color:var(--accent); line-height:1.7">/imagine prompt: <strong>equirectangular projection of</strong> a visually stunning landscape: majestic mountains, golden sunset, <strong>expansive, awe-inspiring, breathtaking, vivid colors, dramatic lighting, sharp focus, good exposure, insanely detailed, ultra-wide angle lens</strong> --no black edges, text, any distortion --ar 16:9 --v 4 --style 4c</p>
     </div>
     <iframe src="https://www.youtube-nocookie.com/embed/F4wGqCoFIDg" style="width:80%; max-width:700px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+
+  <!-- ——— INTERACTIVE WORKSHOP DESCRIPTION ——— -->
+
+  <div class="slide section-title" data-notes="Now it's your turn. We have a custom-built interactive workshop where you can experiment hands-on with 8 different generative AI tools — all running in your browser, powered by real AI models via the Replicate API. No accounts needed, no installs. Just open the link and start creating.">
+    <h2>Hands-On <span class="green">Workshop</span></h2>
+    <div class="divider" style="background:var(--green)"></div>
+    <p style="color:var(--text); font-size:1.4rem; margin-top:16px">8 interactive tools — try them yourself</p>
+  </div>
+
+  <div class="slide" data-notes="Here's what you can do in the workshop. Each tab is a different generative AI capability. Text to Image uses FLUX-schnell — type a prompt, get an image in about 5 seconds. Image to Image uses SDXL — upload a photo, describe how to change it, and control the strength. Image to Text uses Salesforce BLIP — upload any image and the AI describes what it sees. PhotoMaker from TencentARC takes a photo of your face and generates you in different styles — cinematic, comic book, fantasy art. Image to 3D uses Hunyuan3D — upload a photo of an object and get a full 3D model you can rotate and download. Text to 3D uses OpenAI Shap-E — describe an object in words and get a 3D model. Face Swap does exactly what it sounds like — upload two faces and swap them. Pose Transfer extracts a body pose from one image and generates a new person in that exact pose. All models run via Replicate API. Generation times range from 5 seconds to 4 minutes depending on the task.">
+    <h2>Workshop Tools</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; max-width:1050px; width:100%">
+      <div class="card red-border" style="padding:14px 16px">
+        <h3 style="color:var(--red); font-size:1.05rem">1. Text to Image</h3>
+        <p style="font-size:0.95rem">Type a prompt, get an image</p>
+        <p style="font-size:0.8rem; color:var(--dim); margin-top:6px">FLUX-schnell · ~5s</p>
+      </div>
+      <div class="card orange-border" style="padding:14px 16px">
+        <h3 style="color:var(--orange); font-size:1.05rem">2. Image to Image</h3>
+        <p style="font-size:0.95rem">Transform photos with text</p>
+        <p style="font-size:0.8rem; color:var(--dim); margin-top:6px">SDXL · ~15s</p>
+      </div>
+      <div class="card yellow-border" style="padding:14px 16px">
+        <h3 style="color:var(--yellow); font-size:1.05rem">3. Image to Text</h3>
+        <p style="font-size:0.95rem">AI describes your image</p>
+        <p style="font-size:0.8rem; color:var(--dim); margin-top:6px">BLIP · ~10s</p>
+      </div>
+      <div class="card pink-border" style="padding:14px 16px">
+        <h3 style="color:var(--pink); font-size:1.05rem">4. PhotoMaker</h3>
+        <p style="font-size:0.95rem">Your face in any style</p>
+        <p style="font-size:0.8rem; color:var(--dim); margin-top:6px">TencentARC · ~30s</p>
+      </div>
+      <div class="card green-border" style="padding:14px 16px">
+        <h3 style="color:var(--green); font-size:1.05rem">5. Image to 3D</h3>
+        <p style="font-size:0.95rem">Photo → 3D model</p>
+        <p style="font-size:0.8rem; color:var(--dim); margin-top:6px">Hunyuan3D · ~3min</p>
+      </div>
+      <div class="card" style="padding:14px 16px; border-left-color:var(--accent)">
+        <h3 style="color:var(--accent); font-size:1.05rem">6. Text to 3D</h3>
+        <p style="font-size:0.95rem">Describe → 3D model</p>
+        <p style="font-size:0.8rem; color:var(--dim); margin-top:6px">Shap-E · ~2min</p>
+      </div>
+      <div class="card red-border" style="padding:14px 16px">
+        <h3 style="color:var(--red); font-size:1.05rem">7. Face Swap</h3>
+        <p style="font-size:0.95rem">Swap faces between photos</p>
+        <p style="font-size:0.8rem; color:var(--dim); margin-top:6px">CodePlugTech · ~30s</p>
+      </div>
+      <div class="card" style="padding:14px 16px; border-left-color:var(--dim)">
+        <h3 style="font-size:1.05rem">8. Pose Transfer</h3>
+        <p style="font-size:0.95rem">Copy a pose to new image</p>
+        <p style="font-size:0.8rem; color:var(--dim); margin-top:6px">ControlNet · ~20s</p>
+      </div>
+    </div>
   </div>
 
   <!-- ============================================ -->
