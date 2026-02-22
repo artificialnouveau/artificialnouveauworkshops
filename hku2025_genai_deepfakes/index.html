@@ -53,10 +53,10 @@
     .fragment { opacity: 0; transition: opacity 0.4s ease; }
     .fragment.visible { opacity: 1; }
 
-    .slide h1 { font-size: 3.6rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 16px; }
-    .slide h2 { font-size: 2.8rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 20px; }
-    .slide h3 { font-size: 1.6rem; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
-    .slide p, .slide li { font-size: 1.35rem; line-height: 1.7; color: var(--dim); }
+    .slide h1 { font-size: 4.2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 16px; }
+    .slide h2 { font-size: 3.2rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 20px; }
+    .slide h3 { font-size: 1.8rem; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
+    .slide p, .slide li { font-size: 1.5rem; line-height: 1.7; color: var(--dim); }
     .slide ul { list-style: none; padding: 0; text-align: left; }
     .slide ul li { padding: 6px 0; padding-left: 24px; position: relative; }
     .slide ul li::before { content: '\2192'; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); }
@@ -73,15 +73,15 @@
     .orange { color: var(--orange); }
 
     .title-slide { align-items: center; text-align: center; justify-content: center; }
-    .title-slide h1 { font-size: 4.2rem; }
-    .title-slide .subtitle { font-size: 1.4rem; color: var(--dim); font-family: var(--mono); margin-top: 12px; }
+    .title-slide h1 { font-size: 4.8rem; }
+    .title-slide .subtitle { font-size: 1.6rem; color: var(--dim); font-family: var(--mono); margin-top: 12px; }
 
     .section-title { align-items: center; text-align: center; justify-content: center; }
-    .section-title h2 { font-size: 3.4rem; color: var(--accent); }
+    .section-title h2 { font-size: 3.8rem; color: var(--accent); }
     .section-title .divider { width: 80px; height: 3px; background: var(--accent); margin: 20px auto; border-radius: 2px; }
 
     .sub-section { align-items: center; text-align: center; justify-content: center; }
-    .sub-section h3 { font-size: 2.2rem; color: var(--dim); letter-spacing: 0.05em; text-transform: uppercase; }
+    .sub-section h3 { font-size: 2.4rem; color: var(--dim); letter-spacing: 0.05em; text-transform: uppercase; }
     .sub-section .sub-divider { width: 40px; height: 2px; background: var(--dim); margin: 12px auto; border-radius: 2px; }
 
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; width: 100%; text-align: left; }
@@ -141,6 +141,23 @@
     #slide-counter { position: fixed; bottom: 30px; left: 30px; font-family: var(--mono); font-size: 0.8rem; color: var(--dim); z-index: 100; }
     #progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); transition: width 0.3s ease; z-index: 100; }
 
+    #section-nav {
+      position: fixed; top: 3px; left: 0; right: 0; z-index: 99;
+      display: flex; justify-content: center; gap: 4px; padding: 8px 16px;
+      background: linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.8) 80%, transparent 100%);
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+      flex-wrap: wrap;
+    }
+    #section-nav.visible { opacity: 1; pointer-events: auto; }
+    #section-nav button {
+      border: 1px solid #333; background: var(--bg-card); color: var(--dim);
+      border-radius: 20px; padding: 4px 14px; cursor: pointer;
+      font-family: var(--mono); font-size: 0.7rem; white-space: nowrap;
+      transition: all 0.2s;
+    }
+    #section-nav button:hover { border-color: var(--accent); color: var(--accent); }
+    #section-nav button.active { border-color: var(--accent); color: var(--accent); background: rgba(74,158,255,0.12); }
+
     @media (max-width: 900px) {
       .slide { padding: 30px 24px; }
       .slide h1 { font-size: 2.2rem; }
@@ -154,6 +171,7 @@
 <body>
 
   <div id="progress"></div>
+  <div id="section-nav"></div>
 
   <!-- ============================================ -->
   <!-- PART 1: INTRODUCTION                         -->
@@ -167,23 +185,21 @@
   </div>
 
   <!-- Outline -->
-  <div class="slide" data-notes="Quick overview of today's journey. We start with the fundamentals of GenAI, move through ethics and tools, then deep-dive into deepfakes — what they are, how they're used, and the consent issues they raise.">
+  <div class="slide" data-notes="Here's the roadmap. We start with what generative AI actually is, then examine it through five characteristics of modern AI empires — drawing on Karen Hao's Empire of AI framework. After the conclusion we move into deepfakes and then the hands-on workshop with tools and resources.">
     <h2>Outline</h2>
     <div class="two-col" style="font-size:1.4rem; max-width:800px; gap:24px">
       <ul>
         <li>What is Generative AI</li>
-        <li>Extraction Without Consent</li>
-        <li>Environmental Cost</li>
-        <li>Labor &amp; Economic Displacement</li>
-        <li>GenAI Tools &amp; Resources</li>
+        <li style="color:var(--red)">1. Resource Appropriation</li>
+        <li style="color:var(--green)">2. Scale at All Costs</li>
+        <li style="color:var(--orange)">3. Labor Exploitation</li>
       </ul>
       <ul>
-        <li>What Are Deepfakes</li>
-        <li>Degrees of Simulation</li>
-        <li>Homogenization &amp; Control</li>
-        <li>Surveillance &amp; Manipulation</li>
-        <li>Consent &amp; Harm</li>
-        <li>Concentration of Power</li>
+        <li style="color:var(--pink)">4. The Civilizing Mission</li>
+        <li style="color:var(--accent)">5. Competitive Justification</li>
+        <li>Conclusion</li>
+        <li style="color:var(--dim)">Deepfakes &amp; Consent</li>
+        <li style="color:var(--green)">Workshop + Tools</li>
       </ul>
     </div>
   </div>
@@ -200,6 +216,36 @@
       <img src="img/slide2_Picture_11.jpg" class="small">
       <img src="img/slide2_Picture_13.jpg" class="small">
       <img src="img/slide2_Picture_15.jpg" class="small">
+    </div>
+  </div>
+
+  <div class="slide" data-notes="This framework comes from Karen Hao's book Empire of AI (2025). Hao spent years reporting on OpenAI from the inside and argues that AI companies aren't just tech companies — they're modern empires. The key insight: the logic driving AI expansion isn't new. It's colonial logic — the same patterns used by the East India Company, the Belgian Congo, and the British Empire. Hao identifies characteristics that map directly onto how empires have always operated. Resource Appropriation — empires laid claim to land, minerals, and labor that weren't theirs. AI companies do the same with data, creative work, and natural resources. They scraped the entire internet without permission — billions of images, books, articles, code — to build proprietary systems worth trillions. Labor Exploitation — empires ran on cheap and coerced labor. AI runs on $2/hour content moderators in Kenya and the Philippines who review traumatic content so the models can be 'safe'. The wealth flows to Silicon Valley; the human cost is borne by the Global South. Competitive Justification — every empire justified expansion by pointing to a rival. 'If we don't colonize Africa, France will.' Today: 'We must build AGI before China does.' This framing makes safety concerns sound like weakness and turns reckless speed into patriotic duty. The Civilizing Mission — empires claimed to bring progress and enlightenment to 'backward' peoples. AI companies claim to 'democratize AI' and 'benefit all of humanity' — while training on Western data, encoding Western values, and flattening the world's cultural diversity into a single homogenized output. Scale at All Costs — empires needed constant expansion to survive — more territory, more resources, more subjects. AI needs the same: more data centres, more water for cooling, more energy, more land. Microsoft is restarting Three Mile Island. Google's emissions rose 48% in one year. This is imperial expansion in digital form. Supporting references: Kate Crawford, Atlas of AI (2021) — the material costs of AI. Nick Couldry and Ulises Mejias, The Costs of Connection (2019) — data colonialism as the new extractive frontier.">
+    <h2>The Empire of AI</h2>
+    <p style="color:var(--dim); margin-bottom:20px; font-size:1.2rem">Five characteristics of modern AI empires</p>
+    <div style="display:flex; gap:24px; align-items:start; max-width:1100px; width:100%">
+      <img src="img/empire_of_ai_cover.jpg" style="width:180px; border-radius:8px; flex-shrink:0; box-shadow:0 4px 20px rgba(0,0,0,0.4)">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; flex:1">
+        <div class="card red-border" style="padding:14px 18px">
+          <h3 style="color:var(--red); font-size:1.1rem">1. Resource Appropriation</h3>
+          <p style="font-size:1rem">Laying claim to data, creative work, and natural resources</p>
+        </div>
+        <div class="card orange-border fragment" style="padding:14px 18px">
+          <h3 style="color:var(--orange); font-size:1.1rem">2. Labor Exploitation</h3>
+          <p style="font-size:1rem">$2/hour content moderators while Silicon Valley earns billions</p>
+        </div>
+        <div class="card yellow-border fragment" style="padding:14px 18px">
+          <h3 style="color:var(--yellow); font-size:1.1rem">3. Competitive Justification</h3>
+          <p style="font-size:1rem">"We must build AGI before China does" — good empire vs evil empire</p>
+        </div>
+        <div class="card pink-border fragment" style="padding:14px 18px">
+          <h3 style="color:var(--pink); font-size:1.1rem">4. The Civilizing Mission</h3>
+          <p style="font-size:1rem">"Democratizing AI" while extracting and homogenizing</p>
+        </div>
+        <div class="card green-border fragment" style="padding:14px 18px; grid-column: span 2">
+          <h3 style="color:var(--green); font-size:1.1rem">5. Scale at All Costs</h3>
+          <p style="font-size:1rem">Imperial expansion demanding more land, water, and energy for data centres</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -238,13 +284,13 @@
 
   <div class="slide" data-notes="Training a generative model requires massive datasets and significant compute. These images show the training pipeline — from raw data collection through to the neural network learning patterns over many iterations.">
     <h2>Training Time</h2>
-    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; max-width:1100px; width:100%">
-      <img src="img/slide5_Picture_8.jpg" style="width:100%; border-radius:8px; object-fit:contain">
-      <img src="img/slide5_Picture_2.jpg" style="width:100%; border-radius:8px; object-fit:contain">
-      <img src="img/slide5_Picture_6.jpg" style="width:100%; border-radius:8px; object-fit:contain">
-      <img src="img/slide5_Picture_12.png" class="fragment" style="width:100%; border-radius:8px; object-fit:contain">
-      <img src="img/slide5_Picture_4.png" class="fragment" style="width:100%; border-radius:8px; object-fit:contain">
-      <img src="img/slide5_Picture_10.jpg" class="fragment" style="width:100%; border-radius:8px; object-fit:contain">
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; max-width:1100px; width:100%">
+      <img src="img/slide5_Picture_8.jpg" style="grid-column:1; grid-row:1; width:100%; border-radius:8px; object-fit:contain">
+      <img src="img/slide5_Picture_12.png" class="fragment" style="grid-column:1; grid-row:2; width:100%; border-radius:8px; object-fit:contain">
+      <img src="img/slide5_Picture_2.jpg" class="fragment" style="grid-column:2; grid-row:1; width:100%; border-radius:8px; object-fit:contain">
+      <img src="img/slide5_Picture_4.png" class="fragment" style="grid-column:2; grid-row:2; width:100%; border-radius:8px; object-fit:contain">
+      <img src="img/slide5_Picture_6.jpg" class="fragment" style="grid-column:3; grid-row:1; width:100%; border-radius:8px; object-fit:contain">
+      <img src="img/slide5_Picture_10.jpg" class="fragment" style="grid-column:3; grid-row:2; width:100%; border-radius:8px; object-fit:contain">
     </div>
   </div>
 
@@ -293,11 +339,89 @@
   </div>
 
   <!-- ============================================ -->
-  <!-- PART 4: EXTRACTION WITHOUT CONSENT            -->
+  <!-- GENERATIVE AI APPLICATIONS                    -->
   <!-- ============================================ -->
 
-  <div class="slide section-title" data-notes="Training data was scraped from billions of people without permission or compensation. Artists, writers, and creators had their work taken to build systems that replace them. This mirrors colonial extraction logic — take from the many, profit for the few.">
-    <h2>Extraction <span class="red">Without Consent</span></h2>
+  <div class="slide section-title" data-notes="Now let's look at some of the applications of generative AI — what these tools can actually do today.">
+    <h2>Generative AI <span class="accent">Applications</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <div class="slide" data-notes="Overview of what generative AI can produce today. The key modalities are text-to-image, text-to-video, image-to-image transformation, image-to-video animation, and combined image+text-to-video. Each has different tools and different levels of maturity.">
+    <h2>Generative AI Applications</h2>
+    <h3>Image &amp; Video Synthesis</h3>
+    <div class="three-col" style="max-width:800px; margin-top:16px">
+      <div class="card"><p style="color:var(--text)">Text-to-Image</p></div>
+      <div class="card"><p style="color:var(--text)">Text-to-Video</p></div>
+      <div class="card"><p style="color:var(--text)">Image-to-Image</p></div>
+      <div class="card"><p style="color:var(--text)">Image-to-Video</p></div>
+      <div class="card" style="grid-column: span 2"><p style="color:var(--text)">Image+Text-to-Video</p></div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="DeepFaceLab and Faceswap are the two main open-source face-swapping tools. DeepFaceLab is the power-user choice with extensive options. Faceswap is more beginner-friendly with a GUI. Both are free and on GitHub.">
+    <h2>DeepFake Faces</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <iframe src="https://www.youtube-nocookie.com/embed/uAPUkgeiFVY?start=85" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <video src="img/deepfake_faces_clip.mp4" controls style="width:100%; aspect-ratio:16/9; border-radius:8px; margin-top:12px"></video>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px">
+          <h3>DeepFaceLab</h3>
+          <p><a href="https://github.com/iperov/DeepFaceLab" target="_blank">GitHub: iperov/DeepFaceLab</a></p>
+          <p style="margin-top:6px">Wide variety of options, continually updated — the go-to choice for many users.</p>
+        </div>
+        <div class="card green-border">
+          <h3 style="color:var(--green)">Faceswap</h3>
+          <p><a href="https://github.com/deepfakes/faceswap" target="_blank">GitHub: deepfakes/faceswap</a></p>
+          <p style="margin-top:6px">Friendly GUI and supportive community, accessible for beginners.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="First Order Motion Model — takes a single portrait image and animates it using a driving video. You can make any photo move and talk like the person in the driving video. The key breakthrough was doing this without any face-specific training.">
+    <h2>DeepFake Bodies</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <iframe src="https://www.youtube-nocookie.com/embed/PCBTZh41Ris?start=134" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+      <div class="card">
+        <h3>First Order Model</h3>
+        <p><a href="https://github.com/AliaksandrSiarohin/first-order-model" target="_blank">GitHub: AliaksandrSiarohin/first-order-model</a></p>
+        <p style="margin-top:6px">Animates portrait images using a driving video.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Voice synthesis has advanced rapidly. Tacotron/Tacotron2 was an early neural TTS model. Mozilla TTS made it open-source. VITS combines variational inference with adversarial training for high-quality speech. RVC allows voice cloning from just a few minutes of audio — this is what powers most deepfake voice content.">
+    <h2>DeepFake Voices</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div class="card">
+        <h3>Voice Synthesis</h3>
+        <p style="color:var(--dim); margin-top:8px">Generate realistic speech from text, or clone a voice from a short audio sample</p>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px">
+          <h3>Popular Resources</h3>
+          <ul>
+            <li><strong>Tacotron / Tacotron2</strong> — Neural text-to-speech</li>
+            <li><strong>Mozilla TTS</strong> — Open-source TTS engine</li>
+            <li><strong>VITS</strong> — High-quality end-to-end TTS</li>
+            <li><strong>RVC</strong> — Retrieval-based Voice Conversion</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- PART 4: RESOURCE APPROPRIATION                -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Like colonial powers claiming land and resources that weren't theirs, AI companies have laid claim to the world's data, creative work, and natural resources — scraping billions of people's work without permission or compensation to build proprietary systems. This is resource appropriation at industrial scale.">
+    <h2>Resource <span class="red">Appropriation</span></h2>
     <div class="divider" style="background:var(--red)"></div>
   </div>
 
@@ -326,13 +450,30 @@
     <p class="fragment" style="margin-top:20px; color:var(--red); font-size:1.2rem">No permission. No compensation. No opt-out.</p>
   </div>
 
-  <div class="slide" data-notes="Many generative models were trained on data scraped from the internet without consent. Artists, photographers, and writers have found their work reproduced or closely imitated by AI systems — without credit, compensation, or permission. These are real examples of copyrighted works found in training datasets.">
-    <h2>Copyright Violations in Datasets</h2>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:1100px; width:100%; align-items:center">
-      <img src="img/nyt_harvest_data.png" style="width:100%; max-height:450px; border-radius:8px; object-fit:contain">
-      <img src="img/slide10_Picture_18.png" class="fragment" style="width:100%; max-height:450px; border-radius:8px; object-fit:contain">
-      <img src="img/slide10_Picture_20.png" class="fragment" style="width:100%; max-height:450px; border-radius:8px; object-fit:contain">
-      <img src="img/slide10_Picture_22.png" class="fragment" style="width:100%; max-height:450px; border-radius:8px; object-fit:contain">
+  <div class="slide" data-notes="This is from a New York Times investigation published April 2024. In January 2020, Jared Kaplan published a paper showing that more data equals better AI — 'scale is all you need' became the rallying cry. By late 2021, OpenAI had exhausted every reputable English-language text source on the internet. They built Whisper to transcribe over 1 million hours of YouTube videos — even though employees knew it likely violated YouTube's rules. Google was doing the same thing with YouTube transcripts. Meta's VP of generative AI told executives they'd used almost every available English book, essay, poem and news article. Meta discussed buying Simon & Schuster outright just for the training data. One Meta lawyer warned of ethical concerns around taking artists' IP and was met with silence. Google quietly broadened its privacy policy on July 4th weekend 2023 to allow using Google Docs and Maps data for AI. Researchers estimate companies could exhaust all high-quality internet data by 2026.">
+    <h2>How Tech Giants Harvested Data</h2>
+    <div style="display:flex; gap:20px; align-items:start; max-width:1100px; width:100%">
+      <img src="img/nyt_harvest_data.png" style="max-width:500px; width:100%; border-radius:8px; object-fit:contain; flex-shrink:0">
+      <div style="text-align:left">
+        <div class="card" style="padding:14px 18px; margin-bottom:8px">
+          <p style="color:var(--dim); font-size:1.25rem"><strong class="yellow">Jan 2020</strong> — "Scale is all you need" paper published. More data = better AI becomes the rallying cry</p>
+        </div>
+        <div class="card fragment" style="padding:14px 18px; margin-bottom:8px; border-left-color:var(--red)">
+          <p style="color:var(--dim); font-size:1.25rem"><strong class="red">Late 2021</strong> — OpenAI exhausts every reputable English-language text on the internet</p>
+        </div>
+        <div class="card fragment" style="padding:14px 18px; margin-bottom:8px; border-left-color:var(--red)">
+          <p style="color:var(--dim); font-size:1.25rem"><strong class="red">2022</strong> — OpenAI builds Whisper, transcribes <strong>1M+ hours</strong> of YouTube videos for GPT-4. Employees knew it likely violated YouTube's rules</p>
+        </div>
+        <div class="card fragment" style="padding:14px 18px; margin-bottom:8px; border-left-color:var(--orange)">
+          <p style="color:var(--dim); font-size:1.25rem"><strong class="orange">2023</strong> — Meta uses almost every English book, essay &amp; article online. Discusses buying Simon &amp; Schuster for training data</p>
+        </div>
+        <div class="card fragment" style="padding:14px 18px; margin-bottom:8px; border-left-color:var(--yellow)">
+          <p style="color:var(--dim); font-size:1.25rem"><strong class="yellow">July 4 2023</strong> — Google quietly broadens privacy policy to use Google Docs, Maps &amp; other user data for AI</p>
+        </div>
+        <div class="card fragment" style="padding:14px 18px; border-left-color:var(--dim)">
+          <p style="color:var(--dim); font-size:1.25rem"><strong style="color:var(--text)">~2026</strong> — Estimated date companies exhaust all high-quality internet data</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -370,12 +511,21 @@
   </div>
 
   <!-- ============================================ -->
-  <!-- PART 5: ENVIRONMENTAL COST                    -->
+  <!-- PART 5: SCALE AT ALL COSTS                    -->
   <!-- ============================================ -->
 
-  <div class="slide section-title" data-notes="Massive energy and water consumption disproportionately impacts communities with the least power. The environmental burden is externalized onto marginalized populations — data centres are built where land and energy are cheap, not where the people who profit from AI live.">
-    <h2><span class="green">Environmental</span> Cost</h2>
+  <div class="slide section-title" data-notes="Imperial expansion always demands more — more land, more water, more energy, more resources. AI expansion follows the same logic: data centres are built where land and energy are cheap, not where the people who profit from AI live. The environmental burden is externalized onto communities with the least power, just as colonial industries dumped waste and extracted resources from colonized lands.">
+    <h2>Scale at <span class="green">All Costs</span></h2>
     <div class="divider" style="background:var(--green)"></div>
+  </div>
+
+  <div class="slide" data-notes="This is xAI's Colossus data centre in Memphis, Tennessee — the largest AI supercomputer in the world. It was built in just 122 days, running on gas turbines that burn natural gas 24/7. Residents in the surrounding neighbourhood — a predominantly Black community — reported vibrations, constant noise, and air quality concerns. The facility consumes as much energy as a small city. This is what 'scale at all costs' looks like on the ground: imperial infrastructure built in marginalized communities to power AI systems those communities will never benefit from. Photo credit: Steve Jones / Flight by Southwings for SELC.">
+    <h2>Data Centers</h2>
+    <div class="two-col" style="max-width:1000px; align-items:start">
+      <img src="img/colossus_datacenter.avif" style="width:100%; border-radius:8px; object-fit:contain">
+      <img src="img/xai_datacenter_aerial.jpg" style="width:100%; border-radius:8px; object-fit:contain">
+    </div>
+    <p style="color:var(--dim); font-size:1rem; margin-top:12px">xAI Colossus — Memphis, Tennessee. The world's largest AI supercomputer, built in 122 days.</p>
   </div>
 
   <div class="slide" data-notes="Data centres aren't new — they've been powering the internet for decades. Everything from cloud services, streaming, banking, gaming, and e-commerce runs on data centres. The point: AI is not the first heavy user of this infrastructure, but it is changing the game significantly.">
@@ -406,11 +556,11 @@
   </div>
 
   <!-- ============================================ -->
-  <!-- PART 6: LABOR & ECONOMIC DISPLACEMENT         -->
+  <!-- PART 6: LABOR EXPLOITATION                    -->
   <!-- ============================================ -->
 
-  <div class="slide section-title" data-notes="Generative AI is marketed as a tool of democratization, but it is designed to eliminate jobs and reduce labor costs. The wealth concentrates upward while displacing workers who have no say in the process. This weakens collective bargaining power across creative industries, journalism, translation, customer service, and more.">
-    <h2>Labor &amp; Economic <span class="orange">Displacement</span></h2>
+  <div class="slide section-title" data-notes="Empires have always relied on cheap or coerced labor — from indentured workers in British colonies to enslaved people in the Americas. Today's AI empires follow the same pattern: content moderators in Kenya earn $2/hour cleaning up traumatic training data, while the companies they serve are valued in the trillions. The wealth flows upward; the human cost is borne by those with the least power.">
+    <h2>Labor <span class="orange">Exploitation</span></h2>
     <div class="divider" style="background:var(--orange)"></div>
   </div>
 
@@ -448,7 +598,7 @@
           <li>Voice actors</li>
         </ul>
       </div>
-      <div class="card yellow-border"><h3 style="color:var(--yellow)">Knowledge Work</h3>
+      <div class="card yellow-border fragment"><h3 style="color:var(--yellow)">Knowledge Work</h3>
         <ul>
           <li>Copywriters</li>
           <li>Translators</li>
@@ -468,6 +618,199 @@
   </div>
 
   <!-- ============================================ -->
+  <!-- THE CIVILIZING MISSION                        -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Colonial empires justified their expansion through a 'civilizing mission' — claiming to bring progress, Christianity, and modernity to 'backward' peoples. Today's AI empires use the same logic: 'democratizing AI', 'benefiting all of humanity', 'making knowledge accessible'. But whose knowledge? Whose culture? Models trained on Western, English-language data flatten the world's diversity into a single homogenized output — a digital civilizing mission at planetary scale.">
+    <h2>The Civilizing <span class="pink">Mission</span></h2>
+    <div class="divider" style="background:var(--pink)"></div>
+  </div>
+
+  <div class="slide" data-notes="Washington Post (2024): when prompted with 'beautiful woman', nearly 9 in 10 of Midjourney's outputs are light-skinned. Only 2% of images showed single-fold eyelids (common in East Asian faces). University of Washington study: prompting 'a person' over-represents light-skinned men and sexualizes women of colour. Bloomberg (2023): Stable Diffusion defaults to white male CEOs, white doctors, white engineers. The world according to these models is Western, white, and male unless you explicitly specify otherwise. This is what a civilizing mission looks like in the 21st century — not missionaries and schools, but training data and default outputs that encode one culture's aesthetics as universal.">
+    <h2>The Default is Western</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <div class="card pink-border" style="margin-bottom:12px">
+          <h3 style="color:var(--pink)">Prompt: "beautiful woman"</h3>
+          <p><strong class="pink">9 in 10</strong> outputs are light-skinned (Midjourney)</p>
+          <p>Only <strong class="pink">2%</strong> showed single-fold eyelids</p>
+          <p style="color:var(--dim); font-size:0.9rem; margin-top:8px">— Washington Post, 2024</p>
+        </div>
+        <div class="card red-border fragment" style="margin-bottom:12px">
+          <h3 style="color:var(--red)">Prompt: "a person"</h3>
+          <p>Defaults to <strong>light-skinned men</strong></p>
+          <p>Women of colour are <strong>sexualized</strong></p>
+          <p style="color:var(--dim); font-size:0.9rem; margin-top:8px">— University of Washington, 2023</p>
+        </div>
+        <div class="card yellow-border fragment">
+          <h3 style="color:var(--yellow)">Prompt: "a CEO"</h3>
+          <p>Stable Diffusion: almost exclusively <strong>white men</strong></p>
+          <p style="color:var(--dim); font-size:0.9rem; margin-top:8px">— Bloomberg, 2023</p>
+        </div>
+      </div>
+      <div>
+        <img src="img/midjourney_general_grid.jpg" style="width:100%; border-radius:8px; margin-bottom:12px">
+        <p style="color:var(--dim); font-size:0.9rem; text-align:center">Midjourney outputs for neutral prompts across cultures<br><em>Source: Rest of World, 2023</em></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="These are actual Midjourney outputs from a Rest of World investigation (2023). They prompted 'an Indian person', 'a Mexican person', 'a Nigerian person' — the results reduce entire cultures to the most stereotypical Western imagination of them. Every Indian person wears traditional clothing, every Mexican is in a sombrero or colorful shawl, every Nigerian is in bright traditional dress. Meanwhile 'an American person' produces casual, modern, diverse-looking white people. The models don't reflect reality — they reflect the internet's stereotypes, which are overwhelmingly produced by Western, English-speaking users. This is cultural flattening at scale. And then when Google tried to fix it with Gemini — adding a diversity filter that generated Black Nazi soldiers and Asian US founding fathers — the overcorrection revealed how superficial the fix was. You can't patch over structural bias with a diversity checkbox.">
+    <h2>AI Stereotypes by Country</h2>
+    <div class="two-col" style="max-width:1000px; align-items:start">
+      <div>
+        <img src="img/midjourney_indian_person.jpg" style="width:100%; border-radius:8px; margin-bottom:8px">
+        <p style="color:var(--dim); font-size:0.9rem; text-align:center">Midjourney: "an Indian person"</p>
+      </div>
+      <div>
+        <img src="img/midjourney_mexican_person.jpg" style="width:100%; border-radius:8px; margin-bottom:8px">
+        <p style="color:var(--dim); font-size:0.9rem; text-align:center">Midjourney: "a Mexican person"</p>
+      </div>
+    </div>
+    <div class="card fragment" style="max-width:800px; margin-top:16px; border-left-color:var(--pink)">
+      <p><strong class="pink">Google Gemini's "fix":</strong> a diversity filter that generated Black Nazi soldiers and Asian US founding fathers — paused within days after backlash. You can't patch structural bias with a checkbox.</p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- COMPETITIVE JUSTIFICATION                     -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Every empire justifies its expansion by pointing to a rival empire. The British said 'if we don't colonize Africa, France will.' Today's AI companies say 'we must build AGI before China does.' This competitive justification drives a race to deploy powerful AI systems with minimal safeguards — because slowing down means losing. The result: a handful of corporations concentrate unprecedented power while framing it as national security necessity.">
+    <h2>Competitive <span class="accent">Justification</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <div class="slide" data-notes="The AI arms race mirrors colonial scrambles for territory. Sam Altman has explicitly framed AI development as a geopolitical competition — 'American AI vs Chinese AI.' This framing serves a strategic purpose: it makes safety concerns sound like weakness, turns reckless speed into patriotic duty, and justifies concentrating enormous power in a few private companies. Microsoft invested $13 billion in OpenAI. Google, Meta, and Amazon are each spending over $50 billion per year on AI infrastructure. These companies argue they need minimal regulation because slowing down means 'losing to China.' But the real competition isn't between nations — it's between corporations racing to lock in market dominance. The same logic drove the East India Company to expand faster than its rivals, the same logic drove the scramble for Africa. The justification is always the same: 'if we don't do it, someone worse will.'">
+    <h2>The AI Arms Race</h2>
+    <div class="two-col" style="max-width:900px">
+      <div class="card" style="border-left-color:var(--accent)">
+        <h3 style="color:var(--accent)">The Logic</h3>
+        <ul>
+          <li>"We must build AGI before China does"</li>
+          <li>Safety concerns reframed as <strong>weakness</strong></li>
+          <li>Reckless speed becomes <strong>patriotic duty</strong></li>
+          <li>Minimal regulation = competitive advantage</li>
+        </ul>
+      </div>
+      <div class="card red-border fragment">
+        <h3 style="color:var(--red)">The Reality</h3>
+        <ul>
+          <li>Microsoft: <strong>$13B</strong> into OpenAI</li>
+          <li>Google, Meta, Amazon: <strong>$50B+/year</strong> each on AI infrastructure</li>
+          <li>A handful of companies concentrate <strong>unprecedented power</strong></li>
+          <li>The race isn't between nations — it's between <strong>corporations</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Google integrated their Veo3 video generation model directly into YouTube. This means AI-generated video is now a first-class feature on the world's largest video platform. The line between 'real' and 'generated' YouTube content becomes increasingly blurred.">
+    <h2>Google + YouTube + Veo3</h2>
+    <div style="display:flex; gap:24px; align-items:center; max-width:950px; width:100%">
+      <iframe src="https://www.youtube-nocookie.com/embed/zrphf1DH6Nw" style="width:320px; aspect-ratio:9/16; border:none; border-radius:8px; flex-shrink:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <div class="card" style="flex:1">
+        <p style="color:var(--text)">Google's video generation model integrated into YouTube, enabling AI-generated video content at scale.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Meta launched Vibes — generative AI tools built into Instagram and Facebook. Users can now create AI-generated images and videos directly within social media apps used by billions. This normalises synthetic content in everyday social interaction.">
+    <h2>Meta + Vibes</h2>
+    <img src="img/Vibes_header.gif" style="max-width:900px; width:100%; border-radius:8px; margin-bottom:16px; object-fit:contain">
+    <div class="card" style="max-width:700px">
+      <p style="color:var(--text)">Meta's generative AI tools integrated across Instagram and Facebook for content creation.</p>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="OpenAI launched Sora2 — their next-generation video model with higher fidelity, longer clips, and better prompt following. Unlike the original Sora which was limited access, Sora2 is being rolled out more broadly. The quality is reaching a point where casual viewers cannot distinguish it from real footage.">
+    <h2>OpenAI + Sora2</h2>
+    <div class="card" style="max-width:700px; margin-bottom:16px">
+      <p style="color:var(--text)">OpenAI's next-generation video model — higher fidelity, longer clips, better prompt adherence.</p>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Here are Sora2 examples in practice. Notice the quality — the lighting, physics, and human movement are remarkably realistic. We're rapidly approaching a world where seeing is no longer believing.">
+    <h2>OpenAI + Sora2</h2>
+    <div class="two-col" style="max-width:950px; align-items:center">
+      <img src="img/slide74_Picture_3.png" style="width:100%; border-radius:8px; object-fit:contain">
+      <video src="img/slide74_ScreenRecording_10-17-2025_16-10-28_1.mp4" controls style="width:100%; border-radius:8px"></video>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="More examples of what mainstream AI video generation can produce. These were all generated by consumer-accessible tools. The range of content — from humorous to disturbing — shows both the creative potential and the risk.">
+    <h2>AI Video Generation Examples</h2>
+    <div class="two-col" style="max-width:950px">
+      <video src="img/slide75_GayHitler.mp4" controls style="width:100%; border-radius:8px"></video>
+      <video src="img/slide75_ScreenRecording_10-12-2025_15-19-47_1.mp4" controls style="width:100%; border-radius:8px"></video>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- PART 13: CONCLUSION                          -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Let's bring it all together. What have we learned, and what does it mean going forward?">
+    <h2><span class="accent">Conclusion</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <div class="slide" data-notes="The argument isn't that AI is inherently evil, but that the conditions of its production, deployment, and ownership replicate imperial power structures — appropriation of resources, exploitation of labor, competitive expansion at all costs, a civilizing mission that flattens diversity, and justification through rivalry. These are the patterns of empire, not coincidence.">
+    <h2>The Empire of AI</h2>
+    <div class="three-col" style="max-width:1000px; gap:12px">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">Resource Appropriation</h3>
+        <p>Training data scraped from billions without permission — laying claim to the world's creative output to build proprietary empires</p>
+      </div>
+      <div class="card orange-border fragment">
+        <h3 style="color:var(--orange)">Labor Exploitation</h3>
+        <p>$2/hour content moderators clean up the mess while trillion-dollar companies reap the profits — colonial labor patterns persist</p>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">Competitive Justification</h3>
+        <p>"We must build AGI before China does" — the same logic empires used to justify expansion by pointing to rival empires</p>
+      </div>
+      <div class="card pink-border fragment">
+        <h3 style="color:var(--pink)">The Civilizing Mission</h3>
+        <p>"Democratizing AI" and "benefiting humanity" — while encoding Western biases and flattening cultural diversity at planetary scale</p>
+      </div>
+      <div class="card green-border fragment">
+        <h3 style="color:var(--green)">Scale at All Costs</h3>
+        <p>Imperial expansion demanding more land, water, and energy — environmental burden externalized onto marginalized communities</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- BRIDGE: FROM EMPIRE TO IMPACT                 -->
+  <!-- ============================================ -->
+
+  <div class="slide" data-notes="The empire framework explains why deepfakes exist and proliferate. The deepfakes section shows who gets hurt — primarily women, primarily through non-consensual sexual content. It's the human cost of empire made visceral and personal. Resource Appropriation created the conditions — faces, voices, and likenesses were scraped without consent, making deepfakes possible in the first place. Competitive Justification means companies ship powerful generative video tools like Sora, Veo3, and Vibes with minimal safeguards — because slowing down means losing the race. The Civilizing Mission rhetoric of 'democratizing creativity' is exactly how these tools get marketed, even as 96% of deepfakes are non-consensual pornography targeting women. Scale at All Costs means the tools get better and cheaper faster than any regulation can keep up.">
+    <h2>From Empire to <span class="red">Impact</span></h2>
+    <p style="color:var(--dim); margin-bottom:24px; font-size:1.3rem">The empire builds the tools. Deepfakes show who gets hurt.</p>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div class="card" style="border-left-color:var(--accent)">
+        <h3 style="color:var(--accent)">The Empire Enables</h3>
+        <ul>
+          <li><strong class="red">Resource Appropriation</strong> — faces and voices scraped without consent</li>
+          <li><strong class="yellow">Competitive Justification</strong> — tools shipped fast, safeguards slow</li>
+          <li><strong class="pink">Civilizing Mission</strong> — "democratizing creativity"</li>
+          <li><strong class="green">Scale at All Costs</strong> — tools get cheaper faster than regulation</li>
+        </ul>
+      </div>
+      <div class="card red-border fragment">
+        <h3 style="color:var(--red)">The Human Cost</h3>
+        <ul>
+          <li><strong>96%</strong> of deepfakes are non-consensual pornography</li>
+          <li>Targets are overwhelmingly <strong>women</strong></li>
+          <li>Victims have almost <strong>no legal recourse</strong></li>
+          <li>The tools are free, the damage is <strong>permanent</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
   <!-- PART 8: WHAT ARE DEEPFAKES                   -->
   <!-- ============================================ -->
 
@@ -479,98 +822,6 @@
   <div class="slide" data-notes="Let's start with a deepfake video example. Watch carefully — can you tell this isn't real? The term 'deepfake' combines 'deep learning' with 'fake'. It was coined on Reddit in 2017.">
     <h2>Deepfakes</h2>
     <video src="img/slide38_WhatsApp_Video_2025-03-29_at_13.50.56.mp4" controls style="width:80%; max-width:700px; border-radius:8px"></video>
-  </div>
-
-  <div class="slide" data-notes="These are photos from my DEEPFAKE exhibition at Peckham Digital — an art project exploring the cultural implications of deepfake technology. Art can be a powerful way to make these issues tangible and accessible.">
-    <h2>DEEPFAKE @ Peckham Digital</h2>
-    <div style="display:flex; gap:20px; align-items:center; max-width:1100px; width:100%; justify-content:center">
-      <iframe src="https://player.vimeo.com/video/1082448682?badge=0&autopause=0&player_id=0&app_id=58479" style="width:400px; aspect-ratio:16/9; border:none; border-radius:8px; flex-shrink:0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" allowfullscreen></iframe>
-      <img src="img/slide39_Picture_6.jpg" style="max-height:280px; border-radius:8px; object-fit:contain">
-      <img src="img/slide39_Picture_8.jpg" style="max-height:280px; border-radius:8px; object-fit:contain">
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- PART 8: DEGREES OF SIMULATION (MOVED)        -->
-  <!-- ============================================ -->
-
-  <div class="slide section-title" data-notes="Before we go deeper into how deepfakes are used, I want to introduce a conceptual framework. Not all deepfakes are the same — they exist on a spectrum of simulation. Understanding this spectrum helps us think more clearly about the different harms and uses.">
-    <h2>Degrees of <span class="yellow">Simulation</span></h2>
-    <div class="divider" style="background:var(--yellow)"></div>
-  </div>
-
-  <div class="slide" data-notes="First degree: the faithful copy. An AI reproduction that tries to be as accurate to reality as possible. Think of a deepfake that perfectly replicates how a person looks and speaks. The goal is indistinguishability. Play the video example.">
-    <h2>Faithful Copy</h2>
-    <iframe src="https://www.youtube-nocookie.com/embed/oQ7V74s6e04" style="width:80%; max-width:700px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-  </div>
-
-  <div class="slide" data-notes="Second degree: the distorted copy. The AI output is recognisably based on reality but deliberately or accidentally altered. This is where artistic deepfakes and glitchy outputs live. The distortion itself can be meaningful — or it can be a sign of the technology's limitations.">
-    <h2>Distorted Copy</h2>
-    <div class="img-row">
-      <img src="img/slide66_Content_Placeholder_4.png" class="medium">
-      <img src="img/slide66_Picture_4.png" class="medium">
-    </div>
-  </div>
-
-  <div class="slide" data-notes="Third degree: masking the absence of reality. Creating a deepfake of something that never happened — like this fake video of Zelensky announcing Ukraine's surrender, which circulated on social media during the war. The deepfake doesn't copy reality; it fabricates a reality that doesn't exist. This is where disinformation lives.">
-    <h2>Masking the Absence of Reality</h2>
-    <div class="two-col" style="max-width:950px; align-items:start">
-      <div>
-        <video src="img/slide67_Deepfake_video_of_Volodymyr_Zelensky_surrendering_surfaces_on_social_media.mp4" controls style="width:100%; border-radius:8px"></video>
-        <p class="caption">Deepfake of Zelensky "surrendering"</p>
-      </div>
-      <div>
-        <img src="img/slide67_Picture_4.jpg" class="medium">
-      </div>
-    </div>
-  </div>
-
-  <div class="slide" data-notes="Fourth degree: a new reality entirely. When synthetic media becomes indistinguishable from reality at scale, the very concept of 'real' footage starts to lose meaning. We enter a world where anything can be faked, and therefore nothing can be fully trusted. This has profound implications for evidence, journalism, and trust. Keep this framework in mind as we look at specific applications.">
-    <h2>A New Reality</h2>
-    <div class="card" style="max-width:700px">
-      <p style="font-size:1.5rem; color:var(--text); line-height:1.8">When synthetic media becomes indistinguishable from reality, deepfakes don't just <em>copy</em> the world — they create a <strong>new one</strong>.</p>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- HOMOGENIZATION & CONTROL                      -->
-  <!-- ============================================ -->
-
-  <div class="slide section-title" data-notes="Models encode the biases and values of their creators. Outputs tend toward a flattened, generic aesthetic — cultural homogenization at scale. Guardrails and content policies are set unilaterally by corporations, not communities. Who decides what AI can and cannot produce? And whose culture gets flattened in the process?">
-    <h2>Homogenization &amp; <span class="pink">Control</span></h2>
-    <div class="divider" style="background:var(--pink)"></div>
-  </div>
-
-  <div class="slide" data-notes="Every model carries the biases of its training data and the values of its creators. When a handful of companies control the most powerful models, their worldview becomes the default. Content policies are decided in boardrooms in San Francisco, not by the communities affected. The outputs converge on a generic, Western-centric aesthetic that flattens cultural diversity.">
-    <h2>Whose Values?</h2>
-    <div class="two-col" style="max-width:900px">
-      <div class="card pink-border">
-        <h3 style="color:var(--pink)">Encoded Bias</h3>
-        <ul>
-          <li>Models reflect their creators' worldview</li>
-          <li>Training data skews Western, English-speaking</li>
-          <li>Default outputs converge on a <strong>generic aesthetic</strong></li>
-        </ul>
-      </div>
-      <div class="card red-border fragment">
-        <h3 style="color:var(--red)">Unilateral Control</h3>
-        <ul>
-          <li>Content policies set by corporations</li>
-          <li>Guardrails decided without community input</li>
-          <li>Cultural diversity gets <strong>flattened</strong></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- SURVEILLANCE & MANIPULATION                   -->
-  <!-- ============================================ -->
-
-  <div class="slide section-title" data-notes="Deepfakes enable disinformation and the erosion of shared reality. Synthetic media makes it harder to trust any evidence, benefiting those in power — the so-called 'liar's dividend'. AI-generated content floods information ecosystems, drowning out authentic voices.">
-    <h2>Surveillance &amp; <span class="red">Manipulation</span></h2>
-    <div class="divider" style="background:var(--red)"></div>
-    <div class="warning-badge">Trigger Warning: Will discuss porn and show sexually explicit content</div>
   </div>
 
   <!-- ============================================ -->
@@ -598,6 +849,15 @@
   <div class="slide" data-notes="Textswaps are less discussed but equally important. AI can generate text that mimics a specific person's writing style, or alter existing text in images and documents. This enables forged messages, fake social media posts, and document manipulation.">
     <h2>Textswaps</h2>
     <img src="img/slide45_Picture_8.png" class="medium">
+  </div>
+
+  <div class="slide" data-notes="These are photos from my DEEPFAKE exhibition at Peckham Digital — an art project exploring the cultural implications of deepfake technology. Art can be a powerful way to make these issues tangible and accessible.">
+    <h2>DEEPFAKE @ Peckham Digital</h2>
+    <iframe src="https://player.vimeo.com/video/1082448682?badge=0&autopause=0&player_id=0&app_id=58479" style="width:80%; max-width:750px; aspect-ratio:16/9; border:none; border-radius:8px" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" allowfullscreen></iframe>
+    <div style="display:flex; gap:16px; justify-content:center; margin-top:16px">
+      <img src="img/slide39_Picture_6.jpg" style="max-height:200px; border-radius:8px; object-fit:contain">
+      <img src="img/slide39_Picture_8.jpg" style="max-height:200px; border-radius:8px; object-fit:contain">
+    </div>
   </div>
 
   <!-- ============================================ -->
@@ -687,6 +947,48 @@
   </div>
 
   <!-- ============================================ -->
+  <!-- DEGREES OF SIMULATION                         -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Now that we've seen how deepfakes are used in practice, let's introduce a conceptual framework. Not all deepfakes are the same — they exist on a spectrum of simulation. Understanding this spectrum helps us think more clearly about the different harms and uses.">
+    <h2>Degrees of <span class="yellow">Simulation</span></h2>
+    <div class="divider" style="background:var(--yellow)"></div>
+  </div>
+
+  <div class="slide" data-notes="First degree: the faithful copy. An AI reproduction that tries to be as accurate to reality as possible. Think of a deepfake that perfectly replicates how a person looks and speaks. The goal is indistinguishability. Play the video example.">
+    <h2>Faithful Copy</h2>
+    <iframe src="https://www.youtube-nocookie.com/embed/oQ7V74s6e04" style="width:80%; max-width:700px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+
+  <div class="slide" data-notes="Second degree: the distorted copy. The AI output is recognisably based on reality but deliberately or accidentally altered. This is where artistic deepfakes and glitchy outputs live. The distortion itself can be meaningful — or it can be a sign of the technology's limitations.">
+    <h2>Distorted Copy</h2>
+    <div class="img-row">
+      <img src="img/slide66_Content_Placeholder_4.png" class="medium">
+      <img src="img/slide66_Picture_4.png" class="medium">
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Third degree: masking the absence of reality. Creating a deepfake of something that never happened — like this fake video of Zelensky announcing Ukraine's surrender, which circulated on social media during the war. The deepfake doesn't copy reality; it fabricates a reality that doesn't exist. This is where disinformation lives.">
+    <h2>Masking the Absence of Reality</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <video src="img/slide67_Deepfake_video_of_Volodymyr_Zelensky_surrendering_surfaces_on_social_media.mp4" controls style="width:100%; border-radius:8px"></video>
+        <p class="caption">Deepfake of Zelensky "surrendering"</p>
+      </div>
+      <div>
+        <img src="img/slide67_Picture_4.jpg" class="medium">
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Fourth degree: a new reality entirely. When synthetic media becomes indistinguishable from reality at scale, the very concept of 'real' footage starts to lose meaning. We enter a world where anything can be faked, and therefore nothing can be fully trusted. This has profound implications for evidence, journalism, and trust.">
+    <h2>A New Reality</h2>
+    <div class="card" style="max-width:700px">
+      <p style="font-size:1.5rem; color:var(--text); line-height:1.8">When synthetic media becomes indistinguishable from reality, deepfakes don't just <em>copy</em> the world — they create a <strong>new one</strong>.</p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
   <!-- PART 11: CONSENT & HARM                      -->
   <!-- ============================================ -->
 
@@ -759,65 +1061,22 @@
     <video src="img/slide63_CelebrityHugs.mp4" controls style="width:60%; max-width:600px; border-radius:8px"></video>
   </div>
 
-  <!-- ============================================ -->
-  <!-- PART 12: DEEPFAKES GO MAINSTREAM             -->
-  <!-- ============================================ -->
 
-  <div class="slide section-title" data-notes="The final twist: deepfake technology isn't just on the fringes anymore. The biggest tech companies in the world are now shipping these capabilities as consumer products. This changes the scale of the problem entirely.">
-    <h2>Concentration of <span class="accent">Power</span></h2>
-    <div class="divider"></div>
+  <div class="slide title-slide" data-notes="Open the floor for questions. Encourage students to share their reactions — what surprised them? What concerned them? What excited them? Remind them that understanding these tools is the first step to using them responsibly.">
+    <h1>Questions<span class="accent">?</span> Comments<span class="accent">?</span></h1>
   </div>
 
-  <div class="slide" data-notes="Google integrated their Veo3 video generation model directly into YouTube. This means AI-generated video is now a first-class feature on the world's largest video platform. The line between 'real' and 'generated' YouTube content becomes increasingly blurred.">
-    <h2>Google + YouTube + Veo3</h2>
-    <div style="display:flex; gap:24px; align-items:center; max-width:950px; width:100%">
-      <iframe src="https://www.youtube-nocookie.com/embed/zrphf1DH6Nw" style="width:320px; aspect-ratio:9/16; border:none; border-radius:8px; flex-shrink:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      <div class="card" style="flex:1">
-        <p style="color:var(--text)">Google's video generation model integrated into YouTube, enabling AI-generated video content at scale.</p>
-      </div>
-    </div>
+  <div class="slide title-slide" data-notes="Thank you everyone! If you have more questions, feel free to reach out. Remember: these tools are powerful — use them with intention and respect for others.">
+    <h1>Thank You<span class="pink">!</span></h1>
+    <p class="subtitle">Questions?</p>
   </div>
 
-  <div class="slide" data-notes="Meta launched Vibes — generative AI tools built into Instagram and Facebook. Users can now create AI-generated images and videos directly within social media apps used by billions. This normalises synthetic content in everyday social interaction.">
-    <h2>Meta + Vibes</h2>
-    <img src="img/Vibes_header.gif" style="max-width:900px; width:100%; border-radius:8px; margin-bottom:16px; object-fit:contain">
-    <div class="card" style="max-width:700px">
-      <p style="color:var(--text)">Meta's generative AI tools integrated across Instagram and Facebook for content creation.</p>
-    </div>
+  <div class="slide section-title" data-notes="Time for the hands-on workshop. We'll be exploring our own generative selves — experimenting with these tools first-hand so you can understand both their power and their limitations.">
+    <h2><span class="green">Workshop</span></h2>
+    <div class="divider" style="background:var(--green)"></div>
+    <p style="color:var(--text); font-size:1.4rem; margin-top:16px">Owning Your Generative Self</p>
   </div>
 
-  <div class="slide" data-notes="OpenAI launched Sora2 — their next-generation video model with higher fidelity, longer clips, and better prompt following. Unlike the original Sora which was limited access, Sora2 is being rolled out more broadly. The quality is reaching a point where casual viewers cannot distinguish it from real footage.">
-    <h2>OpenAI + Sora2</h2>
-    <div class="card" style="max-width:700px; margin-bottom:16px">
-      <p style="color:var(--text)">OpenAI's next-generation video model — higher fidelity, longer clips, better prompt adherence.</p>
-    </div>
-  </div>
-
-  <div class="slide" data-notes="Here are Sora2 examples in practice. Notice the quality — the lighting, physics, and human movement are remarkably realistic. We're rapidly approaching a world where seeing is no longer believing.">
-    <h2>OpenAI + Sora2</h2>
-    <div class="two-col" style="max-width:950px; align-items:start">
-      <div>
-        <img src="img/slide74_Picture_3.png" class="medium">
-      </div>
-      <div>
-        <video src="img/slide74_ScreenRecording_10-17-2025_16-10-28_1.mp4" controls style="width:100%; border-radius:8px"></video>
-      </div>
-    </div>
-  </div>
-
-  <div class="slide" data-notes="More examples of what mainstream AI video generation can produce. These were all generated by consumer-accessible tools. The range of content — from humorous to disturbing — shows both the creative potential and the risk.">
-    <h2>AI Video Generation Examples</h2>
-    <div class="two-col" style="max-width:950px">
-      <video src="img/slide75_GayHitler.mp4" controls style="width:100%; border-radius:8px"></video>
-      <video src="img/slide75_ScreenRecording_10-12-2025_15-19-47_1.mp4" controls style="width:100%; border-radius:8px"></video>
-    </div>
-  </div>
-
-  <div class="slide" data-notes="One more example of mainstream AI video content. Pay attention to how convincing this is — and remember that this technology will only improve from here.">
-    <iframe src="https://www.youtube-nocookie.com/embed/ZZ85dd8Wh1U" style="width:80%; max-width:800px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-  </div>
-
-  <!-- ============================================ -->
   <!-- PART 7: GENAI TOOLS & RESOURCES              -->
   <!-- ============================================ -->
 
@@ -826,8 +1085,8 @@
     <div class="divider"></div>
   </div>
 
-  <div class="slide" data-notes="Overview of what generative AI can produce today. The key modalities are text-to-image, text-to-video, image-to-image transformation, image-to-video animation, and combined image+text-to-video. Each has different tools and different levels of maturity.">
-    <h2>Generative AI Applications</h2>
+  <div class="slide" data-notes="Overview of generative AI resources and tools. The key modalities are text-to-image, text-to-video, image-to-image transformation, image-to-video animation, and combined image+text-to-video. Each has different tools and different levels of maturity.">
+    <h2>Generative AI Resources</h2>
     <h3>Image &amp; Video Synthesis</h3>
     <div class="three-col" style="max-width:800px; margin-top:16px">
       <div class="card"><p style="color:var(--text)">Text-to-Image</p></div>
@@ -1116,58 +1375,6 @@
   </div>
 
   <!-- ============================================ -->
-  <!-- PART 13: CONCLUSION                          -->
-  <!-- ============================================ -->
-
-  <div class="slide section-title" data-notes="Let's bring it all together. What have we learned, and what does it mean going forward?">
-    <h2><span class="accent">Conclusion</span></h2>
-    <div class="divider"></div>
-  </div>
-
-  <div class="slide" data-notes="The argument isn't that the technology itself is fascist ideology, but that the conditions of its production, deployment, and ownership replicate authoritarian power structures — centralized control, mass extraction, suppression of dissent, and erosion of democratic accountability.">
-    <h2>The Structure of Power</h2>
-    <div class="three-col" style="max-width:1000px; gap:12px">
-      <div class="card yellow-border">
-        <h3 style="color:var(--yellow)">Concentration of Power</h3>
-        <p>A handful of corporations control frontier AI — massive capital, compute, and data create extreme power asymmetry</p>
-      </div>
-      <div class="card red-border fragment">
-        <h3 style="color:var(--red)">Extraction Without Consent</h3>
-        <p>Training data scraped from billions without permission — colonial extraction logic: take from the many, profit for the few</p>
-      </div>
-      <div class="card orange-border fragment">
-        <h3 style="color:var(--orange)">Labor Displacement</h3>
-        <p>Marketed as "democratization" while designed to eliminate jobs — wealth concentrates upward, collective power weakens</p>
-      </div>
-      <div class="card pink-border fragment">
-        <h3 style="color:var(--pink)">Homogenization &amp; Control</h3>
-        <p>Models encode their creators' biases — outputs flatten cultural diversity, guardrails set unilaterally by corporations</p>
-      </div>
-      <div class="card fragment" style="border-left-color:var(--dim)">
-        <h3>Surveillance &amp; Manipulation</h3>
-        <p>Deepfakes erode shared reality — the "liar's dividend" benefits those in power, authentic voices get drowned out</p>
-      </div>
-      <div class="card green-border fragment">
-        <h3 style="color:var(--green)">Environmental Cost</h3>
-        <p>Massive energy and water consumption — environmental burden externalized onto marginalized communities</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="slide title-slide" data-notes="Open the floor for questions. Encourage students to share their reactions — what surprised them? What concerned them? What excited them? Remind them that understanding these tools is the first step to using them responsibly.">
-    <h1>Questions<span class="accent">?</span> Comments<span class="accent">?</span></h1>
-  </div>
-
-  <div class="slide title-slide" data-notes="Thank you everyone! If you have more questions, feel free to reach out. Remember: these tools are powerful — use them with intention and respect for others.">
-    <h1>Thank You<span class="pink">!</span></h1>
-    <p class="subtitle">Questions?</p>
-  </div>
-
-  <div class="slide section-title" data-notes="Time for the hands-on workshop. We'll be exploring our own generative selves — experimenting with these tools first-hand so you can understand both their power and their limitations.">
-    <h2><span class="green">Workshop</span></h2>
-    <div class="divider" style="background:var(--green)"></div>
-    <p style="color:var(--text); font-size:1.4rem; margin-top:16px">Owning Your Generative Self</p>
-  </div>
 
   <!-- NAV -->
   <div id="slide-counter"></div>
@@ -1295,9 +1502,43 @@
       updatePresenter();
     }
 
-    var _origShow = show; show = function(n) { _origShow(n); setTimeout(updatePresenter, 50); };
-    var _origNext = next; next = function() { _origNext(); setTimeout(updatePresenter, 50); };
-    var _origPrev = prev; prev = function() { _origPrev(); setTimeout(updatePresenter, 50); };
+    // Section navigation bar
+    var sectionNav = document.getElementById('section-nav');
+    var sectionSlides = [];
+    slides.forEach(function(s, i) {
+      if (s.classList.contains('section-title') || s.classList.contains('title-slide')) {
+        var h = s.querySelector('h2') || s.querySelector('h1');
+        if (h) {
+          var label = h.textContent.trim();
+          sectionSlides.push({ index: i, label: label });
+          var btn = document.createElement('button');
+          btn.textContent = label;
+          btn.setAttribute('data-slide', i);
+          btn.addEventListener('click', function() { show(i); });
+          sectionNav.appendChild(btn);
+        }
+      }
+    });
+
+    function updateSectionNav() {
+      var btns = sectionNav.querySelectorAll('button');
+      var activeSection = 0;
+      for (var i = sectionSlides.length - 1; i >= 0; i--) {
+        if (current >= sectionSlides[i].index) { activeSection = i; break; }
+      }
+      btns.forEach(function(b, idx) {
+        b.classList.toggle('active', idx === activeSection);
+      });
+    }
+
+    // Patch show/next/prev to update section nav
+    var __origShow = show;
+    show = function(n) { __origShow(n); setTimeout(function() { updateSectionNav(); updatePresenter(); }, 50); };
+    var __origNext = next;
+    next = function() { __origNext(); setTimeout(function() { updateSectionNav(); updatePresenter(); }, 50); };
+    var __origPrev = prev;
+    prev = function() { __origPrev(); setTimeout(function() { updateSectionNav(); updatePresenter(); }, 50); };
+
     document.querySelector('#nav button:nth-child(1)').onclick = function() { prev(); };
     document.querySelector('#nav button:nth-child(2)').onclick = function() { next(); };
 
@@ -1308,6 +1549,7 @@
       if (e.key === 'End') { e.preventDefault(); show(total - 1); }
       if (e.key === 'p' || e.key === 'P') openPresenter();
       if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+      if (e.key === 'n' || e.key === 'N') sectionNav.classList.toggle('visible');
     });
 
     var touchStartX = 0;
@@ -1317,8 +1559,10 @@
       if (Math.abs(diff) > 50) { diff < 0 ? next() : prev(); }
     });
 
+    updateSectionNav();
     show(0);
   </script>
 
 </body>
 </html>
+
