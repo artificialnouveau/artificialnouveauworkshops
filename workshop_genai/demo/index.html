@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generative AI Workshop</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="loader-content">
+      <div class="spinner"></div>
+      <p>Loading<span class="dots"></span></p>
+      <p class="loader-sub">Preparing workshop materials</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header id="app-header">
+    <h1>Generative AI Workshop</h1>
+    <p class="subtitle">Everything runs on your device. No data is uploaded anywhere.</p>
+  </header>
+
+  <!-- Step navigation -->
+  <nav id="step-nav">
+    <button class="step-tab active" data-step="1">1. Step One</button>
+    <button class="step-tab" data-step="2">2. Step Two</button>
+    <button class="step-tab" data-step="3">3. Step Three</button>
+    <button class="step-tab" data-step="4">4. Step Four</button>
+  </nav>
+
+  <!-- Step 1 -->
+  <section id="step-1" class="step active">
+    <div class="step-intro">
+      <h2>Step One</h2>
+      <p>Placeholder description for the first step of the Generative AI workshop. Replace this text with the actual content and instructions for participants.</p>
+    </div>
+
+    <div class="explainer-block">
+      <h3>Explainer Title</h3>
+      <p>Add your explanation here. This block can contain <strong>highlighted terms</strong> and detailed descriptions of what participants are seeing or doing.</p>
+    </div>
+
+    <textarea class="text-input" placeholder="Type your prompt here..."></textarea>
+    <button class="btn-secondary" style="margin-bottom:24px">Generate</button>
+
+    <div id="step1-results" class="results hidden">
+      <div class="output-block mono">
+        Output will appear here...
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 2 -->
+  <section id="step-2" class="step">
+    <div class="step-intro">
+      <h2>Step Two</h2>
+      <p>Placeholder description for the second step. Replace this with your workshop content.</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-2">
+      <label for="file-input-2" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload an image</span>
+      </label>
+      <input type="file" id="file-input-2" accept="image/*" capture="environment">
+    </div>
+
+    <div id="step2-results" class="results hidden">
+      <div class="explainer-block">
+        <h3>Explainer Title</h3>
+        <p>Add your explanation for this step here.</p>
+      </div>
+
+      <div class="mirror-row">
+        <div class="mirror-card">
+          <h3>Input</h3>
+          <canvas id="canvas-2a"></canvas>
+          <p class="description">The original input</p>
+        </div>
+        <div class="mirror-card">
+          <h3>Output</h3>
+          <canvas id="canvas-2b"></canvas>
+          <p class="description">The generated output</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 3 -->
+  <section id="step-3" class="step">
+    <div class="step-intro">
+      <h2>Step Three</h2>
+      <p>Placeholder description for the third step. Replace this with your workshop content.</p>
+    </div>
+
+    <div class="explainer-block" style="border-left-color:var(--yellow)">
+      <h3 style="color:var(--yellow)">Explainer Title</h3>
+      <p>Add your explanation for this step here. This block uses the <strong>yellow accent</strong> variant.</p>
+    </div>
+
+    <textarea class="text-input" placeholder="Enter your text here..."></textarea>
+    <button class="btn-primary">Analyse</button>
+
+    <div id="step3-results" class="results hidden">
+      <div class="comparison-row">
+        <div class="comparison-card">
+          <h3>Version A</h3>
+          <div class="output-block" style="border-left-color:var(--accent)">Output A</div>
+        </div>
+        <div class="vs-divider">VS</div>
+        <div class="comparison-card">
+          <h3>Version B</h3>
+          <div class="output-block" style="border-left-color:var(--yellow)">Output B</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 4 -->
+  <section id="step-4" class="step">
+    <div class="step-intro">
+      <h2>Step Four</h2>
+      <p>Placeholder description for the fourth step. Replace this with your workshop content.</p>
+    </div>
+
+    <div class="explainer-block" style="border-left-color:var(--green)">
+      <h3 style="color:var(--green)">Explainer Title</h3>
+      <p>Add your explanation for this step here. This block uses the <strong>green accent</strong> variant.</p>
+    </div>
+
+    <textarea class="text-input" placeholder="Write your reflection here..."></textarea>
+    <button class="btn-primary">Submit</button>
+
+    <div id="step4-results" class="results hidden">
+      <div class="output-block mono">
+        Output will appear here...
+      </div>
+
+      <div class="critical-text" style="margin-top:20px">
+        <p>"Add a closing reflection or discussion prompt here."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p class="mono">All processing happens on your device. No data leaves your browser.</p>
+    <p>A workshop tool by Artificial Nouveau</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browser-Based Generative AI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0f1117;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  h1 { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; color: #fff; }
+  .subtitle { text-align: center; color: #888; margin-bottom: 2rem; font-size: 1rem; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    max-width: 900px;
+    margin: 0 auto 2rem;
+  }
+  .tab-btn {
+    padding: 0.8rem 1.5rem;
+    background: #1a1d27;
+    color: #888;
+    border: 1px solid #2a2d37;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .tab-btn:first-child { border-radius: 8px 0 0 8px; }
+  .tab-btn:last-child { border-radius: 0 8px 8px 0; }
+  .tab-btn.active {
+    background: #4a90d9;
+    color: #fff;
+    border-color: #4a90d9;
+  }
+  .tab-btn:not(.active):hover {
+    background: #2a2d37;
+    color: #ccc;
+  }
+
+  /* Tab content */
+  .tab-content { display: none; max-width: 900px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+
+  /* Tab intro */
+  .tab-intro {
+    background: #1a1d27;
+    border: 1px solid #2a2d37;
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 2rem;
+    color: #aaa;
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+  .tab-intro strong { color: #e0e0e0; }
+
+  /* Cards */
+  .card {
+    background: #1a1d27;
+    border: 1px solid #2a2d37;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.2rem;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: #4a90d9; }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.8rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .card h3 { color: #fff; font-size: 1.15rem; }
+  .card p { color: #aaa; line-height: 1.6; margin-bottom: 0.6rem; }
+  .card p:last-child { margin-bottom: 0; }
+
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .badge.practical { background: #1b3a2a; color: #4caf50; }
+  .badge.experimental { background: #3a2a1b; color: #ff9800; }
+  .badge.emerging { background: #2a1b3a; color: #ab47bc; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
+  .tag {
+    background: #2a2d37;
+    color: #aaa;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+  }
+
+  .links { margin-top: 0.8rem; }
+  .links a {
+    color: #4a90d9;
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-right: 1rem;
+  }
+  .links a:hover { text-decoration: underline; }
+
+  /* Section headers within tabs */
+  .section-label {
+    color: #666;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #2a2d37;
+  }
+  .section-label:not(:first-of-type) { margin-top: 2rem; }
+
+  .section-explainer {
+    color: #888;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 1.2rem;
+    margin-top: -0.4rem;
+  }
+
+  /* Back link */
+  .back-link {
+    display: inline-block;
+    color: #4a90d9;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  .back-link:hover { text-decoration: underline; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    color: #555;
+    font-size: 0.8rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #2a2d37;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 1rem; }
+    h1 { font-size: 1.5rem; }
+    .tab-btn { padding: 0.6rem 0.8rem; font-size: 0.8rem; }
+    .card { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">&larr; Back to Workshop</a>
+
+<h1>Browser-Based Generative AI</h1>
+<p class="subtitle">A guide to generative algorithms that run entirely in the browser — from mathematical procedures to neural networks</p>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('procedural')">Procedural Generation</button>
+  <button class="tab-btn" onclick="switchTab('classical')">Classical ML</button>
+  <button class="tab-btn" onclick="switchTab('modern')">Modern Generative AI</button>
+</div>
+
+<!-- ==================== PROCEDURAL GENERATION ==================== -->
+<div class="tab-content active" id="tab-procedural">
+
+  <div class="tab-intro">
+    <strong>Generation from math.</strong> Long before neural networks, artists and programmers were creating stunning generative works using nothing but algorithms and equations. Perlin noise mimics natural textures, fractals reveal infinite detail from simple formulas, and cellular automata produce lifelike emergent behaviour from a handful of rules. These techniques require no training data, no model downloads, and no GPU — they run instantly at 60fps on any device. They're the fastest way to get participants creating, and they teach the fundamental idea that <strong>complexity can emerge from simplicity</strong>.
+  </div>
+
+  <p class="section-label">Noise &amp; Flow Fields</p>
+  <p class="section-explainer">Noise functions are the building blocks of procedural art. They produce smooth, continuous randomness — unlike pure random numbers which look like static. By layering and transforming noise, you can create everything from clouds and mountains to flowing rivers of particles. These techniques are behind much of the organic-feeling generative art you see online.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Perlin / Simplex Noise</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>The foundation of procedural generation. Coherent gradient noise functions that produce natural-looking randomness — clouds, terrain, wood grain, marble. Ken Perlin's original algorithm (1983) and its improved successor Simplex noise are built into most creative coding frameworks.</p>
+    <p><strong>Use cases:</strong> Terrain generation, texture synthesis, particle flow fields, organic movement, generative landscapes.</p>
+    <div class="tags">
+      <span class="tag">p5.js</span>
+      <span class="tag">GLSL shaders</span>
+      <span class="tag">Real-time</span>
+      <span class="tag">Any device</span>
+    </div>
+    <div class="links">
+      <a href="https://p5js.org/reference/noise/" target="_blank">p5.js noise()</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Flow Fields</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>A grid of angle values (often driven by Perlin noise) that guides particles or brush strokes across a canvas. Produces organic, wind-like patterns. One of the most popular techniques in generative art — simple to implement but produces endlessly varied results.</p>
+    <p><strong>Use cases:</strong> Particle trails, generative drawings, data visualisation, interactive installations.</p>
+    <div class="tags">
+      <span class="tag">p5.js</span>
+      <span class="tag">Canvas API</span>
+      <span class="tag">Interactive</span>
+      <span class="tag">Beginner-friendly</span>
+    </div>
+    <div class="links">
+      <a href="https://p5js.org/" target="_blank">p5.js</a>
+    </div>
+  </div>
+
+  <p class="section-label">Fractals &amp; Recursion</p>
+  <p class="section-explainer">Fractals demonstrate one of the most beautiful ideas in mathematics: self-similarity at every scale. Zoom into a fractal and you find smaller copies of the whole. A few lines of code can produce images of infinite complexity. L-systems take a different approach — simple string-rewriting rules that unfold into organic, plant-like structures.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Mandelbrot &amp; Julia Sets</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Classic fractal visualisations rendered by iterating complex number equations. Infinitely zoomable, endlessly detailed. Can be rendered on the CPU with Canvas or at high speed with WebGL/WebGPU shaders for real-time exploration.</p>
+    <p><strong>Performance:</strong> CPU rendering is educational; GPU shaders enable smooth real-time zoom at high resolution.</p>
+    <div class="tags">
+      <span class="tag">Canvas API</span>
+      <span class="tag">WebGL shaders</span>
+      <span class="tag">Interactive zoom</span>
+      <span class="tag">GPU-accelerated</span>
+    </div>
+    <div class="links">
+      <a href="https://www.shadertoy.com/results?query=mandelbrot" target="_blank">Shadertoy Examples</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>L-Systems</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Lindenmayer systems — a string-rewriting grammar that produces fractal-like structures. Originally developed to model plant growth. Define a few simple rules and watch them unfold into trees, ferns, snowflakes, and abstract branching patterns.</p>
+    <p><strong>Use cases:</strong> Procedural trees and plants, fractal curves (Koch, Sierpinski), generative typography.</p>
+    <div class="tags">
+      <span class="tag">p5.js</span>
+      <span class="tag">Canvas API</span>
+      <span class="tag">Rule-based</span>
+      <span class="tag">Recursive</span>
+    </div>
+  </div>
+
+  <p class="section-label">Cellular Automata &amp; Simulations</p>
+  <p class="section-explainer">What happens when you give millions of simple cells a few basic rules and let them interact? Emergent behaviour — complex, unpredictable patterns that no one designed. Cellular automata and reaction-diffusion systems show how nature's patterns (spots, stripes, spirals) can arise from local interactions, with no central control.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Game of Life &amp; Cellular Automata</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Conway's Game of Life and other cellular automata — grids of cells that evolve according to simple neighbour-counting rules. From trivial rules emerge complex, lifelike behaviours: gliders, oscillators, self-replicating patterns. Wolfram's 1D automata (Rule 30, Rule 110) are equally fascinating.</p>
+    <p><strong>Performance:</strong> Runs at 60fps even on large grids. Can be GPU-accelerated with WebGL for massive simulations.</p>
+    <div class="tags">
+      <span class="tag">Canvas API</span>
+      <span class="tag">WebGL</span>
+      <span class="tag">Interactive</span>
+      <span class="tag">Emergent behaviour</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Reaction-Diffusion</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Simulates two chemicals that spread and react — producing organic patterns strikingly similar to animal markings (leopard spots, zebra stripes), coral growth, and fingerprints. The Gray-Scott model is the most popular variant. Beautiful when rendered with WebGL shaders.</p>
+    <p><strong>Performance:</strong> Real-time with WebGL shaders. CPU versions work but are slower on large canvases.</p>
+    <div class="tags">
+      <span class="tag">WebGL shaders</span>
+      <span class="tag">Gray-Scott model</span>
+      <span class="tag">Organic patterns</span>
+      <span class="tag">Real-time</span>
+    </div>
+    <div class="links">
+      <a href="https://www.shadertoy.com/results?query=reaction+diffusion" target="_blank">Shadertoy Examples</a>
+    </div>
+  </div>
+
+  <p class="section-label">Shader Art</p>
+  <p class="section-explainer">Shaders are tiny programs that run directly on the GPU, colouring every pixel on screen in parallel. This makes them extraordinarily fast — capable of rendering complex generative visuals at 60fps. The creative coding community on Shadertoy has produced thousands of stunning examples, from photorealistic landscapes to abstract mathematical sculptures, all running in a single browser tab.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>GLSL Fragment Shaders</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Write small programs that run on the GPU to colour every pixel independently. The most powerful approach for real-time generative visuals — ray marching, SDF modelling, noise composition, colour mapping. Shadertoy has thousands of community examples to learn from.</p>
+    <p><strong>Performance:</strong> 60fps, resolution-independent. The GPU does all the work. Works on any device with WebGL.</p>
+    <div class="tags">
+      <span class="tag">WebGL / WebGPU</span>
+      <span class="tag">Shadertoy</span>
+      <span class="tag">GLSL Sandbox</span>
+      <span class="tag">60fps</span>
+    </div>
+    <div class="links">
+      <a href="https://www.shadertoy.com/" target="_blank">Shadertoy</a>
+      <a href="https://thebookofshaders.com/" target="_blank">The Book of Shaders</a>
+      <a href="https://github.com/patriciogonzalezvivo/lygia" target="_blank">Lygia Shader Library</a>
+    </div>
+  </div>
+
+  <p class="section-label">Frameworks</p>
+  <p class="section-explainer">These libraries handle the boilerplate of setting up canvases, animation loops, and GPU rendering, so you can focus on the creative logic. p5.js is the most beginner-friendly; Three.js is the standard for 3D. Both have huge communities and extensive examples to learn from.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>p5.js</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>The go-to creative coding framework for the browser. A JavaScript port of Processing with a beginner-friendly API for drawing, animation, interaction, and sound. Huge community, extensive examples, and ideal for workshops. Supports both 2D Canvas and WebGL rendering.</p>
+    <div class="tags">
+      <span class="tag">Canvas / WebGL</span>
+      <span class="tag">Beginner-friendly</span>
+      <span class="tag">Huge community</span>
+      <span class="tag">Workshop-ready</span>
+    </div>
+    <div class="links">
+      <a href="https://p5js.org/" target="_blank">p5.js</a>
+      <a href="https://editor.p5js.org/" target="_blank">Online Editor</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Three.js</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>The standard 3D library for the web. Build procedural 3D scenes, particle systems, generative geometry, and custom shader materials. Ideal for immersive generative installations and interactive 3D art.</p>
+    <div class="tags">
+      <span class="tag">WebGL / WebGPU</span>
+      <span class="tag">3D</span>
+      <span class="tag">Particles</span>
+      <span class="tag">Custom shaders</span>
+    </div>
+    <div class="links">
+      <a href="https://threejs.org/" target="_blank">Three.js</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== CLASSICAL ML ==================== -->
+<div class="tab-content" id="tab-classical">
+
+  <div class="tab-intro">
+    <strong>Generation from learned patterns.</strong> The first wave of neural network creativity. These models — GANs, autoencoders, style transfer networks — learn the statistical patterns in a dataset and then produce new outputs that share those patterns. A GAN trained on faces learns what "face-ness" looks like; a style transfer model learns to separate content from style. They don't understand prompts or instructions — instead, they remix and recombine what they've seen. These models are small enough to run comfortably in the browser, making them ideal for <strong>hands-on experimentation with how machines learn to create</strong>.
+  </div>
+
+  <p class="section-label">Style Transfer</p>
+  <p class="section-explainer">One of the earliest and most visually striking applications of neural networks in art. Style transfer networks learn to separate the "content" of an image (what's in it) from its "style" (how it looks) — then recombine them. Feed in a photo and a painting, and the network renders your photo in the painter's style. It's fast, intuitive, and always produces a satisfying result.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Arbitrary Style Transfer (TensorFlow.js)</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Transfers the visual style of one image onto another in real time. Uses a pre-trained model via TensorFlow.js that runs comfortably in-browser. Well-established, lightweight, and works on most devices including mobile. One of the best-proven ML demos for workshops.</p>
+    <p><strong>Performance:</strong> Near real-time on modern devices. Model size ~10MB. Works with WebGL backend.</p>
+    <div class="tags">
+      <span class="tag">TensorFlow.js</span>
+      <span class="tag">WebGL</span>
+      <span class="tag">~10MB</span>
+      <span class="tag">Real-time</span>
+    </div>
+    <div class="links">
+      <a href="https://www.tensorflow.org/js/tutorials" target="_blank">TF.js Tutorials</a>
+      <a href="https://github.com/magenta/magenta-js" target="_blank">Magenta.js</a>
+    </div>
+  </div>
+
+  <p class="section-label">GANs (Generative Adversarial Networks)</p>
+  <p class="section-explainer">GANs pit two neural networks against each other: a generator that creates fake images and a discriminator that tries to spot them. Through this adversarial game, the generator learns to produce increasingly convincing output. GANs were the first AI technique to produce photorealistic synthetic images, and they remain one of the most elegant ideas in machine learning. Smaller GAN models are well-suited for browser inference.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>GAN Lab</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>An interactive browser visualisation that lets you watch a GAN train in real time. See the generator and discriminator compete step by step. Excellent for teaching how GANs work — participants can tweak hyperparameters and see the effect immediately.</p>
+    <p><strong>Best for:</strong> Understanding GAN concepts. Not for producing high-quality images, but invaluable as a teaching tool.</p>
+    <div class="tags">
+      <span class="tag">TensorFlow.js</span>
+      <span class="tag">Educational</span>
+      <span class="tag">Interactive</span>
+      <span class="tag">Real-time training</span>
+    </div>
+    <div class="links">
+      <a href="https://poloclub.github.io/ganlab/" target="_blank">GAN Lab</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Lightweight GANs (TensorFlow.js)</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>Smaller pre-trained GAN models (DCGAN, Pix2Pix) can run inference in-browser via TensorFlow.js. Generate faces, handwritten digits, or transform sketches to images. Models need to be pre-trained and converted — browser-side training of full GANs is too slow to be practical.</p>
+    <p><strong>Performance:</strong> Inference in milliseconds for small models. Training not feasible in-browser for real image generation.</p>
+    <div class="tags">
+      <span class="tag">TensorFlow.js</span>
+      <span class="tag">DCGAN</span>
+      <span class="tag">Pix2Pix</span>
+      <span class="tag">Pre-trained</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Pix2Pix Interactive Demos</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>One of the most engaging GAN applications for workshops. Pix2Pix learns to translate one type of image into another — edges to photos, sketches to cats, day to night. Several interactive browser demos let participants draw a rough sketch and instantly see it transformed into a photorealistic image. The results are often hilariously wrong, which makes it even more fun.</p>
+    <p><strong>Best for:</strong> Hands-on workshop engagement. Draw a cat outline, get a "realistic" cat. The imperfections are part of the charm.</p>
+    <div class="tags">
+      <span class="tag">TensorFlow.js</span>
+      <span class="tag">Sketch-to-photo</span>
+      <span class="tag">Interactive drawing</span>
+      <span class="tag">Workshop favourite</span>
+    </div>
+    <div class="links">
+      <a href="https://affinelayer.com/pixsrv/" target="_blank">Pix2Pix Demo</a>
+    </div>
+  </div>
+
+  <p class="section-label">Neural Visualisation</p>
+  <p class="section-explainer">What does a neural network actually "see"? These techniques let you peek inside the black box by amplifying the patterns and features a network has learned to recognise. The results are surreal, psychedelic, and surprisingly beautiful — revealing that neural networks develop their own strange visual vocabulary of eyes, fur, spirals, and dog-slug hybrids.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>DeepDream</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Google's iconic neural network "hallucination" technique (2015). Instead of using a network to classify images, DeepDream runs it in reverse — amplifying whatever patterns the network detects, feeding the result back in, and repeating. The effect is dreamlike and psychedelic: clouds become dogs, buildings sprout eyes, landscapes dissolve into fractal animal textures. A landmark moment in AI art history.</p>
+    <p><strong>Performance:</strong> Can run in-browser via TensorFlow.js with a pre-trained classification network (InceptionV3 or similar). Processing takes a few seconds per iteration.</p>
+    <div class="tags">
+      <span class="tag">TensorFlow.js</span>
+      <span class="tag">Feature amplification</span>
+      <span class="tag">Psychedelic</span>
+      <span class="tag">Iconic</span>
+    </div>
+    <div class="links">
+      <a href="https://deepdreamgenerator.com/" target="_blank">DeepDream Generator</a>
+    </div>
+  </div>
+
+  <p class="section-label">Interactive Perception</p>
+  <p class="section-explainer">These models don't generate new content — they perceive and interpret the real world through your webcam in real time. Track hands, map faces, classify objects, and train custom recognisers. For workshops, they're incredibly powerful because they create an immediate feedback loop between the participant's body and the machine's understanding of it. Combine with p5.js or Three.js for interactive installations.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Teachable Machine (Google)</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Train a custom image, sound, or pose classifier directly in the browser using your webcam — no code required. Show the model examples of different classes (e.g. "thumbs up" vs "thumbs down"), click train, and it works in seconds. The trained model can be exported and used in your own projects. One of the best tools for demystifying how machine learning training works.</p>
+    <p><strong>Best for:</strong> Teaching ML concepts to beginners. Participants train their own model in under 5 minutes and immediately see it working.</p>
+    <div class="tags">
+      <span class="tag">TensorFlow.js</span>
+      <span class="tag">No code</span>
+      <span class="tag">Webcam training</span>
+      <span class="tag">Exportable models</span>
+    </div>
+    <div class="links">
+      <a href="https://teachablemachine.withgoogle.com/" target="_blank">Teachable Machine</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>HandPose / FaceMesh</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Real-time hand tracking (21 keypoints per hand) and face tracking (468 keypoints) via TensorFlow.js and MediaPipe. Detect finger positions, hand gestures, facial expressions, and head orientation — all from a standard webcam at 30+ fps. Perfect for building gesture-controlled generative art, virtual puppets, sign language experiments, and interactive installations.</p>
+    <p><strong>Performance:</strong> 30+ fps on modern devices. Works on mobile. Models are small (~5–10MB) and load quickly.</p>
+    <div class="tags">
+      <span class="tag">TensorFlow.js</span>
+      <span class="tag">MediaPipe</span>
+      <span class="tag">21 hand keypoints</span>
+      <span class="tag">468 face keypoints</span>
+    </div>
+    <div class="links">
+      <a href="https://github.com/tensorflow/tfjs-models/tree/master/hand-pose-detection" target="_blank">HandPose</a>
+      <a href="https://github.com/tensorflow/tfjs-models/tree/master/face-landmarks-detection" target="_blank">FaceMesh</a>
+      <a href="https://mediapipe-studio.webapps.google.com/" target="_blank">MediaPipe Studio</a>
+    </div>
+  </div>
+
+  <p class="section-label">Autoencoders</p>
+  <p class="section-explainer">Autoencoders compress data down to a small "latent space" and then reconstruct it. The magic is in the middle — that compressed representation captures the essential features of the data. Variational autoencoders (VAEs) add randomness to this process, letting you sample from the latent space to generate entirely new outputs. Slide through the latent space and watch one face smoothly morph into another.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Variational Autoencoders (VAE)</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>VAEs learn a compressed "latent space" of an image dataset, then generate new images by sampling from that space. Smaller VAEs (trained on MNIST, faces, etc.) can run in TensorFlow.js. The latent space can be explored interactively — slide between different outputs in real time.</p>
+    <p><strong>Best for:</strong> Teaching latent spaces and interpolation. Interactive latent space exploration is very engaging.</p>
+    <div class="tags">
+      <span class="tag">TensorFlow.js</span>
+      <span class="tag">Latent space</span>
+      <span class="tag">Interpolation</span>
+      <span class="tag">Interactive</span>
+    </div>
+  </div>
+
+  <p class="section-label">Music &amp; Audio Generation</p>
+  <p class="section-explainer">Generative AI isn't just visual — neural networks can learn musical patterns too. Trained on melodies, harmonies, and rhythms, these models can continue a tune you start, generate drum beats, or harmonise a melody in different styles. Music generation is one of the most engaging workshop activities because the feedback is immediate and the results are always surprising.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Magenta.js (Google)</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Google's creative ML toolkit for the browser. Generate melodies, harmonise existing tunes, create drum patterns, and produce multi-instrument arrangements. Uses RNN and VAE models that run smoothly in-browser. One of the most polished browser ML experiences available.</p>
+    <p><strong>Performance:</strong> Real-time generation. Models are small (~5–15MB). Works on mobile.</p>
+    <div class="tags">
+      <span class="tag">TensorFlow.js</span>
+      <span class="tag">Music generation</span>
+      <span class="tag">Melody / Drums</span>
+      <span class="tag">Real-time</span>
+    </div>
+    <div class="links">
+      <a href="https://magenta.tensorflow.org/js" target="_blank">Magenta.js</a>
+      <a href="https://magenta.tensorflow.org/demos" target="_blank">Demos</a>
+    </div>
+  </div>
+
+  <p class="section-label">Creative ML Frameworks</p>
+  <p class="section-explainer">These libraries lower the barrier to using machine learning in creative projects. ml5.js wraps complex TensorFlow.js models behind simple, friendly APIs — making it possible for artists and beginners to use ML without understanding the underlying math. TensorFlow.js provides the full power of the framework when you need more control.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>ml5.js</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>A beginner-friendly wrapper around TensorFlow.js built for creative coding. Provides simple APIs for style transfer, pose detection, image classification, sound classification, and more. Designed to pair with p5.js. Ideal for workshops with non-technical participants.</p>
+    <div class="tags">
+      <span class="tag">TensorFlow.js wrapper</span>
+      <span class="tag">Beginner-friendly</span>
+      <span class="tag">p5.js compatible</span>
+      <span class="tag">Workshop-ready</span>
+    </div>
+    <div class="links">
+      <a href="https://ml5js.org/" target="_blank">ml5.js</a>
+      <a href="https://learn.ml5js.org/" target="_blank">Learn</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>TensorFlow.js</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Google's ML framework for JavaScript. The most mature option for running classical ML models in the browser. Uses WebGL for GPU acceleration. Extensive pre-trained model library covering image, audio, text, and pose tasks.</p>
+    <div class="tags">
+      <span class="tag">WebGL</span>
+      <span class="tag">WebGPU (experimental)</span>
+      <span class="tag">Mature ecosystem</span>
+      <span class="tag">Pre-trained models</span>
+    </div>
+    <div class="links">
+      <a href="https://www.tensorflow.org/js" target="_blank">TensorFlow.js</a>
+      <a href="https://github.com/tensorflow/tfjs-models" target="_blank">Pre-trained Models</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== MODERN GENERATIVE AI ==================== -->
+<div class="tab-content" id="tab-modern">
+
+  <div class="tab-intro">
+    <strong>Generation from prompts.</strong> The current frontier — models that understand language and can be directed with natural text instructions. Tell a diffusion model "a watercolour painting of a cat in a spacesuit" and it creates one from scratch. Show a vision-language model a photo and ask "what's happening here?" and it describes the scene. These models are dramatically larger than their predecessors (hundreds of millions to billions of parameters), but advances in quantization, distillation, and WebGPU acceleration are making them <strong>increasingly feasible to run entirely in the browser</strong> — no server, no API key, no data leaving the device.
+  </div>
+
+  <p class="section-label">Text-to-Image</p>
+  <p class="section-explainer">Type a description, get an image. Diffusion models work by starting with pure noise and gradually "denoising" it into an image that matches your text prompt. This process — guided by a language model that understands what your words mean visually — is what powers tools like Stable Diffusion, DALL-E, and Midjourney. Running these models in the browser requires WebGPU and patience, but it's increasingly feasible.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Stable Diffusion 1.5 (WebGPU)</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>The original open-source diffusion model, ported to run in-browser via ONNX Runtime Web with WebGPU acceleration. Generates 512x512 images from text prompts. Requires a capable GPU and a WebGPU-enabled browser (Chrome/Edge).</p>
+    <p><strong>Performance:</strong> ~30s–2min per image depending on GPU. Model weights ~1.7GB downloaded on first use.</p>
+    <div class="tags">
+      <span class="tag">ONNX Runtime Web</span>
+      <span class="tag">WebGPU</span>
+      <span class="tag">~1.7GB</span>
+      <span class="tag">512x512</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/runwayml/stable-diffusion-v1-5" target="_blank">Model Card</a>
+      <a href="https://onnxruntime.ai/" target="_blank">ONNX Runtime</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Stable Diffusion Turbo / SDXL Turbo</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>Distilled versions of Stable Diffusion that generate images in just 1–4 denoising steps instead of 20–50. This dramatically reduces inference time, making browser execution more feasible. SDXL Turbo produces higher resolution (1024x1024) but requires more VRAM.</p>
+    <p><strong>Performance:</strong> ~5–30s per image with 1–4 steps. Significantly faster than standard SD.</p>
+    <div class="tags">
+      <span class="tag">ONNX Runtime Web</span>
+      <span class="tag">WebGPU</span>
+      <span class="tag">1–4 steps</span>
+      <span class="tag">Fast inference</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/stabilityai/sdxl-turbo" target="_blank">SDXL Turbo</a>
+      <a href="https://huggingface.co/stabilityai/sd-turbo" target="_blank">SD Turbo</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Latent Consistency Models (LCM)</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>LCMs distil diffusion models to require only 2–4 inference steps while maintaining quality. Combined with LoRA adapters, they can be applied to various base models. A strong candidate for real-time browser generation.</p>
+    <p><strong>Performance:</strong> 2–4 denoising steps. Can be combined with SD 1.5 or SDXL base models.</p>
+    <div class="tags">
+      <span class="tag">Distilled diffusion</span>
+      <span class="tag">2–4 steps</span>
+      <span class="tag">LoRA compatible</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/SimianLuo/LCM_Dreamshaper_v7" target="_blank">LCM Models</a>
+      <a href="https://latent-consistency-models.github.io/" target="_blank">Project Page</a>
+    </div>
+  </div>
+
+  <p class="section-label">Image-to-Image</p>
+  <p class="section-explainer">Instead of starting from noise, these models start from an existing image and transform it according to a text prompt or spatial conditioning. Sketch a rough drawing and have AI refine it, upscale a low-res photo with hallucinated detail, or segment objects for creative editing. Image-to-image models bridge human creativity with AI generation — you provide the structure, the model provides the detail.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Stable Diffusion img2img (WebGPU)</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>Stable Diffusion in img2img mode — takes an input image plus a text prompt and generates a new image that follows the structure of the original. Useful for variations, sketch-to-image, and guided editing.</p>
+    <p><strong>Performance:</strong> ~30s–2min depending on steps and GPU. Fewer steps needed when starting from an existing image.</p>
+    <div class="tags">
+      <span class="tag">ONNX Runtime Web</span>
+      <span class="tag">WebGPU</span>
+      <span class="tag">Prompt-guided</span>
+      <span class="tag">Sketch-to-image</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/docs/diffusers/using-diffusers/img2img" target="_blank">img2img Guide</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>ControlNet (WebGPU)</h3>
+      <span class="badge emerging">Emerging</span>
+    </div>
+    <p>Adds precise spatial control to Stable Diffusion. Condition generation on edge maps, depth maps, pose skeletons, or scribbles. Browser implementations are emerging but require significant GPU memory. Best combined with Turbo/LCM models for feasible in-browser use.</p>
+    <div class="tags">
+      <span class="tag">Spatial control</span>
+      <span class="tag">Edge / Depth / Pose</span>
+      <span class="tag">WebGPU</span>
+      <span class="tag">Heavy</span>
+    </div>
+    <div class="links">
+      <a href="https://github.com/lllyasviel/ControlNet" target="_blank">ControlNet</a>
+      <a href="https://huggingface.co/lllyasviel" target="_blank">Models</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Real-ESRGAN (WebGPU)</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>AI-powered image upscaling that enhances resolution and detail. Can upscale images 2x–4x while adding realistic detail. Useful for enhancing low-resolution photos or AI-generated images.</p>
+    <p><strong>Performance:</strong> A few seconds per image for moderate resolutions.</p>
+    <div class="tags">
+      <span class="tag">ONNX Runtime Web</span>
+      <span class="tag">WebGPU</span>
+      <span class="tag">2x–4x upscale</span>
+    </div>
+    <div class="links">
+      <a href="https://github.com/xinntao/Real-ESRGAN" target="_blank">Real-ESRGAN</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Segment Anything (SAM)</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Meta's universal image segmentation model. Click on any object to get a precise mask. The lightweight decoder runs in-browser in milliseconds. Enables creative editing workflows like object removal, recoloring, and compositing.</p>
+    <div class="tags">
+      <span class="tag">ONNX Runtime Web</span>
+      <span class="tag">WebGPU</span>
+      <span class="tag">Click-to-segment</span>
+      <span class="tag">Masks</span>
+    </div>
+    <div class="links">
+      <a href="https://segment-anything.com/" target="_blank">Project Page</a>
+      <a href="https://github.com/facebookresearch/segment-anything" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+  <p class="section-label">Image-to-Text</p>
+  <p class="section-explainer">The reverse of text-to-image — these models look at an image and describe what they see in natural language. Vision-language models combine an image encoder (which "sees" the image) with a text decoder (which generates words), enabling captioning, visual question answering, and OCR. They're a powerful way to make images searchable, accessible, and understandable by other AI systems.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>BLIP / BLIP-2 (Transformers.js)</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Salesforce's image captioning and visual question answering models. Generates natural language descriptions of images and can answer questions about them. The base BLIP model is lightweight enough for comfortable browser use.</p>
+    <p><strong>Performance:</strong> Captions in 1–3 seconds. Base model ~400MB. Supports conditional and unconditional captioning.</p>
+    <div class="tags">
+      <span class="tag">Transformers.js</span>
+      <span class="tag">ONNX Runtime Web</span>
+      <span class="tag">~400MB</span>
+      <span class="tag">VQA</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/Salesforce/blip-image-captioning-base" target="_blank">BLIP Base</a>
+      <a href="https://huggingface.co/docs/transformers.js" target="_blank">Transformers.js</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>ViT-GPT2 Image Captioning</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>A lightweight captioning model combining a Vision Transformer encoder with GPT-2 text decoder. One of the smallest and fastest captioning models for browser use.</p>
+    <p><strong>Performance:</strong> Fast inference (~1s). Model size ~300MB.</p>
+    <div class="tags">
+      <span class="tag">Transformers.js</span>
+      <span class="tag">Vision Transformer</span>
+      <span class="tag">~300MB</span>
+      <span class="tag">Lightweight</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/nlpconnect/vit-gpt2-image-captioning" target="_blank">Model Card</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Florence-2 (Microsoft)</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>A unified vision-language model that handles captioning, OCR, object detection, and visual grounding — all via text prompts. The base variant (~230M params) is small enough for browser inference, making it exceptionally versatile.</p>
+    <div class="tags">
+      <span class="tag">Transformers.js</span>
+      <span class="tag">Multi-task</span>
+      <span class="tag">OCR</span>
+      <span class="tag">Object detection</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/microsoft/Florence-2-base" target="_blank">Florence-2 Base</a>
+      <a href="https://huggingface.co/microsoft/Florence-2-large" target="_blank">Florence-2 Large</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Moondream</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>A tiny but capable vision-language model (~1.6B params) that describes images, answers questions, and follows instructions. Designed for edge deployment. Browser inference feasible with WebGPU and quantization.</p>
+    <div class="tags">
+      <span class="tag">Vision-language</span>
+      <span class="tag">~1.6B params</span>
+      <span class="tag">WebGPU</span>
+      <span class="tag">Conversational</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/vikhyatk/moondream2" target="_blank">Moondream 2</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>SmolVLM (Hugging Face)</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>Hugging Face's compact vision-language model. Describes images, answers visual questions, and reads text in images. Optimized for small footprints while maintaining strong performance.</p>
+    <div class="tags">
+      <span class="tag">Vision-language</span>
+      <span class="tag">Compact</span>
+      <span class="tag">WebGPU</span>
+      <span class="tag">VQA</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/HuggingFaceTB/SmolVLM-Instruct" target="_blank">SmolVLM</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Tesseract.js</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>The gold standard for browser-based OCR. A JavaScript port of Google's Tesseract engine. Supports 100+ languages, runs entirely client-side. Mature, well-documented, and production-ready.</p>
+    <p><strong>Performance:</strong> 1–5 seconds per image. Language data ~2–15MB per language.</p>
+    <div class="tags">
+      <span class="tag">WebAssembly</span>
+      <span class="tag">100+ languages</span>
+      <span class="tag">Mature</span>
+      <span class="tag">Production-ready</span>
+    </div>
+    <div class="links">
+      <a href="https://tesseract.projectnaptha.com/" target="_blank">Project Page</a>
+      <a href="https://github.com/naptha/tesseract.js" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+  <p class="section-label">Text Generation</p>
+  <p class="section-explainer">Large language models (LLMs) are the technology behind ChatGPT, Claude, and other AI assistants. They predict the next word in a sequence, and by doing so can generate coherent text, answer questions, write code, and carry on conversations. Running a full LLM in the browser was unthinkable a few years ago, but WebGPU and model compression have made it possible — you can now chat with an AI running entirely on your device.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>WebLLM (MLC)</h3>
+      <span class="badge experimental">Experimental</span>
+    </div>
+    <p>Run full large language models (Llama, Mistral, Phi, Gemma) entirely in the browser via WebGPU. Chat with an AI that runs 100% on-device. Impressive but requires a capable GPU and several GB of VRAM.</p>
+    <p><strong>Performance:</strong> 10–30 tokens/sec on good GPUs. Models 1–7B parameters. Requires WebGPU.</p>
+    <div class="tags">
+      <span class="tag">WebGPU</span>
+      <span class="tag">LLM</span>
+      <span class="tag">On-device</span>
+      <span class="tag">Chat</span>
+    </div>
+    <div class="links">
+      <a href="https://webllm.mlc.ai/" target="_blank">WebLLM Demo</a>
+      <a href="https://github.com/mlc-ai/web-llm" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>SmolLM / SmolLM2 (Hugging Face)</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Tiny language models (135M–1.7B params) designed to run on-device. Generate stories, complete text, or answer questions. Small enough to run via Transformers.js without WebGPU on many devices.</p>
+    <div class="tags">
+      <span class="tag">Transformers.js</span>
+      <span class="tag">135M–1.7B</span>
+      <span class="tag">WASM / WebGPU</span>
+      <span class="tag">Lightweight</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/HuggingFaceTB/SmolLM2-135M" target="_blank">SmolLM2</a>
+    </div>
+  </div>
+
+  <p class="section-label">Frameworks &amp; Runtimes</p>
+  <p class="section-explainer">Modern generative models are too complex to implement from scratch in JavaScript. These frameworks handle the heavy lifting — loading model weights, running inference on the GPU via WebGPU or WebAssembly, and providing developer-friendly APIs. Transformers.js is the highest-level option; ONNX Runtime Web gives you more control under the hood.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Transformers.js (Hugging Face)</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Hugging Face's official JavaScript library for running ML models in the browser. Wraps ONNX Runtime Web and provides a high-level API. Supports image generation, captioning, text generation, speech-to-text, and more. The easiest way to get started with modern generative AI in the browser.</p>
+    <div class="tags">
+      <span class="tag">ONNX Runtime Web</span>
+      <span class="tag">WebGPU / WASM</span>
+      <span class="tag">npm / CDN</span>
+      <span class="tag">High-level API</span>
+    </div>
+    <div class="links">
+      <a href="https://huggingface.co/docs/transformers.js" target="_blank">Documentation</a>
+      <a href="https://github.com/huggingface/transformers.js" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>ONNX Runtime Web</h3>
+      <span class="badge practical">Practical</span>
+    </div>
+    <p>Microsoft's cross-platform inference engine with a WebGPU backend. Runs ONNX-format models directly in the browser. Lower-level than Transformers.js but gives more control over model loading, quantization, and execution.</p>
+    <div class="tags">
+      <span class="tag">WebGPU</span>
+      <span class="tag">WebAssembly</span>
+      <span class="tag">ONNX format</span>
+    </div>
+    <div class="links">
+      <a href="https://onnxruntime.ai/docs/tutorials/web/" target="_blank">Web Docs</a>
+      <a href="https://github.com/microsoft/onnxruntime" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>Artificial Nouveau Workshops</p>
+  <p style="margin-top: 0.5rem;">All tools and models listed run client-side in the browser. WebGPU required for diffusion models and LLMs (Chrome 113+, Edge 113+).</p>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
