@@ -22,12 +22,25 @@ const API_BASE = window.location.hostname === 'localhost' || window.location.hos
 /* ================================================================
    Utilities
    ================================================================ */
-function fileToDataURI(file) {
+function fileToDataURI(file, maxSize = 1024) {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file);
+    const img = new Image();
+    img.onload = () => {
+      // Resize if larger than maxSize to reduce payload
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        const scale = maxSize / Math.max(w, h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
   });
 }
 
