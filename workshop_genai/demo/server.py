@@ -5,6 +5,9 @@ Uses async predictions + polling to avoid Render's 30s request timeout.
 The frontend calls /api/<model> to start a prediction, then polls
 /api/prediction/<id> until it completes.
 
+Images are uploaded to Replicate's file service first (fast), then
+the file URL is passed to the prediction (no huge base64 in JSON).
+
 Local:
     pip install flask flask-cors replicate
     export REPLICATE_API_TOKEN="r8_your_token_here"
@@ -12,9 +15,11 @@ Local:
 
 Render:
     Set REPLICATE_API_TOKEN in Render environment variables.
-    Start command: gunicorn server:app
+    Start command: gunicorn server:app --timeout 120 --workers 2
 """
 
+import base64
+import io
 import os
 
 from flask import Flask, request, jsonify
@@ -36,10 +41,22 @@ MODELS = {
 }
 
 
+def upload_data_uri(data_uri):
+    """Convert a data URI to a Replicate file upload URL."""
+    # Parse data URI: data:image/jpeg;base64,/9j/4AAQ...
+    header, b64data = data_uri.split(",", 1)
+    mime = header.split(":")[1].split(";")[0]
+    ext = mime.split("/")[1].replace("jpeg", "jpg")
+    raw = base64.b64decode(b64data)
+    file_obj = io.BytesIO(raw)
+    file_obj.name = f"upload.{ext}"
+    uploaded = replicate.files.create(file_obj, content_type=mime)
+    return uploaded.urls["get"]
+
+
 def start_prediction(model_key, model_input):
     """Start an async prediction and return its ID immediately."""
-    model_ref = MODELS[model_key]
-    version = model_ref.split(":")[1]
+    version = MODELS[model_key].split(":")[1]
     prediction = replicate.predictions.create(
         version=version,
         input=model_input,
@@ -74,8 +91,9 @@ def img2img():
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
 
+    image_url = upload_data_uri(image)
     pred_id = start_prediction("img2img", {
-        "prompt": prompt, "image": image,
+        "prompt": prompt, "image": image_url,
         "prompt_strength": strength, "num_outputs": 1,
     })
     return jsonify({"prediction_id": pred_id})
@@ -88,8 +106,9 @@ def img2txt():
     if not image:
         return jsonify({"error": "Image is required"}), 400
 
+    image_url = upload_data_uri(image)
     pred_id = start_prediction("img2txt", {
-        "image": image, "task": "image_captioning",
+        "image": image_url, "task": "image_captioning",
     })
     return jsonify({"prediction_id": pred_id})
 
@@ -110,8 +129,9 @@ def photomaker():
     if "img" not in prompt.lower():
         prompt = f"a photo of a person img, {prompt}"
 
+    image_url = upload_data_uri(image)
     pred_id = start_prediction("photomaker", {
-        "prompt": prompt, "input_image": image,
+        "prompt": prompt, "input_image": image_url,
         "style_name": style, "num_outputs": min(num_outputs, 4),
     })
     return jsonify({"prediction_id": pred_id})
@@ -124,8 +144,9 @@ def img3d():
     if not image:
         return jsonify({"error": "Image is required"}), 400
 
+    image_url = upload_data_uri(image)
     pred_id = start_prediction("img3d", {
-        "image": image, "steps": 50, "guidance_scale": 5.5,
+        "image": image_url, "steps": 50, "guidance_scale": 5.5,
         "octree_resolution": 256, "remove_background": True,
     })
     return jsonify({"prediction_id": pred_id})
@@ -152,7 +173,7 @@ def get_prediction(prediction_id):
     prediction = replicate.predictions.get(prediction_id)
 
     result = {
-        "status": prediction.status,  # starting, processing, succeeded, failed, canceled
+        "status": prediction.status,
     }
 
     if prediction.status == "succeeded":
