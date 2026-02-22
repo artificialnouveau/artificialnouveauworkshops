@@ -462,7 +462,7 @@ const ImageTo3D = {
       return;
     }
     try {
-      this.imageDataURI = await fileToDataURI(file);
+      this.imageDataURI = await fileToDataURI(file, 512);
       const img = new Image();
       img.onload = () => {
         const canvas = document.getElementById('canvas-img3d-preview');
