@@ -246,7 +246,7 @@ def pose():
         "image": image_url,
         "prompt": prompt,
         "num_samples": "1",
-        "image_resolution": 512,
+        "image_resolution": "512",
     })
     return jsonify({"prediction_id": pred_id})
 
