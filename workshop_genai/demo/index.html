@@ -39,7 +39,7 @@
     <div class="step-intro">
       <h2>Text to Image</h2>
       <span class="step-badge">Text → Image</span>
-      <p>Type a text prompt and a Stable Diffusion model will generate an image. The model runs on HuggingFace's free inference API.</p>
+      <p>Type a text prompt and a Stable Diffusion model will generate an image. No login or API key required.</p>
     </div>
 
     <div class="explainer-block" style="border-left-color:#c084fc">
@@ -48,12 +48,6 @@
     </div>
 
     <textarea class="text-input" id="txt2img-prompt" placeholder="Describe the image you want to generate...">a photo of a cat wearing a tiny hat</textarea>
-
-    <details class="token-details">
-      <summary>Optional: Add HuggingFace token for faster/reliable access</summary>
-      <p class="description" style="margin:8px 0">Get a free token at <a href="https://huggingface.co/settings/tokens" target="_blank" style="color:var(--accent)">huggingface.co/settings/tokens</a></p>
-      <input type="password" class="text-input" id="hf-token" placeholder="hf_..." style="min-height:auto; font-family:var(--mono);">
-    </details>
 
     <div class="loading-bar" id="txt2img-loading">
       <div class="loading-label">

@@ -29,85 +29,32 @@ const TextToImage = {
     const status = document.getElementById('txt2img-loading-status');
 
     loadingEl.classList.add('visible');
-    status.textContent = 'Sending prompt to Stable Diffusion...';
+    status.textContent = 'Generating image (10–30 seconds)...';
     fill.style.width = '30%';
 
     try {
-      const token = document.getElementById('hf-token').value.trim();
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      // Pollinations.ai — free, no auth, no rate limits
+      const encodedPrompt = encodeURIComponent(prompt);
+      const seed = Math.floor(Math.random() * 1000000);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&seed=${seed}&nologo=true`;
 
-      // Try SDXL first, fall back to SD 1.5
-      const models = [
-        'stabilityai/stable-diffusion-xl-base-1.0',
-        'runwayml/stable-diffusion-v1-5'
-      ];
+      fill.style.width = '50%';
+      status.textContent = 'Waiting for Stable Diffusion to generate...';
 
-      let response = null;
-      let lastError = null;
-
-      for (const model of models) {
-        status.textContent = `Trying ${model.split('/')[1]}...`;
-        fill.style.width = '50%';
-
-        try {
-          response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ inputs: prompt })
-          });
-
-          if (response.ok) {
-            const contentType = response.headers.get('content-type') || '';
-            if (contentType.includes('image')) {
-              break; // Success
-            }
-          }
-
-          // Model might be loading — check for retry
-          if (response.status === 503) {
-            const data = await response.json();
-            if (data.estimated_time) {
-              status.textContent = `Model is loading, estimated wait: ${Math.ceil(data.estimated_time)}s...`;
-              fill.style.width = '40%';
-              // Wait and retry once
-              await new Promise(r => setTimeout(r, Math.min(data.estimated_time * 1000, 30000)));
-              response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ inputs: prompt })
-              });
-              if (response.ok) break;
-            }
-          }
-
-          // Auth required or rate limited
-          if (response.status === 401 || response.status === 403) {
-            lastError = 'Authentication required. Please add a free HuggingFace token above.';
-          } else if (response.status === 429) {
-            lastError = 'Rate limited. Please wait a moment and try again, or add a HuggingFace token for higher limits.';
-          } else {
-            const text = await response.text();
-            lastError = `Model ${model.split('/')[1]} returned ${response.status}: ${text}`;
-          }
-          response = null;
-        } catch (fetchErr) {
-          lastError = fetchErr.message;
-          response = null;
-        }
+      // Fetch the image to detect errors before showing it
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`Image generation failed (status ${response.status}). Please try again.`);
       }
-
-      if (!response || !response.ok) {
-        throw new Error(lastError || 'All models failed. Try adding a HuggingFace token.');
-      }
-
-      fill.style.width = '90%';
-      status.textContent = 'Rendering image...';
 
       const blob = await response.blob();
-      const imageUrl = URL.createObjectURL(blob);
+      const blobUrl = URL.createObjectURL(blob);
+
+      fill.style.width = '90%';
+      status.textContent = 'Rendering...';
+
       const imgEl = document.getElementById('img-generated');
-      imgEl.src = imageUrl;
+      imgEl.src = blobUrl;
       imgEl.onload = () => {
         fill.style.width = '100%';
         status.textContent = 'Done!';
