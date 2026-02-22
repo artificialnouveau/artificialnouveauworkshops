@@ -1,78 +1,22 @@
 /**
  * app.js — 3-tab Generative AI workshop:
- *   Tab 1: Text to Image (Stable Diffusion via WebGPU)
- *   Tab 2: Image to Image (Style Transfer via Magenta)
- *   Tab 3: Image to Text (Captioning via BLIP)
+ *   Tab 1: Text to Image (HuggingFace Inference API)
+ *   Tab 2: Image to Image (Style Transfer via Magenta, runs locally)
+ *   Tab 3: Image to Text (Captioning via BLIP, runs locally)
  */
 
 /* ================================================================
-   TAB 1 — Text to Image (Stable Diffusion via WebGPU)
+   TAB 1 — Text to Image (HuggingFace Inference API)
    ================================================================ */
 const TextToImage = {
-  pipeline: null,
-  loading: false,
-
   init() {
     document.getElementById('btn-generate').addEventListener('click', () => this.generate());
-    document.getElementById('btn-generate').disabled = false;
-  },
-
-  async loadPipeline() {
-    if (this.pipeline) return this.pipeline;
-    if (this.loading) return null;
-    this.loading = true;
-
-    const loadingEl = document.getElementById('txt2img-loading');
-    const fill = document.getElementById('txt2img-loading-fill');
-    const status = document.getElementById('txt2img-loading-status');
-    const pctEl = document.getElementById('txt2img-loading-pct');
-    const loadText = document.getElementById('txt2img-loading-text');
-
-    loadingEl.classList.add('visible');
-    loadText.innerHTML = 'Downloading Stable Diffusion<span class="loading-dots"></span>';
-    status.textContent = 'This may take a few minutes on first use (~1.7 GB)...';
-    fill.style.width = '5%';
-
-    try {
-      this.pipeline = await window._loadTextToImagePipeline((progress) => {
-        if (progress.status === 'progress' && progress.total) {
-          const pct = Math.round((progress.loaded / progress.total) * 100);
-          fill.style.width = Math.min(pct, 95) + '%';
-          pctEl.textContent = pct + '%';
-          const mb = (progress.loaded / 1e6).toFixed(1);
-          const totalMb = (progress.total / 1e6).toFixed(1);
-          status.textContent = `${progress.file || progress.name || 'component'}: ${mb} / ${totalMb} MB`;
-        } else if (progress.status === 'loading') {
-          status.textContent = `Loading ${progress.name}...`;
-        } else if (progress.status === 'done') {
-          status.textContent = 'Component loaded!';
-        }
-      });
-
-      fill.style.width = '100%';
-      status.textContent = 'All components loaded!';
-      this.loading = false;
-      setTimeout(() => loadingEl.classList.remove('visible'), 800);
-      return this.pipeline;
-    } catch (err) {
-      this.loading = false;
-      loadingEl.classList.remove('visible');
-      throw err;
-    }
   },
 
   async generate() {
     const btn = document.getElementById('btn-generate');
     const prompt = document.getElementById('txt2img-prompt').value.trim();
     if (!prompt) return;
-
-    if (!navigator.gpu) {
-      document.getElementById('txt2img-webgpu-warning').classList.remove('hidden');
-      document.getElementById('txt2img-error-text').textContent =
-        'WebGPU is not available in this browser. Please use Chrome 113+ or Edge 113+ to generate images.';
-      document.getElementById('txt2img-error').classList.remove('hidden');
-      return;
-    }
 
     btn.disabled = true;
     btn.textContent = 'Generating...';
@@ -83,109 +27,98 @@ const TextToImage = {
     const loadingEl = document.getElementById('txt2img-loading');
     const fill = document.getElementById('txt2img-loading-fill');
     const status = document.getElementById('txt2img-loading-status');
-    const loadText = document.getElementById('txt2img-loading-text');
+
+    loadingEl.classList.add('visible');
+    status.textContent = 'Sending prompt to Stable Diffusion...';
+    fill.style.width = '30%';
 
     try {
-      const pipeline = await this.loadPipeline();
-      if (!pipeline) {
-        btn.disabled = false;
-        btn.textContent = 'Generate Image';
-        return;
-      }
+      const token = document.getElementById('hf-token').value.trim();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      loadingEl.classList.add('visible');
-      loadText.innerHTML = 'Generating image<span class="loading-dots"></span>';
-      status.textContent = 'Running diffusion steps...';
-      fill.style.width = '50%';
+      // Try SDXL first, fall back to SD 1.5
+      const models = [
+        'stabilityai/stable-diffusion-xl-base-1.0',
+        'runwayml/stable-diffusion-v1-5'
+      ];
 
-      const { tokenizer, text_encoder, vae_decoder, unetSession, OrtTensor } = pipeline;
+      let response = null;
+      let lastError = null;
 
-      // Tokenize
-      const inputs = tokenizer(prompt, {
-        padding: 'max_length',
-        max_length: 77,
-        truncation: true,
-        return_tensors: 'pt'
-      });
+      for (const model of models) {
+        status.textContent = `Trying ${model.split('/')[1]}...`;
+        fill.style.width = '50%';
 
-      // Text encoding
-      status.textContent = 'Encoding text prompt...';
-      fill.style.width = '60%';
-      const textOutput = await text_encoder({ input_ids: inputs.input_ids });
-      const textEmbeddings = textOutput.text_embeds || textOutput.last_hidden_state;
+        try {
+          response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ inputs: prompt })
+          });
 
-      // Generate random latent (Box-Muller for normal distribution)
-      status.textContent = 'Running UNet denoising...';
-      fill.style.width = '70%';
-      const latentShape = [1, 4, 64, 64];
-      const latentData = new Float32Array(1 * 4 * 64 * 64);
-      for (let i = 0; i < latentData.length; i++) {
-        const u1 = Math.random();
-        const u2 = Math.random();
-        latentData[i] = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-      }
+          if (response.ok) {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('image')) {
+              break; // Success
+            }
+          }
 
-      // Float32 to Float16 conversion
-      const latentTensor = new OrtTensor('float16', new Uint16Array(latentData.length), latentShape);
-      const f32 = latentData;
-      const f16 = latentTensor.data;
-      for (let i = 0; i < f32.length; i++) {
-        const floatView = new Float32Array([f32[i]]);
-        const intView = new Uint32Array(floatView.buffer);
-        const bits = intView[0];
-        const sign = (bits >> 16) & 0x8000;
-        const exponent = ((bits >> 23) & 0xff) - 127 + 15;
-        const mantissa = (bits >> 13) & 0x3ff;
-        if (exponent <= 0) f16[i] = sign;
-        else if (exponent >= 31) f16[i] = sign | 0x7c00;
-        else f16[i] = sign | (exponent << 10) | mantissa;
-      }
+          // Model might be loading — check for retry
+          if (response.status === 503) {
+            const data = await response.json();
+            if (data.estimated_time) {
+              status.textContent = `Model is loading, estimated wait: ${Math.ceil(data.estimated_time)}s...`;
+              fill.style.width = '40%';
+              // Wait and retry once
+              await new Promise(r => setTimeout(r, Math.min(data.estimated_time * 1000, 30000)));
+              response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ inputs: prompt })
+              });
+              if (response.ok) break;
+            }
+          }
 
-      // SD-Turbo: single-step inference
-      const timestep = new Float32Array([999]);
-      const unetOutput = await unetSession.run({
-        sample: latentTensor,
-        timestep: new OrtTensor('float32', timestep, [1]),
-        encoder_hidden_states: textEmbeddings.ort_tensor || textEmbeddings
-      });
-
-      // Decode with VAE
-      status.textContent = 'Decoding image...';
-      fill.style.width = '90%';
-      const denoised = unetOutput.out_sample || Object.values(unetOutput)[0];
-      const decoded = await vae_decoder({ latent_sample: denoised });
-      const imageData = decoded.sample || Object.values(decoded)[0];
-
-      // Render to canvas
-      const canvas = document.getElementById('canvas-generated');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      const imgData = ctx.createImageData(512, 512);
-      const pixels = imageData.data || imageData.cpuData;
-
-      for (let y = 0; y < 512; y++) {
-        for (let x = 0; x < 512; x++) {
-          const idx = (y * 512 + x) * 4;
-          const srcIdx = y * 512 + x;
-          imgData.data[idx]     = Math.max(0, Math.min(255, (pixels[srcIdx] + 1) * 127.5));
-          imgData.data[idx + 1] = Math.max(0, Math.min(255, (pixels[srcIdx + 512*512] + 1) * 127.5));
-          imgData.data[idx + 2] = Math.max(0, Math.min(255, (pixels[srcIdx + 512*512*2] + 1) * 127.5));
-          imgData.data[idx + 3] = 255;
+          // Auth required or rate limited
+          if (response.status === 401 || response.status === 403) {
+            lastError = 'Authentication required. Please add a free HuggingFace token above.';
+          } else if (response.status === 429) {
+            lastError = 'Rate limited. Please wait a moment and try again, or add a HuggingFace token for higher limits.';
+          } else {
+            const text = await response.text();
+            lastError = `Model ${model.split('/')[1]} returned ${response.status}: ${text}`;
+          }
+          response = null;
+        } catch (fetchErr) {
+          lastError = fetchErr.message;
+          response = null;
         }
       }
-      ctx.putImageData(imgData, 0, 0);
 
-      fill.style.width = '100%';
-      status.textContent = 'Done!';
-      setTimeout(() => loadingEl.classList.remove('visible'), 800);
-      document.getElementById('txt2img-results').classList.remove('hidden');
+      if (!response || !response.ok) {
+        throw new Error(lastError || 'All models failed. Try adding a HuggingFace token.');
+      }
+
+      fill.style.width = '90%';
+      status.textContent = 'Rendering image...';
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      const imgEl = document.getElementById('img-generated');
+      imgEl.src = imageUrl;
+      imgEl.onload = () => {
+        fill.style.width = '100%';
+        status.textContent = 'Done!';
+        setTimeout(() => loadingEl.classList.remove('visible'), 600);
+        document.getElementById('txt2img-results').classList.remove('hidden');
+      };
 
     } catch (err) {
       console.error('Text-to-image error:', err);
       loadingEl.classList.remove('visible');
-      document.getElementById('txt2img-error-text').textContent =
-        'Error: ' + err.message + '\n\nText-to-image requires Chrome 113+ with WebGPU enabled and ~4 GB GPU memory. This feature is experimental.';
+      document.getElementById('txt2img-error-text').textContent = 'Error: ' + err.message;
       document.getElementById('txt2img-error').classList.remove('hidden');
     } finally {
       btn.disabled = false;
