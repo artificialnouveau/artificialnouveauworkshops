@@ -6,20 +6,21 @@
  *   Tab 4: PhotoMaker (consistent characters)
  *   Tab 5: Image to 3D (Hunyuan3D-2)
  *   Tab 6: Text to 3D (Shap-E)
+ *
+ * All API calls use async polling to avoid Render's 30s timeout:
+ *   1. POST to /api/<model> → returns { prediction_id }
+ *   2. Poll GET /api/prediction/<id> every 2s until succeeded/failed
  */
 
 /* ================================================================
    API Configuration
-   ================================================================
-   When running locally:  API_BASE = ''  (relative URLs)
-   When on GitHub Pages:  API_BASE = your Render deploy URL
    ================================================================ */
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? ''
   : 'https://genai-workshop-api.onrender.com';
 
 /* ================================================================
-   Utility — convert File to data URI
+   Utilities
    ================================================================ */
 function fileToDataURI(file) {
   return new Promise((resolve, reject) => {
@@ -28,6 +29,65 @@ function fileToDataURI(file) {
     reader.onerror = () => reject(new Error('Failed to read file'));
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Start a prediction and poll until complete.
+ * @param {string} endpoint - e.g. '/api/txt2img'
+ * @param {object} body - request body
+ * @param {function} onStatus - called with status text updates
+ * @param {function} onProgress - called with progress 0-100
+ * @returns {object} prediction output
+ */
+async function runPrediction(endpoint, body, onStatus, onProgress) {
+  // Step 1: Start the prediction
+  onStatus('Submitting request...');
+  onProgress(10);
+
+  const startRes = await fetch(`${API_BASE}${endpoint}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const startData = await startRes.json();
+  if (!startRes.ok) throw new Error(startData.error || 'Request failed');
+  if (!startData.prediction_id) throw new Error('No prediction ID returned');
+
+  // Step 2: Poll for completion
+  const predId = startData.prediction_id;
+  onStatus('Processing...');
+  onProgress(20);
+
+  const maxAttempts = 180; // 6 minutes max (180 * 2s)
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+
+    const pollRes = await fetch(`${API_BASE}/api/prediction/${predId}`);
+    const pollData = await pollRes.json();
+
+    if (pollData.status === 'succeeded') {
+      onProgress(100);
+      onStatus('Done!');
+      return pollData.output;
+    }
+
+    if (pollData.status === 'failed') {
+      throw new Error(pollData.error || 'Prediction failed');
+    }
+
+    // Update progress bar (20% to 90% over time)
+    const pct = Math.min(20 + Math.round((i / maxAttempts) * 70), 90);
+    onProgress(pct);
+
+    if (pollData.status === 'processing') {
+      onStatus('Model is generating...');
+    } else {
+      onStatus('Waiting for model to start...');
+    }
+  }
+
+  throw new Error('Generation timed out. Please try again.');
 }
 
 /* ================================================================
@@ -45,42 +105,31 @@ const TextToImage = {
 
     btn.disabled = true;
     btn.textContent = 'Generating...';
-
     document.getElementById('txt2img-results').classList.add('hidden');
     document.getElementById('txt2img-error').classList.add('hidden');
 
     const loadingEl = document.getElementById('txt2img-loading');
     const fill = document.getElementById('txt2img-loading-fill');
     const status = document.getElementById('txt2img-loading-status');
-
     loadingEl.classList.add('visible');
-    status.textContent = 'Sending request to FLUX...';
-    fill.style.width = '30%';
 
     try {
-      const res = await fetch(`${API_BASE}/api/txt2img`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
+      const output = await runPrediction(
+        '/api/txt2img',
+        { prompt },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
 
-      fill.style.width = '80%';
-      status.textContent = 'Processing response...';
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Generation failed');
-      if (!data.images || data.images.length === 0) throw new Error('No image returned');
-
-      fill.style.width = '100%';
-      status.textContent = 'Done!';
+      const images = Array.isArray(output) ? output : [output];
+      if (images.length === 0) throw new Error('No image returned');
 
       const imgEl = document.getElementById('txt2img-output');
-      imgEl.src = data.images[0];
+      imgEl.src = String(images[0]);
       imgEl.onload = () => {
         setTimeout(() => loadingEl.classList.remove('visible'), 600);
         document.getElementById('txt2img-results').classList.remove('hidden');
       };
-
     } catch (err) {
       console.error('Text-to-image error:', err);
       loadingEl.classList.remove('visible');
@@ -115,19 +164,16 @@ const ImageToImage = {
   async handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
-      this.showError(`"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`);
+      this.showError(`"${file.name}" is not an image file.`);
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
-      this.showError(`"${file.name}" is too large (${(file.size / 1e6).toFixed(1)} MB). Please use an image under 20 MB.`);
+      this.showError(`"${file.name}" is too large. Please use an image under 20 MB.`);
       return;
     }
-
     try {
       this.imageDataURI = await fileToDataURI(file);
-
       const img = new Image();
       img.onload = () => {
         const canvas = document.getElementById('canvas-img2img-preview');
@@ -137,7 +183,6 @@ const ImageToImage = {
         document.getElementById('btn-img2img').disabled = false;
       };
       img.src = this.imageDataURI;
-
       this.hideError();
     } catch (err) {
       this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
@@ -148,7 +193,6 @@ const ImageToImage = {
     document.getElementById('img2img-error-text').textContent = msg;
     document.getElementById('img2img-error').classList.remove('hidden');
   },
-
   hideError() {
     document.getElementById('img2img-error').classList.add('hidden');
   },
@@ -159,47 +203,36 @@ const ImageToImage = {
     const strength = parseFloat(document.getElementById('img2img-strength').value);
 
     if (!this.imageDataURI) return;
-    if (!prompt) { this.showError('Please enter a prompt describing the transformation.'); return; }
+    if (!prompt) { this.showError('Please enter a prompt.'); return; }
 
     btn.disabled = true;
     btn.textContent = 'Transforming...';
-
     document.getElementById('img2img-results').classList.add('hidden');
     this.hideError();
 
     const loadingEl = document.getElementById('img2img-loading');
     const fill = document.getElementById('img2img-loading-fill');
     const status = document.getElementById('img2img-loading-status');
-
     loadingEl.classList.add('visible');
-    status.textContent = 'Sending image to SDXL...';
-    fill.style.width = '30%';
 
     try {
-      const res = await fetch(`${API_BASE}/api/img2img`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, image: this.imageDataURI, strength })
-      });
+      const output = await runPrediction(
+        '/api/img2img',
+        { prompt, image: this.imageDataURI, strength },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
 
-      fill.style.width = '80%';
-      status.textContent = 'Processing response...';
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Transformation failed');
-      if (!data.images || data.images.length === 0) throw new Error('No image returned');
-
-      fill.style.width = '100%';
-      status.textContent = 'Done!';
+      const images = Array.isArray(output) ? output : [output];
+      if (images.length === 0) throw new Error('No image returned');
 
       document.getElementById('img2img-original').src = this.imageDataURI;
       const outputEl = document.getElementById('img2img-output');
-      outputEl.src = data.images[0];
+      outputEl.src = String(images[0]);
       outputEl.onload = () => {
         setTimeout(() => loadingEl.classList.remove('visible'), 600);
         document.getElementById('img2img-results').classList.remove('hidden');
       };
-
     } catch (err) {
       console.error('Image-to-image error:', err);
       loadingEl.classList.remove('visible');
@@ -227,19 +260,16 @@ const ImageToText = {
   async handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
-      this.showError(`"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`);
+      this.showError(`"${file.name}" is not an image file.`);
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
-      this.showError(`"${file.name}" is too large. Please use an image under 20 MB.`);
+      this.showError(`"${file.name}" is too large.`);
       return;
     }
-
     try {
       this.imageDataURI = await fileToDataURI(file);
-
       const img = new Image();
       img.onload = () => {
         const canvas = document.getElementById('canvas-img2txt-preview');
@@ -248,11 +278,8 @@ const ImageToText = {
         document.getElementById('upload-area-img2txt').classList.add('has-file');
       };
       img.src = this.imageDataURI;
-
       this.hideError();
       document.getElementById('img2txt-results').classList.add('hidden');
-
-      // Auto-caption on upload
       await this.caption();
     } catch (err) {
       this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
@@ -263,7 +290,6 @@ const ImageToText = {
     document.getElementById('img2txt-error-text').textContent = msg;
     document.getElementById('img2txt-error').classList.remove('hidden');
   },
-
   hideError() {
     document.getElementById('img2txt-error').classList.add('hidden');
   },
@@ -274,31 +300,20 @@ const ImageToText = {
     const loadingEl = document.getElementById('img2txt-loading');
     const fill = document.getElementById('img2txt-loading-fill');
     const status = document.getElementById('img2txt-loading-status');
-
     loadingEl.classList.add('visible');
-    status.textContent = 'Sending image to BLIP...';
-    fill.style.width = '30%';
 
     try {
-      const res = await fetch(`${API_BASE}/api/img2txt`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: this.imageDataURI })
-      });
+      const output = await runPrediction(
+        '/api/img2txt',
+        { image: this.imageDataURI },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
 
-      fill.style.width = '80%';
-      status.textContent = 'Processing response...';
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Captioning failed');
-
-      fill.style.width = '100%';
-      status.textContent = 'Done!';
-
-      document.getElementById('img2txt-caption').textContent = data.caption || 'No caption generated.';
+      const caption = typeof output === 'string' ? output : String(output);
+      document.getElementById('img2txt-caption').textContent = caption || 'No caption generated.';
       setTimeout(() => loadingEl.classList.remove('visible'), 600);
       document.getElementById('img2txt-results').classList.remove('hidden');
-
     } catch (err) {
       console.error('Image-to-text error:', err);
       loadingEl.classList.remove('visible');
@@ -318,26 +333,22 @@ const PhotoMaker = {
     const uploadArea = document.getElementById('upload-area-photomaker');
     uploadArea.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', e => this.handleUpload(e));
-
     document.getElementById('btn-photomaker').addEventListener('click', () => this.generate());
   },
 
   async handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
-      this.showError(`"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`);
+      this.showError(`"${file.name}" is not an image file.`);
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
-      this.showError(`"${file.name}" is too large. Please use an image under 20 MB.`);
+      this.showError(`"${file.name}" is too large.`);
       return;
     }
-
     try {
       this.imageDataURI = await fileToDataURI(file);
-
       const img = new Image();
       img.onload = () => {
         const canvas = document.getElementById('canvas-photomaker-preview');
@@ -347,7 +358,6 @@ const PhotoMaker = {
         document.getElementById('btn-photomaker').disabled = false;
       };
       img.src = this.imageDataURI;
-
       this.hideError();
     } catch (err) {
       this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
@@ -358,7 +368,6 @@ const PhotoMaker = {
     document.getElementById('photomaker-error-text').textContent = msg;
     document.getElementById('photomaker-error').classList.remove('hidden');
   },
-
   hideError() {
     document.getElementById('photomaker-error').classList.add('hidden');
   },
@@ -369,56 +378,40 @@ const PhotoMaker = {
     const style = document.getElementById('photomaker-style').value;
 
     if (!this.imageDataURI) return;
-    if (!prompt) { this.showError('Please enter a prompt describing the scene.'); return; }
+    if (!prompt) { this.showError('Please enter a prompt.'); return; }
 
     btn.disabled = true;
     btn.textContent = 'Generating...';
-
     document.getElementById('photomaker-results').classList.add('hidden');
     this.hideError();
 
     const loadingEl = document.getElementById('photomaker-loading');
     const fill = document.getElementById('photomaker-loading-fill');
     const status = document.getElementById('photomaker-loading-status');
-
     loadingEl.classList.add('visible');
-    status.textContent = 'Sending to PhotoMaker...';
-    fill.style.width = '20%';
 
     try {
-      const res = await fetch(`${API_BASE}/api/photomaker`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          image: this.imageDataURI,
-          style,
-          num_outputs: 2
-        })
-      });
+      const output = await runPrediction(
+        '/api/photomaker',
+        { prompt, image: this.imageDataURI, style, num_outputs: 2 },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
 
-      fill.style.width = '80%';
-      status.textContent = 'Processing response...';
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Generation failed');
-      if (!data.images || data.images.length === 0) throw new Error('No images returned');
-
-      fill.style.width = '100%';
-      status.textContent = 'Done!';
+      const images = Array.isArray(output) ? output : [output];
+      if (images.length === 0) throw new Error('No images returned');
 
       const gallery = document.getElementById('photomaker-gallery');
       gallery.innerHTML = '';
-      data.images.forEach(url => {
+      images.forEach(url => {
         const img = document.createElement('img');
-        img.src = url;
+        img.src = String(url);
         img.className = 'result-image';
         gallery.appendChild(img);
       });
 
       setTimeout(() => loadingEl.classList.remove('visible'), 600);
       document.getElementById('photomaker-results').classList.remove('hidden');
-
     } catch (err) {
       console.error('PhotoMaker error:', err);
       loadingEl.classList.remove('visible');
@@ -441,26 +434,22 @@ const ImageTo3D = {
     const uploadArea = document.getElementById('upload-area-img3d');
     uploadArea.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', e => this.handleUpload(e));
-
     document.getElementById('btn-img3d').addEventListener('click', () => this.generate());
   },
 
   async handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
-      this.showError(`"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`);
+      this.showError(`"${file.name}" is not an image file.`);
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
-      this.showError(`"${file.name}" is too large. Please use an image under 20 MB.`);
+      this.showError(`"${file.name}" is too large.`);
       return;
     }
-
     try {
       this.imageDataURI = await fileToDataURI(file);
-
       const img = new Image();
       img.onload = () => {
         const canvas = document.getElementById('canvas-img3d-preview');
@@ -470,7 +459,6 @@ const ImageTo3D = {
         document.getElementById('btn-img3d').disabled = false;
       };
       img.src = this.imageDataURI;
-
       this.hideError();
     } catch (err) {
       this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
@@ -481,56 +469,47 @@ const ImageTo3D = {
     document.getElementById('img3d-error-text').textContent = msg;
     document.getElementById('img3d-error').classList.remove('hidden');
   },
-
   hideError() {
     document.getElementById('img3d-error').classList.add('hidden');
   },
 
   async generate() {
     const btn = document.getElementById('btn-img3d');
-
     if (!this.imageDataURI) return;
 
     btn.disabled = true;
     btn.textContent = 'Generating...';
-
     document.getElementById('img3d-results').classList.add('hidden');
     this.hideError();
 
     const loadingEl = document.getElementById('img3d-loading');
     const fill = document.getElementById('img3d-loading-fill');
     const status = document.getElementById('img3d-loading-status');
-
     loadingEl.classList.add('visible');
-    status.textContent = 'Sending image to Hunyuan3D-2 (this may take 1-2 minutes)...';
-    fill.style.width = '20%';
 
     try {
-      const res = await fetch(`${API_BASE}/api/img3d`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: this.imageDataURI })
-      });
+      const output = await runPrediction(
+        '/api/img3d',
+        { image: this.imageDataURI },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
 
-      fill.style.width = '80%';
-      status.textContent = 'Processing response...';
+      // Hunyuan3D-2 returns {mesh: "url"} or similar
+      const meshUrl = typeof output === 'object' && output.mesh
+        ? String(output.mesh)
+        : String(output);
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '3D generation failed');
-      if (!data.mesh) throw new Error('No 3D model returned');
-
-      fill.style.width = '100%';
-      status.textContent = 'Done!';
+      if (!meshUrl) throw new Error('No 3D model returned');
 
       const viewer = document.getElementById('img3d-viewer');
-      viewer.setAttribute('src', data.mesh);
+      viewer.setAttribute('src', meshUrl);
 
       const downloadLink = document.getElementById('img3d-download');
-      downloadLink.href = data.mesh;
+      downloadLink.href = meshUrl;
 
       setTimeout(() => loadingEl.classList.remove('visible'), 600);
       document.getElementById('img3d-results').classList.remove('hidden');
-
     } catch (err) {
       console.error('Image-to-3D error:', err);
       loadingEl.classList.remove('visible');
@@ -554,7 +533,6 @@ const TextTo3D = {
     document.getElementById('txt3d-error-text').textContent = msg;
     document.getElementById('txt3d-error').classList.remove('hidden');
   },
-
   hideError() {
     document.getElementById('txt3d-error').classList.add('hidden');
   },
@@ -566,41 +544,30 @@ const TextTo3D = {
 
     btn.disabled = true;
     btn.textContent = 'Generating...';
-
     document.getElementById('txt3d-results').classList.add('hidden');
     this.hideError();
 
     const loadingEl = document.getElementById('txt3d-loading');
     const fill = document.getElementById('txt3d-loading-fill');
     const status = document.getElementById('txt3d-loading-status');
-
     loadingEl.classList.add('visible');
-    status.textContent = 'Sending prompt to Shap-E (this may take a few minutes)...';
-    fill.style.width = '20%';
 
     try {
-      const res = await fetch(`${API_BASE}/api/txt3d`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
+      const output = await runPrediction(
+        '/api/txt3d',
+        { prompt },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
 
-      fill.style.width = '80%';
-      status.textContent = 'Processing response...';
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '3D generation failed');
-      if (!data.files || data.files.length === 0) throw new Error('No output returned');
-
-      fill.style.width = '100%';
-      status.textContent = 'Done!';
+      const files = Array.isArray(output) ? output.map(String) : [String(output)];
+      if (files.length === 0) throw new Error('No output returned');
 
       const gallery = document.getElementById('txt3d-gallery');
       gallery.innerHTML = '';
 
-      data.files.forEach(url => {
+      files.forEach(url => {
         if (url.endsWith('.glb') || url.endsWith('.obj') || url.endsWith('.ply')) {
-          // 3D mesh file — show with model-viewer + download link
           const container = document.createElement('div');
           container.innerHTML = `
             <model-viewer src="${url}" alt="Generated 3D model" auto-rotate camera-controls shadow-intensity="1" style="width:100%; height:350px; background:#111; border-radius:8px;"></model-viewer>
@@ -608,7 +575,6 @@ const TextTo3D = {
           `;
           gallery.appendChild(container);
         } else {
-          // GIF/image preview
           const img = document.createElement('img');
           img.src = url;
           img.className = 'result-image';
@@ -618,7 +584,6 @@ const TextTo3D = {
 
       setTimeout(() => loadingEl.classList.remove('visible'), 600);
       document.getElementById('txt3d-results').classList.remove('hidden');
-
     } catch (err) {
       console.error('Text-to-3D error:', err);
       loadingEl.classList.remove('visible');
