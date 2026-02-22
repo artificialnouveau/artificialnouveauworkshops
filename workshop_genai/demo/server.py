@@ -1,6 +1,10 @@
 """
 Workshop API Server — proxies requests to Replicate API.
 
+Uses async predictions + polling to avoid Render's 30s request timeout.
+The frontend calls /api/<model> to start a prediction, then polls
+/api/prediction/<id> until it completes.
+
 Local:
     pip install flask flask-cors replicate
     export REPLICATE_API_TOKEN="r8_your_token_here"
@@ -11,7 +15,6 @@ Render:
     Start command: gunicorn server:app
 """
 
-import json
 import os
 
 from flask import Flask, request, jsonify
@@ -33,6 +36,29 @@ MODELS = {
 }
 
 
+def start_prediction(model_key, model_input):
+    """Start an async prediction and return its ID immediately."""
+    model_ref = MODELS[model_key]
+    if ":" in model_ref:
+        # Versioned model — use version directly
+        parts = model_ref.split(":")
+        prediction = replicate.predictions.create(
+            version=parts[1],
+            input=model_input,
+        )
+    else:
+        # Unversioned model — use model reference
+        model = replicate.models.get(model_ref)
+        version = model.latest_version
+        prediction = replicate.predictions.create(
+            version=version.id,
+            input=model_input,
+        )
+    return prediction.id
+
+
+# ── Start endpoints (return prediction ID immediately) ───────────────
+
 @app.route("/api/txt2img", methods=["POST"])
 def txt2img():
     body = request.get_json()
@@ -40,12 +66,10 @@ def txt2img():
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
 
-    output = replicate.run(
-        MODELS["txt2img"],
-        input={"prompt": prompt, "num_outputs": 1, "output_format": "webp"},
-    )
-    images = [str(url) for url in output]
-    return jsonify({"images": images})
+    pred_id = start_prediction("txt2img", {
+        "prompt": prompt, "num_outputs": 1, "output_format": "webp",
+    })
+    return jsonify({"prediction_id": pred_id})
 
 
 @app.route("/api/img2img", methods=["POST"])
@@ -60,17 +84,11 @@ def img2img():
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
 
-    output = replicate.run(
-        MODELS["img2img"],
-        input={
-            "prompt": prompt,
-            "image": image,
-            "prompt_strength": strength,
-            "num_outputs": 1,
-        },
-    )
-    images = [str(url) for url in output]
-    return jsonify({"images": images})
+    pred_id = start_prediction("img2img", {
+        "prompt": prompt, "image": image,
+        "prompt_strength": strength, "num_outputs": 1,
+    })
+    return jsonify({"prediction_id": pred_id})
 
 
 @app.route("/api/img2txt", methods=["POST"])
@@ -80,12 +98,10 @@ def img2txt():
     if not image:
         return jsonify({"error": "Image is required"}), 400
 
-    output = replicate.run(
-        MODELS["img2txt"],
-        input={"image": image, "task": "image_captioning"},
-    )
-    caption = str(output)
-    return jsonify({"caption": caption})
+    pred_id = start_prediction("img2txt", {
+        "image": image, "task": "image_captioning",
+    })
+    return jsonify({"prediction_id": pred_id})
 
 
 @app.route("/api/photomaker", methods=["POST"])
@@ -101,21 +117,14 @@ def photomaker():
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
 
-    # PhotoMaker requires "img" trigger word in the prompt
     if "img" not in prompt.lower():
         prompt = f"a photo of a person img, {prompt}"
 
-    output = replicate.run(
-        MODELS["photomaker"],
-        input={
-            "prompt": prompt,
-            "input_image": image,
-            "style_name": style,
-            "num_outputs": min(num_outputs, 4),
-        },
-    )
-    images = [str(url) for url in output]
-    return jsonify({"images": images})
+    pred_id = start_prediction("photomaker", {
+        "prompt": prompt, "input_image": image,
+        "style_name": style, "num_outputs": min(num_outputs, 4),
+    })
+    return jsonify({"prediction_id": pred_id})
 
 
 @app.route("/api/img3d", methods=["POST"])
@@ -125,18 +134,11 @@ def img3d():
     if not image:
         return jsonify({"error": "Image is required"}), 400
 
-    output = replicate.run(
-        MODELS["img3d"],
-        input={
-            "image": image,
-            "steps": 50,
-            "guidance_scale": 5.5,
-            "octree_resolution": 256,
-            "remove_background": True,
-        },
-    )
-    mesh_url = str(output.get("mesh", "")) if isinstance(output, dict) else str(output)
-    return jsonify({"mesh": mesh_url})
+    pred_id = start_prediction("img3d", {
+        "image": image, "steps": 50, "guidance_scale": 5.5,
+        "octree_resolution": 256, "remove_background": True,
+    })
+    return jsonify({"prediction_id": pred_id})
 
 
 @app.route("/api/txt3d", methods=["POST"])
@@ -146,19 +148,29 @@ def txt3d():
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
 
-    output = replicate.run(
-        MODELS["txt3d"],
-        input={
-            "prompt": prompt,
-            "batch_size": 1,
-            "render_mode": "nerf",
-            "render_size": 256,
-            "guidance_scale": 15,
-            "save_mesh": True,
-        },
-    )
-    files = [str(url) for url in output]
-    return jsonify({"files": files})
+    pred_id = start_prediction("txt3d", {
+        "prompt": prompt, "batch_size": 1, "render_mode": "nerf",
+        "render_size": 256, "guidance_scale": 15, "save_mesh": True,
+    })
+    return jsonify({"prediction_id": pred_id})
+
+
+# ── Poll endpoint (frontend checks this every 2s) ────────────────────
+
+@app.route("/api/prediction/<prediction_id>")
+def get_prediction(prediction_id):
+    prediction = replicate.predictions.get(prediction_id)
+
+    result = {
+        "status": prediction.status,  # starting, processing, succeeded, failed, canceled
+    }
+
+    if prediction.status == "succeeded":
+        result["output"] = prediction.output
+    elif prediction.status == "failed":
+        result["error"] = prediction.error or "Prediction failed"
+
+    return jsonify(result)
 
 
 @app.route("/health")
