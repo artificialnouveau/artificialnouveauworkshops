@@ -790,8 +790,17 @@ const PoseTransfer = {
       const images = Array.isArray(output) ? output : [output];
       if (images.length === 0) throw new Error('No image returned');
 
+      // controlnet-pose returns [pose_skeleton, generated_image]
+      const generatedUrl = images.length > 1 ? String(images[1]) : String(images[0]);
+      const poseUrl = images.length > 1 ? String(images[0]) : null;
+
+      if (poseUrl) {
+        document.getElementById('pose-skeleton').src = poseUrl;
+        document.getElementById('pose-skeleton-card').classList.remove('hidden');
+      }
+
       const outputEl = document.getElementById('pose-output');
-      outputEl.src = String(images[0]);
+      outputEl.src = generatedUrl;
       outputEl.onload = () => {
         setTimeout(() => loadingEl.classList.remove('visible'), 600);
         document.getElementById('pose-results').classList.remove('hidden');
