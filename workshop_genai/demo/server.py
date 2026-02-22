@@ -56,11 +56,20 @@ def upload_data_uri(data_uri):
 
 def start_prediction(model_key, model_input):
     """Start an async prediction and return its ID immediately."""
-    version = MODELS[model_key].split(":")[1]
-    prediction = replicate.predictions.create(
-        version=version,
-        input=model_input,
-    )
+    model_ref = MODELS[model_key]
+    if ":" in model_ref:
+        # Versioned model (community) — use version hash
+        version = model_ref.split(":")[1]
+        prediction = replicate.predictions.create(
+            version=version,
+            input=model_input,
+        )
+    else:
+        # Official model (no version) — use model parameter
+        prediction = replicate.predictions.create(
+            model=model_ref,
+            input=model_input,
+        )
     return prediction.id
 
 
