@@ -1,12 +1,12 @@
 /**
  * app.js — 3-tab Generative AI workshop:
- *   Tab 1: Text to Image (HuggingFace Inference API)
+ *   Tab 1: Text to Image (AI Horde — free, no auth)
  *   Tab 2: Image to Image (Style Transfer via Magenta, runs locally)
  *   Tab 3: Image to Text (Captioning via BLIP, runs locally)
  */
 
 /* ================================================================
-   TAB 1 — Text to Image (HuggingFace Inference API)
+   TAB 1 — Text to Image (AI Horde — free, no login)
    ================================================================ */
 const TextToImage = {
   init() {
@@ -29,35 +29,92 @@ const TextToImage = {
     const status = document.getElementById('txt2img-loading-status');
 
     loadingEl.classList.add('visible');
-    status.textContent = 'Generating image (10–30 seconds)...';
-    fill.style.width = '30%';
+    status.textContent = 'Submitting to AI Horde...';
+    fill.style.width = '10%';
 
     try {
-      // Pollinations.ai — free, no auth, no rate limits
-      const encodedPrompt = encodeURIComponent(prompt);
-      const seed = Math.floor(Math.random() * 1000000);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&seed=${seed}&nologo=true`;
+      // Step 1: Submit async generation request
+      const submitRes = await fetch('https://aihorde.net/api/v2/generate/async', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': '0000000000'
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          params: { width: 512, height: 512, steps: 25 },
+          nsfw: false,
+          models: ['stable_diffusion']
+        })
+      });
 
-      fill.style.width = '50%';
-      status.textContent = 'Waiting for Stable Diffusion to generate...';
-
-      // Fetch the image to detect errors before showing it
-      const response = await fetch(imageUrl);
-      if (!response.ok) {
-        throw new Error(`Image generation failed (status ${response.status}). Please try again.`);
+      if (!submitRes.ok) {
+        const errData = await submitRes.json().catch(() => ({}));
+        throw new Error(errData.message || `Submission failed (status ${submitRes.status})`);
       }
 
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+      const { id } = await submitRes.json();
+      fill.style.width = '20%';
+      status.textContent = 'Queued — waiting for a worker to pick this up...';
 
-      fill.style.width = '90%';
-      status.textContent = 'Rendering...';
+      // Step 2: Poll for completion
+      let done = false;
+      let attempts = 0;
+      const maxAttempts = 60; // 2 minutes max
 
+      while (!done && attempts < maxAttempts) {
+        await new Promise(r => setTimeout(r, 2000));
+        attempts++;
+
+        const checkRes = await fetch(`https://aihorde.net/api/v2/generate/check/${id}`);
+        const checkData = await checkRes.json();
+
+        if (checkData.done) {
+          done = true;
+          break;
+        }
+
+        if (checkData.faulted) {
+          throw new Error('Generation failed on the worker. Please try again.');
+        }
+
+        const waitTime = checkData.wait_time || 0;
+        const queuePos = checkData.queue_position || 0;
+        const pct = checkData.processing ? 60 : Math.min(20 + attempts, 50);
+        fill.style.width = pct + '%';
+
+        if (checkData.processing) {
+          status.textContent = 'A worker is generating your image...';
+        } else if (queuePos > 0) {
+          status.textContent = `Queue position: ${queuePos} — estimated wait: ${waitTime}s`;
+        } else {
+          status.textContent = 'Waiting for worker...';
+        }
+      }
+
+      if (!done) {
+        throw new Error('Generation timed out after 2 minutes. The queue may be busy — try again.');
+      }
+
+      // Step 3: Fetch the result
+      fill.style.width = '80%';
+      status.textContent = 'Downloading generated image...';
+
+      const resultRes = await fetch(`https://aihorde.net/api/v2/generate/status/${id}`);
+      const resultData = await resultRes.json();
+
+      if (!resultData.generations || resultData.generations.length === 0) {
+        throw new Error('No image was returned. Please try again.');
+      }
+
+      const imgBase64 = resultData.generations[0].img;
       const imgEl = document.getElementById('img-generated');
-      imgEl.src = blobUrl;
+      imgEl.src = `data:image/webp;base64,${imgBase64}`;
+
+      fill.style.width = '100%';
+      status.textContent = 'Done!';
+
       imgEl.onload = () => {
-        fill.style.width = '100%';
-        status.textContent = 'Done!';
         setTimeout(() => loadingEl.classList.remove('visible'), 600);
         document.getElementById('txt2img-results').classList.remove('hidden');
       };
@@ -95,23 +152,59 @@ const ImageToImage = {
   async handleUpload(e, type) {
     const file = e.target.files[0];
     if (!file) return;
-    const img = await App.loadImage(file);
-    const canvasId = type === 'content' ? 'canvas-content' : 'canvas-style';
-    const canvas = document.getElementById(canvasId);
-    App.drawToCanvas(canvas, img, 300);
-    canvas.style.display = 'block';
 
-    if (type === 'content') {
-      this.contentImg = img;
-      document.getElementById('upload-area-content').classList.add('has-file');
-    } else {
-      this.styleImg = img;
-      document.getElementById('upload-area-style').classList.add('has-file');
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      this.showError(`"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`);
+      return;
     }
 
-    if (this.contentImg && this.styleImg) {
-      document.getElementById('btn-stylize').disabled = false;
+    // Validate file size (max 20MB)
+    if (file.size > 20 * 1024 * 1024) {
+      this.showError(`"${file.name}" is too large (${(file.size / 1e6).toFixed(1)} MB). Please use an image under 20 MB.`);
+      return;
     }
+
+    try {
+      const img = await App.loadImage(file);
+      const canvasId = type === 'content' ? 'canvas-content' : 'canvas-style';
+      const canvas = document.getElementById(canvasId);
+      App.drawToCanvas(canvas, img, 300);
+      canvas.style.display = 'block';
+
+      if (type === 'content') {
+        this.contentImg = img;
+        document.getElementById('upload-area-content').classList.add('has-file');
+      } else {
+        this.styleImg = img;
+        document.getElementById('upload-area-style').classList.add('has-file');
+      }
+
+      this.hideError();
+      if (this.contentImg && this.styleImg) {
+        document.getElementById('btn-stylize').disabled = false;
+      }
+    } catch (err) {
+      this.showError(`Could not load "${file.name}". The file may be corrupted or in an unsupported format. Try a JPG or PNG instead.`);
+    }
+  },
+
+  showError(msg) {
+    let el = document.getElementById('img2img-error');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'img2img-error';
+      el.className = 'output-block mono';
+      el.style.cssText = 'border-left-color:var(--red); color:var(--red); margin-bottom:24px;';
+      document.getElementById('btn-stylize').before(el);
+    }
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  },
+
+  hideError() {
+    const el = document.getElementById('img2img-error');
+    if (el) el.classList.add('hidden');
   },
 
   async loadModel() {
@@ -146,15 +239,45 @@ const ImageToImage = {
 
     try {
       const model = await this.loadModel();
-      const result = await model.stylize(this.contentImg, this.styleImg);
-      const canvas = document.getElementById('canvas-result');
-      canvas.width = result.width;
-      canvas.height = result.height;
-      canvas.getContext('2d').drawImage(result, 0, 0);
+
+      // Magenta stylize() returns an HTMLCanvasElement
+      const resultCanvas = await model.stylize(this.contentImg, this.styleImg);
+
+      const outputCanvas = document.getElementById('canvas-result');
+
+      // Handle both HTMLCanvasElement and ImageData returns
+      if (resultCanvas instanceof HTMLCanvasElement) {
+        outputCanvas.width = resultCanvas.width;
+        outputCanvas.height = resultCanvas.height;
+        outputCanvas.getContext('2d').drawImage(resultCanvas, 0, 0);
+      } else if (resultCanvas instanceof ImageData) {
+        outputCanvas.width = resultCanvas.width;
+        outputCanvas.height = resultCanvas.height;
+        outputCanvas.getContext('2d').putImageData(resultCanvas, 0, 0);
+      } else if (resultCanvas && resultCanvas.data) {
+        // Tensor-like object — convert to ImageData
+        const w = resultCanvas.width || this.contentImg.width;
+        const h = resultCanvas.height || this.contentImg.height;
+        outputCanvas.width = w;
+        outputCanvas.height = h;
+        const ctx = outputCanvas.getContext('2d');
+        const imgData = ctx.createImageData(w, h);
+        const src = resultCanvas.data;
+        for (let i = 0; i < w * h; i++) {
+          imgData.data[i * 4]     = Math.round(src[i * 3] * 255);
+          imgData.data[i * 4 + 1] = Math.round(src[i * 3 + 1] * 255);
+          imgData.data[i * 4 + 2] = Math.round(src[i * 3 + 2] * 255);
+          imgData.data[i * 4 + 3] = 255;
+        }
+        ctx.putImageData(imgData, 0, 0);
+      } else {
+        throw new Error('Unexpected output format from style transfer model.');
+      }
+
       document.getElementById('img2img-results').classList.remove('hidden');
     } catch (err) {
       console.error('Style transfer error:', err);
-      alert('Style transfer failed: ' + err.message);
+      this.showError('Style transfer failed: ' + err.message);
     } finally {
       btn.disabled = false;
       btn.textContent = 'Stylize';
@@ -179,16 +302,30 @@ const ImageToText = {
     const file = e.target.files[0];
     if (!file) return;
 
-    const img = await App.loadImage(file);
-    const canvas = document.getElementById('canvas-caption');
-    App.drawToCanvas(canvas, img, 500);
-    canvas.style.display = 'block';
-    document.getElementById('upload-area-caption').classList.add('has-file');
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      document.getElementById('img2txt-error-text').textContent =
+        `"${file.name}" is not an image file. Please upload a JPG, PNG, or WebP image.`;
+      document.getElementById('img2txt-error').classList.remove('hidden');
+      return;
+    }
 
-    document.getElementById('img2txt-results').classList.add('hidden');
-    document.getElementById('img2txt-error').classList.add('hidden');
+    try {
+      const img = await App.loadImage(file);
+      const canvas = document.getElementById('canvas-caption');
+      App.drawToCanvas(canvas, img, 500);
+      canvas.style.display = 'block';
+      document.getElementById('upload-area-caption').classList.add('has-file');
 
-    await this.caption(file);
+      document.getElementById('img2txt-results').classList.add('hidden');
+      document.getElementById('img2txt-error').classList.add('hidden');
+
+      await this.caption(file);
+    } catch (err) {
+      document.getElementById('img2txt-error-text').textContent =
+        `Could not load "${file.name}". The file may be corrupted or unsupported. Try a JPG or PNG instead.`;
+      document.getElementById('img2txt-error').classList.remove('hidden');
+    }
   },
 
   async caption(file) {
@@ -290,7 +427,7 @@ const App = {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = reject;
+      img.onerror = () => reject(new Error('Failed to load image'));
       img.src = URL.createObjectURL(file);
     });
   },
