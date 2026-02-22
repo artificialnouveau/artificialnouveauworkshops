@@ -31,29 +31,19 @@ MODELS = {
     "img2img": "stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc",
     "img2txt": "salesforce/blip:2e1dddc8621f72155f24cf2e0adbde548458d3cab9f00c0139eea840d0ac4746",
     "photomaker": "tencentarc/photomaker:ddfc2b08d209f9fa8c1eca692712918bd449f695dabb4a958da31802a9570fe4",
-    "img3d": "tencent/hunyuan3d-2",
-    "txt3d": "cjwbw/shap-e",
+    "img3d": "tencent/hunyuan3d-2:b1b9449a1277e10402781c5d41eb30c0a0683504fb23fab591ca9dfc2aabe1cb",
+    "txt3d": "cjwbw/shap-e:5957069d5c509126a73c7cb68abcddbb985aeefa4d318e7c63ec1352ce6da68c",
 }
 
 
 def start_prediction(model_key, model_input):
     """Start an async prediction and return its ID immediately."""
     model_ref = MODELS[model_key]
-    if ":" in model_ref:
-        # Versioned model — use version directly
-        parts = model_ref.split(":")
-        prediction = replicate.predictions.create(
-            version=parts[1],
-            input=model_input,
-        )
-    else:
-        # Unversioned model — use model reference
-        model = replicate.models.get(model_ref)
-        version = model.latest_version
-        prediction = replicate.predictions.create(
-            version=version.id,
-            input=model_input,
-        )
+    version = model_ref.split(":")[1]
+    prediction = replicate.predictions.create(
+        version=version,
+        input=model_input,
+    )
     return prediction.id
 
 
