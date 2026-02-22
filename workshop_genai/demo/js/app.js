@@ -14,15 +14,7 @@ const TextToImage = {
 
   init() {
     document.getElementById('btn-generate').addEventListener('click', () => this.generate());
-
-    // Check WebGPU support
-    if (!navigator.gpu) {
-      document.getElementById('txt2img-webgpu-warning').classList.remove('hidden');
-      document.getElementById('btn-generate').disabled = true;
-      document.getElementById('txt2img-prompt').disabled = true;
-    } else {
-      document.getElementById('btn-generate').disabled = false;
-    }
+    document.getElementById('btn-generate').disabled = false;
   },
 
   async loadPipeline() {
@@ -73,6 +65,14 @@ const TextToImage = {
     const btn = document.getElementById('btn-generate');
     const prompt = document.getElementById('txt2img-prompt').value.trim();
     if (!prompt) return;
+
+    if (!navigator.gpu) {
+      document.getElementById('txt2img-webgpu-warning').classList.remove('hidden');
+      document.getElementById('txt2img-error-text').textContent =
+        'WebGPU is not available in this browser. Please use Chrome 113+ or Edge 113+ to generate images.';
+      document.getElementById('txt2img-error').classList.remove('hidden');
+      return;
+    }
 
     btn.disabled = true;
     btn.textContent = 'Generating...';
@@ -203,8 +203,12 @@ const ImageToImage = {
   styleImg: null,
 
   init() {
-    document.getElementById('file-content').addEventListener('change', e => this.handleUpload(e, 'content'));
-    document.getElementById('file-style').addEventListener('change', e => this.handleUpload(e, 'style'));
+    const contentInput = document.getElementById('file-content');
+    const styleInput = document.getElementById('file-style');
+    contentInput.addEventListener('change', e => this.handleUpload(e, 'content'));
+    styleInput.addEventListener('change', e => this.handleUpload(e, 'style'));
+    document.getElementById('upload-area-content').addEventListener('click', () => contentInput.click());
+    document.getElementById('upload-area-style').addEventListener('click', () => styleInput.click());
     document.getElementById('btn-stylize').addEventListener('click', () => this.stylize());
   },
 
@@ -286,7 +290,9 @@ const ImageToText = {
   loading: false,
 
   init() {
-    document.getElementById('file-caption').addEventListener('change', e => this.handleUpload(e));
+    const captionInput = document.getElementById('file-caption');
+    captionInput.addEventListener('change', e => this.handleUpload(e));
+    document.getElementById('upload-area-caption').addEventListener('click', () => captionInput.click());
   },
 
   async handleUpload(e) {
