@@ -24,7 +24,7 @@
   <!-- Header -->
   <header id="app-header">
     <h1>Generative AI Workshop</h1>
-    <p class="subtitle">Everything runs on your device. No data is uploaded anywhere.</p>
+    <p class="subtitle">Explore generative AI models directly in your browser.</p>
   </header>
 
   <!-- Tab navigation -->
@@ -34,39 +34,40 @@
     <button class="step-tab" data-step="3">Image to Text</button>
   </nav>
 
-  <!-- ============ Tab 1: Text to Image (Stable Diffusion) ============ -->
+  <!-- ============ Tab 1: Text to Image ============ -->
   <section id="step-1" class="step active">
     <div class="step-intro">
       <h2>Text to Image</h2>
       <span class="step-badge">Text → Image</span>
-      <p>Type a text prompt and a Stable Diffusion model will generate an image — running entirely in your browser using WebGPU.</p>
+      <p>Type a text prompt and a Stable Diffusion model will generate an image. The model runs on HuggingFace's free inference API.</p>
     </div>
 
     <div class="explainer-block" style="border-left-color:#c084fc">
       <h3 style="color:#c084fc">How it works</h3>
-      <p><strong>Stable Diffusion</strong> is a <em>latent diffusion model</em> that starts from random noise and gradually removes it, guided by your text prompt. It uses a <strong>CLIP text encoder</strong> to understand the prompt, a <strong>UNet</strong> to denoise, and a <strong>VAE decoder</strong> to produce the final image. This requires <strong>WebGPU</strong> (Chrome 113+) and downloads ~1.7 GB on first use.</p>
-    </div>
-
-    <div id="txt2img-webgpu-warning" class="output-block mono hidden" style="border-left-color:var(--red); color:var(--red); margin-bottom:24px;">
-      WebGPU is not available in this browser. Please use Chrome 113+ or Edge 113+ to run text-to-image generation.
+      <p><strong>Stable Diffusion</strong> is a <em>latent diffusion model</em> that starts from random noise and gradually removes it, guided by your text prompt. It uses a <strong>CLIP text encoder</strong> to understand the prompt, a <strong>UNet</strong> to denoise, and a <strong>VAE decoder</strong> to produce the final image. Generation takes 10–30 seconds.</p>
     </div>
 
     <textarea class="text-input" id="txt2img-prompt" placeholder="Describe the image you want to generate...">a photo of a cat wearing a tiny hat</textarea>
 
+    <details class="token-details">
+      <summary>Optional: Add HuggingFace token for faster/reliable access</summary>
+      <p class="description" style="margin:8px 0">Get a free token at <a href="https://huggingface.co/settings/tokens" target="_blank" style="color:var(--accent)">huggingface.co/settings/tokens</a></p>
+      <input type="password" class="text-input" id="hf-token" placeholder="hf_..." style="min-height:auto; font-family:var(--mono);">
+    </details>
+
     <div class="loading-bar" id="txt2img-loading">
       <div class="loading-label">
-        <span id="txt2img-loading-text">Downloading Stable Diffusion<span class="loading-dots"></span></span>
-        <span id="txt2img-loading-pct"></span>
+        <span id="txt2img-loading-text">Generating image<span class="loading-dots"></span></span>
       </div>
       <div class="loading-track"><div class="loading-fill" id="txt2img-loading-fill"></div></div>
       <div class="loading-steps" id="txt2img-loading-status"></div>
     </div>
 
-    <button class="btn-primary" id="btn-generate" disabled>Generate Image</button>
+    <button class="btn-primary" id="btn-generate">Generate Image</button>
 
     <div id="txt2img-results" class="results hidden">
       <h3 style="text-align:center; font-family:var(--mono); color:var(--text-dim); margin-bottom:12px;">Generated Image</h3>
-      <canvas id="canvas-generated" style="margin:0 auto;"></canvas>
+      <img id="img-generated" style="display:block; max-width:100%; border-radius:var(--radius); margin:0 auto;">
     </div>
 
     <div id="txt2img-error" class="results hidden">
@@ -84,7 +85,7 @@
 
     <div class="explainer-block">
       <h3>How it works</h3>
-      <p>A <strong>neural style transfer</strong> model separates the <em>content</em> (shapes, objects) from the <em>style</em> (colours, textures, brushstrokes) of two images, then recombines them. This uses the <strong>Magenta Arbitrary Style Transfer</strong> model (~10 MB).</p>
+      <p>A <strong>neural style transfer</strong> model separates the <em>content</em> (shapes, objects) from the <em>style</em> (colours, textures, brushstrokes) of two images, then recombines them. This uses the <strong>Magenta Arbitrary Style Transfer</strong> model (~10 MB) and runs entirely on your device.</p>
     </div>
 
     <div class="mirror-row">
@@ -139,7 +140,7 @@
 
     <div class="explainer-block" style="border-left-color:var(--green)">
       <h3 style="color:var(--green)">How it works</h3>
-      <p>This uses <strong>BLIP (vit-gpt2)</strong>, a vision-language model combining a <em>Vision Transformer</em> (to understand the image) with <em>GPT-2</em> (to generate text). The ~300 MB model downloads on first use — be patient! Once cached, it loads instantly.</p>
+      <p>This uses <strong>BLIP (vit-gpt2)</strong>, a vision-language model combining a <em>Vision Transformer</em> (to understand the image) with <em>GPT-2</em> (to generate text). The ~300 MB model downloads on first use and runs entirely in your browser. Once cached, it loads instantly.</p>
     </div>
 
     <div class="upload-area" id="upload-area-caption">
@@ -174,58 +175,15 @@
 
   <!-- Footer -->
   <footer>
-    <p class="mono">All processing happens on your device. No data leaves your browser.</p>
+    <p class="mono">Image-to-Image and Image-to-Text run on your device. Text-to-Image uses the HuggingFace Inference API.</p>
     <p>A workshop tool by Artificial Nouveau</p>
   </footer>
 
   <!-- Scripts -->
   <script src="js/app.js"></script>
 
-  <!-- Module scripts for dynamic imports (Transformers.js) -->
+  <!-- Module script for Transformers.js (Image-to-Text) -->
   <script type="module">
-    // Tab 1: Text-to-image via @huggingface/transformers (WebGPU)
-    window._loadTextToImagePipeline = async function(progressCallback) {
-      const { AutoTokenizer, CLIPTextModelWithProjection, AutoencoderKL, env } =
-        await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.1');
-
-      env.backends.onnx.wasm.proxy = false;
-
-      const modelId = 'schmuell/sd-turbo-ort-web';
-
-      progressCallback({ status: 'loading', name: 'tokenizer' });
-      const tokenizer = await AutoTokenizer.from_pretrained(modelId, {
-        progress_callback: progressCallback
-      });
-
-      progressCallback({ status: 'loading', name: 'text_encoder' });
-      const text_encoder = await CLIPTextModelWithProjection.from_pretrained(modelId, {
-        device: 'webgpu',
-        dtype: 'fp16',
-        subfolder: 'text_encoder',
-        progress_callback: progressCallback
-      });
-
-      progressCallback({ status: 'loading', name: 'vae_decoder' });
-      const vae_decoder = await AutoencoderKL.from_pretrained(modelId, {
-        device: 'webgpu',
-        dtype: 'fp16',
-        subfolder: 'vae_decoder',
-        progress_callback: progressCallback
-      });
-
-      // UNet loaded via ONNX Runtime directly for WebGPU
-      progressCallback({ status: 'loading', name: 'unet' });
-      const { InferenceSession, Tensor: OrtTensor } = await import('https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.1/dist/ort.webgpu.min.js');
-      const unetResponse = await fetch(`https://huggingface.co/${modelId}/resolve/main/unet/model.onnx`);
-      const unetBuffer = await unetResponse.arrayBuffer();
-      const unetSession = await InferenceSession.create(unetBuffer, {
-        executionProviders: ['webgpu']
-      });
-
-      return { tokenizer, text_encoder, vae_decoder, unetSession, OrtTensor };
-    };
-
-    // Tab 3: Image captioning via @xenova/transformers
     window._loadCaptionPipeline = async function(progressCallback) {
       const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
       const captioner = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning', {
