@@ -27,21 +27,57 @@
     <p class="subtitle">Everything runs on your device. No data is uploaded anywhere.</p>
   </header>
 
-  <!-- Step navigation -->
+  <!-- Tab navigation -->
   <nav id="step-nav">
-    <button class="step-tab active" data-step="1">1. Style Transfer</button>
-    <button class="step-tab" data-step="2">2. Teachable Machine</button>
-    <button class="step-tab" data-step="3">3. Body Tracking</button>
-    <button class="step-tab" data-step="4">4. Image Captioning</button>
-    <button class="step-tab" data-step="5">5. Text to Image</button>
-    <button class="step-tab" data-step="6">6. Depth Map</button>
-    <button class="step-tab" data-step="7">7. Segment Anything</button>
+    <button class="step-tab active" data-step="1">Text to Image</button>
+    <button class="step-tab" data-step="2">Image to Image</button>
+    <button class="step-tab" data-step="3">Image to Text</button>
   </nav>
 
-  <!-- ============ Step 1: Style Transfer (Image-to-Image) ============ -->
+  <!-- ============ Tab 1: Text to Image (Stable Diffusion) ============ -->
   <section id="step-1" class="step active">
     <div class="step-intro">
-      <h2>Neural Style Transfer</h2>
+      <h2>Text to Image</h2>
+      <span class="step-badge">Text → Image</span>
+      <p>Type a text prompt and a Stable Diffusion model will generate an image — running entirely in your browser using WebGPU.</p>
+    </div>
+
+    <div class="explainer-block" style="border-left-color:#c084fc">
+      <h3 style="color:#c084fc">How it works</h3>
+      <p><strong>Stable Diffusion</strong> is a <em>latent diffusion model</em> that starts from random noise and gradually removes it, guided by your text prompt. It uses a <strong>CLIP text encoder</strong> to understand the prompt, a <strong>UNet</strong> to denoise, and a <strong>VAE decoder</strong> to produce the final image. This requires <strong>WebGPU</strong> (Chrome 113+) and downloads ~1.7 GB on first use.</p>
+    </div>
+
+    <div id="txt2img-webgpu-warning" class="output-block mono hidden" style="border-left-color:var(--red); color:var(--red); margin-bottom:24px;">
+      WebGPU is not available in this browser. Please use Chrome 113+ or Edge 113+ to run text-to-image generation.
+    </div>
+
+    <textarea class="text-input" id="txt2img-prompt" placeholder="Describe the image you want to generate...">a photo of a cat wearing a tiny hat</textarea>
+
+    <div class="loading-bar" id="txt2img-loading">
+      <div class="loading-label">
+        <span id="txt2img-loading-text">Downloading Stable Diffusion<span class="loading-dots"></span></span>
+        <span id="txt2img-loading-pct"></span>
+      </div>
+      <div class="loading-track"><div class="loading-fill" id="txt2img-loading-fill"></div></div>
+      <div class="loading-steps" id="txt2img-loading-status"></div>
+    </div>
+
+    <button class="btn-primary" id="btn-generate" disabled>Generate Image</button>
+
+    <div id="txt2img-results" class="results hidden">
+      <h3 style="text-align:center; font-family:var(--mono); color:var(--text-dim); margin-bottom:12px;">Generated Image</h3>
+      <canvas id="canvas-generated" style="margin:0 auto;"></canvas>
+    </div>
+
+    <div id="txt2img-error" class="results hidden">
+      <div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="txt2img-error-text"></div>
+    </div>
+  </section>
+
+  <!-- ============ Tab 2: Image to Image (Style Transfer) ============ -->
+  <section id="step-2" class="step">
+    <div class="step-intro">
+      <h2>Image to Image</h2>
       <span class="step-badge">Image → Image</span>
       <p>Upload a content image and a style image. The neural network will blend the style onto your content — all in your browser.</p>
     </div>
@@ -76,112 +112,27 @@
       </div>
     </div>
 
-    <div class="loading-bar" id="step1-loading">
+    <div class="loading-bar" id="img2img-loading">
       <div class="loading-label">
         <span>Loading style transfer model<span class="loading-dots"></span></span>
-        <span id="step1-loading-pct"></span>
+        <span id="img2img-loading-pct"></span>
       </div>
-      <div class="loading-track"><div class="loading-fill" id="step1-loading-fill"></div></div>
-      <div class="loading-steps" id="step1-loading-status"></div>
+      <div class="loading-track"><div class="loading-fill" id="img2img-loading-fill"></div></div>
+      <div class="loading-steps" id="img2img-loading-status"></div>
     </div>
 
     <button class="btn-primary" id="btn-stylize" disabled>Stylize</button>
 
-    <div id="step1-results" class="results hidden">
+    <div id="img2img-results" class="results hidden">
       <h3 style="text-align:center; font-family:var(--mono); color:var(--text-dim); margin-bottom:12px;">Result</h3>
       <canvas id="canvas-result" style="margin:0 auto;"></canvas>
     </div>
   </section>
 
-  <!-- ============ Step 2: Teachable Machine ============ -->
-  <section id="step-2" class="step">
-    <div class="step-intro">
-      <h2>Teachable Machine</h2>
-      <span class="step-badge">Transfer Learning</span>
-      <p>Train your own image classifier in the browser. Add samples for up to 3 classes using your webcam, press Train, and watch the model learn.</p>
-    </div>
-
-    <div class="explainer-block">
-      <h3>How it works</h3>
-      <p><strong>Transfer learning</strong> takes a pre-trained MobileNet model (trained on millions of images) and adds your custom classes on top. Instead of training from scratch, it reuses learned features — making training fast and possible with just a few examples.</p>
-    </div>
-
-    <div class="webcam-container" id="step2-webcam-container">
-      <video id="step2-video" autoplay playsinline muted></video>
-    </div>
-
-    <div id="step2-controls" class="training-controls">
-      <div class="class-row">
-        <input type="text" class="class-name-input" id="class-name-0" value="Class 1" maxlength="20">
-        <button class="btn-secondary btn-sample" data-class="0">Add Sample (<span id="count-0">0</span>)</button>
-      </div>
-      <div class="class-row">
-        <input type="text" class="class-name-input" id="class-name-1" value="Class 2" maxlength="20">
-        <button class="btn-secondary btn-sample" data-class="1">Add Sample (<span id="count-1">0</span>)</button>
-      </div>
-      <div class="class-row">
-        <input type="text" class="class-name-input" id="class-name-2" value="Class 3" maxlength="20">
-        <button class="btn-secondary btn-sample" data-class="2">Add Sample (<span id="count-2">0</span>)</button>
-      </div>
-      <button class="btn-primary" id="btn-train" disabled>Train Model</button>
-    </div>
-
-    <div class="loading-bar" id="step2-loading">
-      <div class="loading-label">
-        <span id="step2-loading-text">Loading MobileNet<span class="loading-dots"></span></span>
-        <span id="step2-loading-pct"></span>
-      </div>
-      <div class="loading-track"><div class="loading-fill" id="step2-loading-fill"></div></div>
-      <div class="loading-steps" id="step2-loading-status"></div>
-    </div>
-
-    <div id="step2-predictions" class="results hidden">
-      <h3 style="font-family:var(--mono); color:var(--text-dim); margin-bottom:12px;">Live Predictions</h3>
-      <div id="step2-pred-bars"></div>
-    </div>
-  </section>
-
-  <!-- ============ Step 3: Hand & Face Tracking ============ -->
+  <!-- ============ Tab 3: Image to Text (Captioning) ============ -->
   <section id="step-3" class="step">
     <div class="step-intro">
-      <h2>Hand &amp; Face Tracking</h2>
-      <span class="step-badge">MediaPipe</span>
-      <p>Real-time hand skeleton (21 keypoints per hand) and face mesh (478 points) overlaid on your webcam feed.</p>
-    </div>
-
-    <div class="explainer-block" style="border-left-color:var(--yellow)">
-      <h3 style="color:var(--yellow)">How it works</h3>
-      <p><strong>MediaPipe</strong> uses specialised ML models to detect and track body landmarks in real-time. The <strong>Hand Landmarker</strong> finds 21 keypoints per hand, while the <strong>Face Landmarker</strong> maps 478 points across the face — all at 30+ FPS in your browser.</p>
-    </div>
-
-    <div class="toggle-row">
-      <button class="btn-toggle active" id="toggle-hands">Hands: ON</button>
-      <button class="btn-toggle active" id="toggle-face">Face: ON</button>
-    </div>
-
-    <div class="webcam-container" id="step3-webcam-container">
-      <video id="step3-video" autoplay playsinline muted></video>
-      <canvas id="step3-overlay" class="webcam-overlay"></canvas>
-    </div>
-
-    <div class="loading-bar" id="step3-loading">
-      <div class="loading-label">
-        <span>Loading tracking models<span class="loading-dots"></span></span>
-        <span id="step3-loading-pct"></span>
-      </div>
-      <div class="loading-track"><div class="loading-fill" id="step3-loading-fill"></div></div>
-      <div class="loading-steps" id="step3-loading-status"></div>
-    </div>
-
-    <div id="step3-info" class="model-info hidden">
-      <p><strong>Status:</strong> <em id="step3-status-text">Waiting for models...</em></p>
-    </div>
-  </section>
-
-  <!-- ============ Step 4: Image Captioning (Image-to-Text) ============ -->
-  <section id="step-4" class="step">
-    <div class="step-intro">
-      <h2>Image Captioning</h2>
+      <h2>Image to Text</h2>
       <span class="step-badge">Image → Text</span>
       <p>Upload any image and a vision-language model will describe what it sees — generating a natural language caption from pixels.</p>
     </div>
@@ -201,155 +152,23 @@
 
     <canvas id="canvas-caption" style="margin:0 auto 24px; display:none;"></canvas>
 
-    <div class="loading-bar" id="step4-loading">
+    <div class="loading-bar" id="img2txt-loading">
       <div class="loading-label">
         <span>Downloading captioning model<span class="loading-dots"></span></span>
-        <span id="step4-loading-pct"></span>
+        <span id="img2txt-loading-pct"></span>
       </div>
-      <div class="loading-track"><div class="loading-fill" id="step4-loading-fill"></div></div>
-      <div class="loading-steps" id="step4-loading-status"></div>
+      <div class="loading-track"><div class="loading-fill" id="img2txt-loading-fill"></div></div>
+      <div class="loading-steps" id="img2txt-loading-status"></div>
     </div>
 
-    <div id="step4-results" class="results hidden">
-      <div class="output-block mono" id="step4-caption">
+    <div id="img2txt-results" class="results hidden">
+      <div class="output-block mono" id="img2txt-caption">
         Caption will appear here...
       </div>
     </div>
 
-    <div id="step4-error" class="results hidden">
-      <div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="step4-error-text"></div>
-    </div>
-  </section>
-
-  <!-- ============ Step 5: Text to Image (Stable Diffusion) ============ -->
-  <section id="step-5" class="step">
-    <div class="step-intro">
-      <h2>Text to Image</h2>
-      <span class="step-badge">Text → Image</span>
-      <p>Type a text prompt and a Stable Diffusion model will generate an image — running entirely in your browser using WebGPU.</p>
-    </div>
-
-    <div class="explainer-block" style="border-left-color:#c084fc">
-      <h3 style="color:#c084fc">How it works</h3>
-      <p><strong>Stable Diffusion</strong> is a <em>latent diffusion model</em> that starts from random noise and gradually removes it, guided by your text prompt. It uses a <strong>CLIP text encoder</strong> to understand the prompt, a <strong>UNet</strong> to denoise, and a <strong>VAE decoder</strong> to produce the final image. This requires <strong>WebGPU</strong> (Chrome 113+) and downloads ~1.7 GB on first use.</p>
-    </div>
-
-    <div id="step5-webgpu-warning" class="output-block mono hidden" style="border-left-color:var(--red); color:var(--red); margin-bottom:24px;">
-      WebGPU is not available in this browser. Please use Chrome 113+ or Edge 113+ to run text-to-image generation.
-    </div>
-
-    <textarea class="text-input" id="step5-prompt" placeholder="Describe the image you want to generate..." disabled>a photo of a cat wearing a tiny hat</textarea>
-
-    <div class="loading-bar" id="step5-loading">
-      <div class="loading-label">
-        <span id="step5-loading-text">Downloading Stable Diffusion<span class="loading-dots"></span></span>
-        <span id="step5-loading-pct"></span>
-      </div>
-      <div class="loading-track"><div class="loading-fill" id="step5-loading-fill"></div></div>
-      <div class="loading-steps" id="step5-loading-status"></div>
-    </div>
-
-    <button class="btn-primary" id="btn-generate" disabled>Generate Image</button>
-
-    <div id="step5-results" class="results hidden">
-      <h3 style="text-align:center; font-family:var(--mono); color:var(--text-dim); margin-bottom:12px;">Generated Image</h3>
-      <canvas id="canvas-generated" style="margin:0 auto;"></canvas>
-    </div>
-
-    <div id="step5-error" class="results hidden">
-      <div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="step5-error-text"></div>
-    </div>
-  </section>
-
-  <!-- ============ Step 6: Depth Estimation ============ -->
-  <section id="step-6" class="step">
-    <div class="step-intro">
-      <h2>Depth Estimation</h2>
-      <span class="step-badge">Image → Depth</span>
-      <p>Upload a photo and a neural network will predict the depth of every pixel — turning a flat 2D image into a 3D depth map.</p>
-    </div>
-
-    <div class="explainer-block" style="border-left-color:#f472b6">
-      <h3 style="color:#f472b6">How it works</h3>
-      <p><strong>Depth Anything</strong> is a monocular depth estimation model — it predicts how far each pixel is from the camera using only a single image (no stereo pair needed). It uses a <em>Vision Transformer</em> trained on millions of images with depth labels. The ~100 MB model produces a dense depth map where brighter = closer.</p>
-    </div>
-
-    <div class="upload-area" id="upload-area-depth">
-      <label for="file-depth" class="upload-label">
-        <span class="upload-icon">+</span>
-        <span>Upload an image</span>
-      </label>
-      <input type="file" id="file-depth" accept="image/*">
-    </div>
-
-    <div class="loading-bar" id="step6-loading">
-      <div class="loading-label">
-        <span>Downloading depth model<span class="loading-dots"></span></span>
-        <span id="step6-loading-pct"></span>
-      </div>
-      <div class="loading-track"><div class="loading-fill" id="step6-loading-fill"></div></div>
-      <div class="loading-steps" id="step6-loading-status"></div>
-    </div>
-
-    <div id="step6-results" class="results hidden">
-      <div class="mirror-row">
-        <div class="mirror-card">
-          <h3>Original</h3>
-          <canvas id="canvas-depth-input"></canvas>
-        </div>
-        <div class="mirror-card">
-          <h3>Depth Map</h3>
-          <canvas id="canvas-depth-output"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div id="step6-error" class="results hidden">
-      <div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="step6-error-text"></div>
-    </div>
-  </section>
-
-  <!-- ============ Step 7: Segment Anything (SAM) ============ -->
-  <section id="step-7" class="step">
-    <div class="step-intro">
-      <h2>Segment Anything</h2>
-      <span class="step-badge">Click → Segment</span>
-      <p>Upload an image, then click on any object to segment it. The model identifies and highlights the object you clicked on.</p>
-    </div>
-
-    <div class="explainer-block" style="border-left-color:#fb923c">
-      <h3 style="color:#fb923c">How it works</h3>
-      <p><strong>SAM (Segment Anything Model)</strong> by Meta AI can segment any object in any image with a single click. It uses a <em>Vision Transformer</em> to encode the full image once, then a lightweight decoder to produce masks from click coordinates — making it fast for interactive use. The ~180 MB model downloads on first use.</p>
-    </div>
-
-    <div class="upload-area" id="upload-area-sam">
-      <label for="file-sam" class="upload-label">
-        <span class="upload-icon">+</span>
-        <span>Upload an image to segment</span>
-      </label>
-      <input type="file" id="file-sam" accept="image/*">
-    </div>
-
-    <div class="loading-bar" id="step7-loading">
-      <div class="loading-label">
-        <span>Downloading SAM model<span class="loading-dots"></span></span>
-        <span id="step7-loading-pct"></span>
-      </div>
-      <div class="loading-track"><div class="loading-fill" id="step7-loading-fill"></div></div>
-      <div class="loading-steps" id="step7-loading-status"></div>
-    </div>
-
-    <p id="step7-hint" class="description hidden" style="text-align:center; margin-bottom:12px;">Click on the image to segment an object. Click different spots to segment different things.</p>
-
-    <div id="step7-results" class="results hidden">
-      <div class="sam-canvas-wrap">
-        <canvas id="canvas-sam" class="sam-canvas"></canvas>
-        <canvas id="canvas-sam-overlay" class="sam-overlay"></canvas>
-      </div>
-    </div>
-
-    <div id="step7-error" class="results hidden">
-      <div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="step7-error-text"></div>
+    <div id="img2txt-error" class="results hidden">
+      <div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="img2txt-error-text"></div>
     </div>
   </section>
 
@@ -364,16 +183,7 @@
 
   <!-- Module scripts for dynamic imports (Transformers.js) -->
   <script type="module">
-    // Step 4: Image captioning via @xenova/transformers
-    window._loadCaptionPipeline = async function(progressCallback) {
-      const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-      const captioner = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning', {
-        progress_callback: progressCallback
-      });
-      return captioner;
-    };
-
-    // Step 5: Text-to-image via @huggingface/transformers (WebGPU)
+    // Tab 1: Text-to-image via @huggingface/transformers (WebGPU)
     window._loadTextToImagePipeline = async function(progressCallback) {
       const { AutoTokenizer, CLIPTextModelWithProjection, AutoencoderKL, env } =
         await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.1');
@@ -415,25 +225,13 @@
       return { tokenizer, text_encoder, vae_decoder, unetSession, OrtTensor };
     };
 
-    // Step 6: Depth estimation via @xenova/transformers
-    window._loadDepthPipeline = async function(progressCallback) {
+    // Tab 3: Image captioning via @xenova/transformers
+    window._loadCaptionPipeline = async function(progressCallback) {
       const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-      const depthEstimator = await pipeline('depth-estimation', 'Xenova/depth-anything-small-hf', {
+      const captioner = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning', {
         progress_callback: progressCallback
       });
-      return depthEstimator;
-    };
-
-    // Step 7: Segment Anything via @xenova/transformers
-    window._loadSAM = async function(progressCallback) {
-      const { SamModel, AutoProcessor, RawImage } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-      const model = await SamModel.from_pretrained('Xenova/samu2-hiera-tiny', {
-        progress_callback: progressCallback
-      });
-      const processor = await AutoProcessor.from_pretrained('Xenova/samu2-hiera-tiny', {
-        progress_callback: progressCallback
-      });
-      return { model, processor, RawImage };
+      return captioner;
     };
   </script>
 </body>
