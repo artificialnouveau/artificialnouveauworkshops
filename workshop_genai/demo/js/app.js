@@ -107,9 +107,10 @@ const TextToImage = {
         throw new Error('No image was returned. Please try again.');
       }
 
-      const imgBase64 = resultData.generations[0].img;
+      const imgSrc = resultData.generations[0].img;
       const imgEl = document.getElementById('img-generated');
-      imgEl.src = `data:image/webp;base64,${imgBase64}`;
+      // AI Horde returns either a URL or base64 string
+      imgEl.src = imgSrc.startsWith('http') ? imgSrc : `data:image/webp;base64,${imgSrc}`;
 
       fill.style.width = '100%';
       status.textContent = 'Done!';
