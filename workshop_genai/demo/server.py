@@ -54,22 +54,36 @@ def upload_data_uri(data_uri):
     return uploaded.urls["get"]
 
 
+def resolve_version(model_ref):
+    """Resolve a model reference to a version hash."""
+    if ":" in model_ref:
+        return model_ref.split(":")[1]
+    # Official model — look up latest version
+    model = replicate.models.get(model_ref)
+    return model.latest_version.id
+
+
+# Resolve all versions at startup so requests are fast
+print("Resolving model versions...")
+VERSIONS = {}
+for key, ref in MODELS.items():
+    try:
+        VERSIONS[key] = resolve_version(ref)
+        print(f"  {key}: {VERSIONS[key][:12]}...")
+    except Exception as e:
+        print(f"  {key}: FAILED — {e}")
+print("Done.\n")
+
+
 def start_prediction(model_key, model_input):
     """Start an async prediction and return its ID immediately."""
-    model_ref = MODELS[model_key]
-    if ":" in model_ref:
-        # Versioned model (community) — use version hash
-        version = model_ref.split(":")[1]
-        prediction = replicate.predictions.create(
-            version=version,
-            input=model_input,
-        )
-    else:
-        # Official model (no version) — use model parameter
-        prediction = replicate.predictions.create(
-            model=model_ref,
-            input=model_input,
-        )
+    version = VERSIONS.get(model_key)
+    if not version:
+        raise ValueError(f"Model {model_key} version not resolved")
+    prediction = replicate.predictions.create(
+        version=version,
+        input=model_input,
+    )
     return prediction.id
 
 
