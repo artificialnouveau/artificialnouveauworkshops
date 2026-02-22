@@ -1,11 +1,13 @@
 /**
- * app.js — 6-tab Generative AI Workshop (Replicate API via server proxy)
+ * app.js — 8-tab Generative AI Workshop (Replicate API via server proxy)
  *   Tab 1: Text to Image (FLUX-schnell)
  *   Tab 2: Image to Image (SDXL)
  *   Tab 3: Image to Text (BLIP)
  *   Tab 4: PhotoMaker (consistent characters)
  *   Tab 5: Image to 3D (Hunyuan3D-2)
  *   Tab 6: Text to 3D (Shap-E)
+ *   Tab 7: Face Swap (codeplugtech/face-swap)
+ *   Tab 8: Pose Transfer (ControlNet-Pose)
  *
  * All API calls use async polling to avoid Render's 30s timeout:
  *   1. POST to /api/<model> → returns { prediction_id }
@@ -609,6 +611,203 @@ const TextTo3D = {
 };
 
 /* ================================================================
+   TAB 7 — Face Swap (codeplugtech/face-swap via Replicate)
+   ================================================================ */
+const FaceSwap = {
+  sourceDataURI: null,
+  targetDataURI: null,
+
+  init() {
+    const srcInput = document.getElementById('file-faceswap-source');
+    const tgtInput = document.getElementById('file-faceswap-target');
+    document.getElementById('upload-area-faceswap-source').addEventListener('click', () => srcInput.click());
+    document.getElementById('upload-area-faceswap-target').addEventListener('click', () => tgtInput.click());
+    srcInput.addEventListener('change', e => this.handleUpload(e, 'source'));
+    tgtInput.addEventListener('change', e => this.handleUpload(e, 'target'));
+    document.getElementById('btn-faceswap').addEventListener('click', () => this.swap());
+  },
+
+  async handleUpload(e, which) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.showError(`"${file.name}" is not an image file.`);
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      this.showError(`"${file.name}" is too large. Please use an image under 20 MB.`);
+      return;
+    }
+    try {
+      const dataURI = await fileToDataURI(file);
+      const img = new Image();
+      img.onload = () => {
+        const canvasId = which === 'source' ? 'canvas-faceswap-source' : 'canvas-faceswap-target';
+        const areaId = which === 'source' ? 'upload-area-faceswap-source' : 'upload-area-faceswap-target';
+        const canvas = document.getElementById(canvasId);
+        App.drawToCanvas(canvas, img, 250);
+        canvas.style.display = 'block';
+        document.getElementById(areaId).classList.add('has-file');
+        if (which === 'source') this.sourceDataURI = dataURI;
+        else this.targetDataURI = dataURI;
+        if (this.sourceDataURI && this.targetDataURI) {
+          document.getElementById('btn-faceswap').disabled = false;
+        }
+      };
+      img.src = dataURI;
+      this.hideError();
+    } catch (err) {
+      this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
+    }
+  },
+
+  showError(msg) {
+    document.getElementById('faceswap-error-text').textContent = msg;
+    document.getElementById('faceswap-error').classList.remove('hidden');
+  },
+  hideError() {
+    document.getElementById('faceswap-error').classList.add('hidden');
+  },
+
+  async swap() {
+    const btn = document.getElementById('btn-faceswap');
+    if (!this.sourceDataURI || !this.targetDataURI) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Swapping...';
+    document.getElementById('faceswap-results').classList.add('hidden');
+    this.hideError();
+
+    const loadingEl = document.getElementById('faceswap-loading');
+    const fill = document.getElementById('faceswap-loading-fill');
+    const status = document.getElementById('faceswap-loading-status');
+    loadingEl.classList.add('visible');
+
+    try {
+      const output = await runPrediction(
+        '/api/faceswap',
+        { swap_image: this.sourceDataURI, target_image: this.targetDataURI },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
+
+      const resultUrl = Array.isArray(output) ? String(output[0]) : String(output);
+      if (!resultUrl) throw new Error('No image returned');
+
+      document.getElementById('faceswap-original').src = this.targetDataURI;
+      const outputEl = document.getElementById('faceswap-output');
+      outputEl.src = resultUrl;
+      outputEl.onload = () => {
+        setTimeout(() => loadingEl.classList.remove('visible'), 600);
+        document.getElementById('faceswap-results').classList.remove('hidden');
+      };
+    } catch (err) {
+      console.error('Face swap error:', err);
+      loadingEl.classList.remove('visible');
+      this.showError('Error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Swap Face';
+    }
+  }
+};
+
+/* ================================================================
+   TAB 8 — Pose Transfer (ControlNet-Pose via Replicate)
+   ================================================================ */
+const PoseTransfer = {
+  imageDataURI: null,
+
+  init() {
+    const fileInput = document.getElementById('file-pose');
+    const uploadArea = document.getElementById('upload-area-pose');
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => this.handleUpload(e));
+    document.getElementById('btn-pose').addEventListener('click', () => this.generate());
+  },
+
+  async handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.showError(`"${file.name}" is not an image file.`);
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      this.showError(`"${file.name}" is too large. Please use an image under 20 MB.`);
+      return;
+    }
+    try {
+      this.imageDataURI = await fileToDataURI(file);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.getElementById('canvas-pose-preview');
+        App.drawToCanvas(canvas, img, 400);
+        canvas.style.display = 'block';
+        document.getElementById('upload-area-pose').classList.add('has-file');
+        document.getElementById('btn-pose').disabled = false;
+      };
+      img.src = this.imageDataURI;
+      this.hideError();
+    } catch (err) {
+      this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
+    }
+  },
+
+  showError(msg) {
+    document.getElementById('pose-error-text').textContent = msg;
+    document.getElementById('pose-error').classList.remove('hidden');
+  },
+  hideError() {
+    document.getElementById('pose-error').classList.add('hidden');
+  },
+
+  async generate() {
+    const btn = document.getElementById('btn-pose');
+    const prompt = document.getElementById('pose-prompt').value.trim();
+
+    if (!this.imageDataURI) return;
+    if (!prompt) { this.showError('Please enter a prompt.'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    document.getElementById('pose-results').classList.add('hidden');
+    this.hideError();
+
+    const loadingEl = document.getElementById('pose-loading');
+    const fill = document.getElementById('pose-loading-fill');
+    const status = document.getElementById('pose-loading-status');
+    loadingEl.classList.add('visible');
+
+    try {
+      const output = await runPrediction(
+        '/api/pose',
+        { image: this.imageDataURI, prompt },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
+
+      const images = Array.isArray(output) ? output : [output];
+      if (images.length === 0) throw new Error('No image returned');
+
+      const outputEl = document.getElementById('pose-output');
+      outputEl.src = String(images[0]);
+      outputEl.onload = () => {
+        setTimeout(() => loadingEl.classList.remove('visible'), 600);
+        document.getElementById('pose-results').classList.remove('hidden');
+      };
+    } catch (err) {
+      console.error('Pose transfer error:', err);
+      loadingEl.classList.remove('visible');
+      this.showError('Error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate from Pose';
+    }
+  }
+};
+
+/* ================================================================
    APP — Main orchestration
    ================================================================ */
 const App = {
@@ -621,6 +820,8 @@ const App = {
     PhotoMaker.init();
     ImageTo3D.init();
     TextTo3D.init();
+    FaceSwap.init();
+    PoseTransfer.init();
     this.setupNav();
     this.hideLoader();
   },

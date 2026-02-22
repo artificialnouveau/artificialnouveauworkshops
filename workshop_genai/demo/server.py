@@ -55,6 +55,8 @@ MODELS = {
     "photomaker": "tencentarc/photomaker:ddfc2b08d209f9fa8c1eca692712918bd449f695dabb4a958da31802a9570fe4",
     "img3d": "tencent/hunyuan3d-2:b1b9449a1277e10402781c5d41eb30c0a0683504fb23fab591ca9dfc2aabe1cb",
     "txt3d": "cjwbw/shap-e:5957069d5c509126a73c7cb68abcddbb985aeefa4d318e7c63ec1352ce6da68c",
+    "faceswap": "codeplugtech/face-swap",
+    "pose": "jagilley/controlnet-pose",
 }
 
 
@@ -204,6 +206,47 @@ def txt3d():
     pred_id = start_prediction("txt3d", {
         "prompt": prompt, "batch_size": 1, "render_mode": "nerf",
         "render_size": 256, "guidance_scale": 15, "save_mesh": True,
+    })
+    return jsonify({"prediction_id": pred_id})
+
+
+@app.route("/api/faceswap", methods=["POST"])
+def faceswap():
+    body = request.get_json()
+    swap_image = body.get("swap_image")
+    target_image = body.get("target_image")
+
+    if not swap_image:
+        return jsonify({"error": "Source face image is required"}), 400
+    if not target_image:
+        return jsonify({"error": "Target image is required"}), 400
+
+    swap_url = upload_data_uri(swap_image)
+    target_url = upload_data_uri(target_image)
+    pred_id = start_prediction("faceswap", {
+        "swap_image": swap_url,
+        "input_image": target_url,
+    })
+    return jsonify({"prediction_id": pred_id})
+
+
+@app.route("/api/pose", methods=["POST"])
+def pose():
+    body = request.get_json()
+    image = body.get("image")
+    prompt = body.get("prompt", "").strip()
+
+    if not image:
+        return jsonify({"error": "Pose reference image is required"}), 400
+    if not prompt:
+        return jsonify({"error": "Prompt is required"}), 400
+
+    image_url = upload_data_uri(image)
+    pred_id = start_prediction("pose", {
+        "image": image_url,
+        "prompt": prompt,
+        "num_samples": "1",
+        "image_resolution": 512,
     })
     return jsonify({"prediction_id": pred_id})
 
