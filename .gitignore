@@ -2,3 +2,9 @@
 ~$*
 .DS_Store
 cream/
+
+# dura_bulk — images stay local, scripts/results are tracked
+dura_bulk/images/
+dura_bulk/downloads/
+dura_bulk/__pycache__/
+*.pyc
