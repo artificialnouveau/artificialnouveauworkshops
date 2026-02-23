@@ -24,7 +24,7 @@
   .status.error { color: #f44336; }
 
   .progress-wrap {
-    max-width: 500px; margin: 0 auto 1.5rem; height: 8px;
+    max-width: 600px; margin: 0 auto 1.5rem; height: 8px;
     background: #2a2d37; border-radius: 4px; overflow: hidden;
   }
   .progress-wrap.hidden { display: none; }
@@ -33,16 +33,30 @@
     transition: width 0.3s; width: 0%;
   }
 
-  /* Download form */
-  .download-form {
-    max-width: 600px; margin: 0 auto 2rem;
-    background: #1a1d27; border-radius: 10px; padding: 1.5rem;
+  /* Tabs */
+  .tabs {
+    display: flex; justify-content: center; gap: 0; margin-bottom: 0;
+    max-width: 600px; margin: 0 auto;
+  }
+  .tab {
+    flex: 1; padding: 0.8rem 1rem; text-align: center; cursor: pointer;
+    background: #1a1d27; color: #888; font-weight: 600; font-size: 0.95rem;
+    border: 1px solid #2a2d37; transition: all 0.2s;
+  }
+  .tab:first-child { border-radius: 10px 0 0 0; }
+  .tab:last-child { border-radius: 0 10px 0 0; }
+  .tab.active { background: #2a2d37; color: #fff; border-bottom-color: #2a2d37; }
+  .tab-content {
+    display: none; max-width: 600px; margin: 0 auto 2rem;
+    background: #2a2d37; border-radius: 0 0 10px 10px; padding: 1.5rem;
     border: 1px solid #2a2d37;
   }
-  .download-form h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #ccc; }
+  .tab-content.active { display: block; }
+
+  /* Form */
   .form-row { display: flex; gap: 0.8rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
   .form-group { flex: 1; min-width: 140px; }
-  .form-group label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 0.3rem; }
+  .form-group label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 0.3rem; }
   .form-group input {
     width: 100%; padding: 0.5rem 0.7rem; border: 1px solid #3a3d47;
     background: #0f1117; color: #e0e0e0; border-radius: 6px; font-size: 0.9rem;
@@ -58,12 +72,11 @@
   .btn.primary { background: #4a90d9; color: #fff; }
   .btn.primary:hover { background: #3a7bc8; }
   .btn.primary:disabled { background: #333; cursor: not-allowed; }
-  .btn.secondary { background: #2a2d37; color: #ccc; border: 1px solid #3a3d47; }
-  .btn.secondary:hover { background: #3a3d47; }
+  .btn.secondary { background: #1a1d27; color: #ccc; border: 1px solid #3a3d47; }
+  .btn.secondary:hover { background: #2a2d37; }
 
   /* Upload area */
   .drop-zone {
-    max-width: 500px; margin: 0 auto 1.5rem;
     border: 2px dashed #3a3d47; border-radius: 10px;
     padding: 1.5rem; text-align: center; color: #666;
     cursor: pointer; transition: border-color 0.2s, background 0.2s;
@@ -74,8 +87,8 @@
 
   /* Results */
   #results-section { display: none; max-width: 1200px; margin: 0 auto; }
-  .results-header { text-align: center; font-size: 1.1rem; margin-bottom: 1.5rem; color: #ccc; }
-  .results-source { text-align: center; font-size: 0.85rem; color: #666; margin-bottom: 1rem; }
+  .results-header { text-align: center; font-size: 1.1rem; margin-bottom: 0.5rem; color: #ccc; }
+  .results-source { text-align: center; font-size: 0.85rem; color: #666; margin-bottom: 1.5rem; }
   .columns { display: flex; gap: 2rem; }
   @media (max-width: 700px) { .columns { flex-direction: column; } }
   .column { flex: 1; }
@@ -92,6 +105,13 @@
   }
   .gallery img:hover { transform: scale(1.05); }
   .empty-msg { color: #666; font-style: italic; padding: 1rem 0; }
+  .dl-btn {
+    display: inline-block; padding: 0.5rem 1.2rem; font-size: 0.85rem;
+    background: #1a1d27; border-radius: 6px; text-decoration: none;
+    color: #e0e0e0; border: 1px solid #3a3d47; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .dl-btn:hover { background: #2a2d37; }
 
   /* Lightbox */
   .lightbox {
@@ -108,14 +128,19 @@
 <h1>Dura Bulk Detector</h1>
 <p class="subtitle">Detect boats with object detection + OCR for "Dura Bulk" text</p>
 
-<div id="status" class="status">Initializing...</div>
+<div id="status" class="status">Loading models...</div>
 <div id="progress-wrap" class="progress-wrap hidden">
   <div id="progress-bar" class="progress-bar"></div>
 </div>
 
-<!-- Download form: profile/hashtag, dates, max images -->
-<div class="download-form" id="download-form">
-  <h2>Download Images from Instagram</h2>
+<!-- Tabs: Download from Instagram vs Upload your own -->
+<div class="tabs">
+  <div class="tab active" data-tab="download">Download from Instagram</div>
+  <div class="tab" data-tab="upload">Upload Your Own</div>
+</div>
+
+<!-- Tab 1: Download form -->
+<div class="tab-content active" id="tab-download">
   <div class="form-row">
     <div class="form-group" style="flex: 2;">
       <label for="profile-input">Profile or #hashtag</label>
@@ -136,20 +161,24 @@
       <input type="date" id="end-date-input" value="2025-12-31">
     </div>
   </div>
-  <div style="text-align: center; margin-top: 0.8rem;">
+  <div style="text-align: center; margin-top: 1rem;">
     <button class="btn primary" id="download-btn">Download &amp; Analyze</button>
-    <p id="download-status" style="color: #888; font-size: 0.8rem; margin-top: 0.5rem;"></p>
   </div>
 </div>
 
-<div class="drop-zone" id="drop-zone">
-  <p>Or drag &amp; drop images here, or <label for="file-input" class="browse-link">browse</label></p>
-  <input type="file" id="file-input" accept="image/*" multiple>
+<!-- Tab 2: Upload / drag-drop -->
+<div class="tab-content" id="tab-upload">
+  <div class="drop-zone" id="drop-zone">
+    <p>Drag &amp; drop images here, or <label for="file-input" class="browse-link">browse</label></p>
+    <input type="file" id="file-input" accept="image/*" multiple>
+  </div>
+  <div style="text-align: center; margin-top: 1rem;">
+    <button class="btn primary" id="analyze-btn" disabled>Analyze in Browser</button>
+  </div>
 </div>
 
 <div class="controls">
-  <button class="btn primary" id="analyze-btn" disabled>Re-analyze in Browser</button>
-  <button class="btn secondary" id="clear-btn">Clear All</button>
+  <button class="btn secondary" id="clear-btn">Clear Results</button>
 </div>
 
 <div id="results-section">
@@ -159,10 +188,12 @@
     <div class="column">
       <h3 class="dura">Dura Bulk (<span id="dura-count">0</span>)</h3>
       <div class="gallery" id="dura-gallery"></div>
+      <a class="dl-btn" id="dl-dura" style="display:none;">Download ZIP</a>
     </div>
     <div class="column">
       <h3 class="non-dura">Other (<span id="non-dura-count">0</span>)</h3>
       <div class="gallery" id="non-dura-gallery"></div>
+      <a class="dl-btn" id="dl-non-dura" style="display:none;">Download ZIP</a>
     </div>
   </div>
 </div>
@@ -172,11 +203,21 @@
 </div>
 
 <script>
+// ============================================================
+// CONFIG: Set this to your Render deployment URL
+// When served by Flask (on Render), leave empty to use same origin.
+// When opened as a static file, set the full Render URL.
+// ============================================================
+const API_BASE = window.location.protocol === "file:"
+  ? "https://dura-bulk-detector.onrender.com"  // <-- UPDATE with your Render URL
+  : "";  // Same origin when served by Flask
+
 const statusEl = document.getElementById("status");
 const progressWrap = document.getElementById("progress-wrap");
 const progressBar = document.getElementById("progress-bar");
 const analyzeBtn = document.getElementById("analyze-btn");
 const clearBtn = document.getElementById("clear-btn");
+const downloadBtn = document.getElementById("download-btn");
 const dropZone = document.getElementById("drop-zone");
 const fileInput = document.getElementById("file-input");
 const resultsSection = document.getElementById("results-section");
@@ -188,13 +229,22 @@ const duraCountEl = document.getElementById("dura-count");
 const nonDuraCountEl = document.getElementById("non-dura-count");
 const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightbox-img");
-const downloadBtn = document.getElementById("download-btn");
-const downloadStatus = document.getElementById("download-status");
+const dlDura = document.getElementById("dl-dura");
+const dlNonDura = document.getElementById("dl-non-dura");
 
 let cocoModel = null;
 let ocrWorker = null;
 let allImages = []; // { img, src, name }
-let hasBackend = false;
+
+// --- Tabs ---
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+  });
+});
 
 function openLightbox(src) {
   lightboxImg.src = src;
@@ -211,45 +261,27 @@ function hideProgress() {
   progressBar.style.width = "0%";
 }
 
-// --- Check if Flask backend is running ---
-async function checkBackend() {
-  try {
-    const resp = await fetch("/api/status/ping", { signal: AbortSignal.timeout(2000) });
-    // Even a 404 means the server is there
-    hasBackend = true;
-  } catch {
-    hasBackend = false;
-  }
-  if (!hasBackend) {
-    downloadStatus.textContent = "Backend not running. Start with: python app.py";
-  }
-}
-
-// --- Download via Flask backend ---
+// ============================================================
+// DOWNLOAD TAB: Fetch from Instagram via backend API
+// ============================================================
 downloadBtn.addEventListener("click", async () => {
-  if (!hasBackend) {
-    downloadStatus.textContent = "Backend not running. Start with: python app.py";
-    downloadStatus.style.color = "#f44336";
-    return;
-  }
-
   const profile = document.getElementById("profile-input").value.trim().replace(/^[@#]/, "");
   const startDate = document.getElementById("start-date-input").value;
   const endDate = document.getElementById("end-date-input").value;
   const maxPosts = parseInt(document.getElementById("max-posts-input").value) || 100;
 
   if (!profile || !startDate || !endDate) {
-    downloadStatus.textContent = "Please fill in all fields.";
-    downloadStatus.style.color = "#f44336";
+    statusEl.textContent = "Please fill in all fields.";
+    statusEl.className = "status error";
     return;
   }
 
   downloadBtn.disabled = true;
-  downloadStatus.style.color = "#888";
-  downloadStatus.textContent = "Starting download...";
+  statusEl.textContent = "Starting download...";
+  statusEl.className = "status";
 
   try {
-    const resp = await fetch("/api/scrape", {
+    const resp = await fetch(API_BASE + "/api/scrape", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -261,55 +293,56 @@ downloadBtn.addEventListener("click", async () => {
     });
 
     if (!resp.ok) {
-      const err = await resp.json();
-      downloadStatus.textContent = `Error: ${err.error || "Request failed"}`;
-      downloadStatus.style.color = "#f44336";
+      const err = await resp.json().catch(() => ({}));
+      statusEl.textContent = `Error: ${err.error || "Request failed"}`;
+      statusEl.className = "status error";
       downloadBtn.disabled = false;
       return;
     }
 
     const { job_id } = await resp.json();
-
-    // Poll for status
-    const poll = setInterval(async () => {
-      try {
-        const statusResp = await fetch(`/api/status/${job_id}`);
-        const job = await statusResp.json();
-
-        downloadStatus.textContent = job.detail || job.step;
-
-        if (job.total > 0 && job.current > 0) {
-          showProgress(job.current / job.total);
-        }
-
-        if (job.step === "done") {
-          clearInterval(poll);
-          hideProgress();
-          downloadBtn.disabled = false;
-
-          if (job.results) {
-            displayBackendResults(job.results);
-          }
-        } else if (job.step === "error") {
-          clearInterval(poll);
-          hideProgress();
-          downloadStatus.style.color = "#f44336";
-          downloadBtn.disabled = false;
-        }
-      } catch {
-        clearInterval(poll);
-        downloadBtn.disabled = false;
-      }
-    }, 1500);
+    pollBackendJob(job_id);
 
   } catch (e) {
-    downloadStatus.textContent = `Error: ${e.message}`;
-    downloadStatus.style.color = "#f44336";
+    statusEl.textContent = `Could not connect to backend. Make sure the server is running.`;
+    statusEl.className = "status error";
     downloadBtn.disabled = false;
   }
 });
 
-// --- Display results from backend (app.py format) ---
+function pollBackendJob(jobId) {
+  const poll = setInterval(async () => {
+    try {
+      const resp = await fetch(API_BASE + `/api/status/${jobId}`);
+      const job = await resp.json();
+
+      statusEl.textContent = job.detail || job.step;
+      statusEl.className = "status";
+
+      if (job.total > 0 && job.current > 0) {
+        showProgress(job.current / job.total);
+      }
+
+      if (job.step === "done") {
+        clearInterval(poll);
+        hideProgress();
+        downloadBtn.disabled = false;
+        if (job.results) displayBackendResults(job.results);
+      } else if (job.step === "error") {
+        clearInterval(poll);
+        hideProgress();
+        statusEl.className = "status error";
+        downloadBtn.disabled = false;
+      }
+    } catch {
+      clearInterval(poll);
+      downloadBtn.disabled = false;
+      statusEl.textContent = "Lost connection to backend.";
+      statusEl.className = "status error";
+    }
+  }, 1500);
+}
+
 function displayBackendResults(results) {
   duraGallery.innerHTML = "";
   nonDuraGallery.innerHTML = "";
@@ -320,23 +353,21 @@ function displayBackendResults(results) {
   duraCountEl.textContent = duraFiles.length;
   nonDuraCountEl.textContent = nonDuraFiles.length;
   resultsSummary.textContent =
-    `${duraFiles.length + nonDuraFiles.length} images: ${duraFiles.length} with "Dura Bulk" detected, ${nonDuraFiles.length} other.`;
-  resultsSource.textContent = "Source: Flask backend (YOLOv8 + EasyOCR)";
+    `${duraFiles.length + nonDuraFiles.length} images: ${duraFiles.length} with "Dura Bulk", ${nonDuraFiles.length} other.`;
+  resultsSource.textContent = "Source: server-side analysis (YOLOv8 + EasyOCR)";
 
   duraFiles.forEach(name => {
     const img = document.createElement("img");
-    img.src = `/api/images/dura_bulk/${name}`;
-    img.alt = name;
-    img.loading = "lazy";
+    img.src = API_BASE + `/api/images/dura_bulk/${encodeURIComponent(name)}`;
+    img.alt = name; img.loading = "lazy";
     img.onclick = () => openLightbox(img.src);
     duraGallery.appendChild(img);
   });
 
   nonDuraFiles.forEach(name => {
     const img = document.createElement("img");
-    img.src = `/api/images/non_dura_bulk/${name}`;
-    img.alt = name;
-    img.loading = "lazy";
+    img.src = API_BASE + `/api/images/non_dura_bulk/${encodeURIComponent(name)}`;
+    img.alt = name; img.loading = "lazy";
     img.onclick = () => openLightbox(img.src);
     nonDuraGallery.appendChild(img);
   });
@@ -344,10 +375,19 @@ function displayBackendResults(results) {
   if (duraFiles.length === 0) duraGallery.innerHTML = '<p class="empty-msg">No matches found.</p>';
   if (nonDuraFiles.length === 0) nonDuraGallery.innerHTML = '<p class="empty-msg">No images.</p>';
 
+  dlDura.href = API_BASE + "/api/download/dura_bulk";
+  dlNonDura.href = API_BASE + "/api/download/non_dura_bulk";
+  dlDura.style.display = duraFiles.length > 0 ? "inline-block" : "none";
+  dlNonDura.style.display = nonDuraFiles.length > 0 ? "inline-block" : "none";
+
   resultsSection.style.display = "block";
   statusEl.textContent = `Done — ${duraFiles.length} Dura Bulk, ${nonDuraFiles.length} other.`;
   statusEl.classList.add("ready");
 }
+
+// ============================================================
+// UPLOAD TAB: Drag-drop + browser-based analysis
+// ============================================================
 
 // --- Display pre-computed results from results.json ---
 function displayPrecomputedResults(results) {
@@ -361,8 +401,8 @@ function displayPrecomputedResults(results) {
   duraCountEl.textContent = duraEntries.length;
   nonDuraCountEl.textContent = nonDuraEntries.length;
   resultsSummary.textContent =
-    `${entries.length} images: ${duraEntries.length} with "Dura Bulk" detected, ${nonDuraEntries.length} other.`;
-  resultsSource.textContent = "Source: pre-computed results.json (YOLOv8 + EasyOCR)";
+    `${entries.length} images: ${duraEntries.length} with "Dura Bulk", ${nonDuraEntries.length} other.`;
+  resultsSource.textContent = "Source: pre-computed results (YOLOv8 + EasyOCR)";
 
   duraEntries.forEach(([name]) => {
     const img = document.createElement("img");
@@ -387,10 +427,12 @@ function displayPrecomputedResults(results) {
   if (duraEntries.length === 0) duraGallery.innerHTML = '<p class="empty-msg">No matches found.</p>';
   if (nonDuraEntries.length === 0) nonDuraGallery.innerHTML = '<p class="empty-msg">No images.</p>';
 
+  dlDura.style.display = "none";
+  dlNonDura.style.display = "none";
   resultsSection.style.display = "block";
 }
 
-// --- Load models (for browser-based fallback) ---
+// --- Load models ---
 async function loadModels() {
   statusEl.textContent = "Loading COCO-SSD model...";
   cocoModel = await cocoSsd.load();
@@ -430,7 +472,6 @@ async function loadPresetImages() {
   }
 }
 
-// --- Try to load pre-computed results ---
 async function loadPrecomputedResults() {
   try {
     const resp = await fetch("./results.json");
@@ -439,7 +480,7 @@ async function loadPrecomputedResults() {
     if (Object.keys(results).length === 0) return false;
 
     displayPrecomputedResults(results);
-    statusEl.textContent = `Showing pre-computed results for ${Object.keys(results).length} images. Use "Re-analyze in Browser" to re-run.`;
+    statusEl.textContent = `Showing pre-computed results for ${Object.keys(results).length} images.`;
     statusEl.classList.add("ready");
     return true;
   } catch {
@@ -496,7 +537,7 @@ async function addFiles(files) {
   }
 
   hideProgress();
-  statusEl.textContent = `${allImages.length} images loaded. Click "Re-analyze in Browser" to detect.`;
+  statusEl.textContent = `${allImages.length} images loaded. Click "Analyze in Browser" to detect.`;
   statusEl.classList.add("ready");
   analyzeBtn.disabled = false;
 }
@@ -570,23 +611,19 @@ async function analyzeAll() {
   duraCountEl.textContent = duraResults.length;
   nonDuraCountEl.textContent = nonDuraResults.length;
   resultsSummary.textContent =
-    `${allImages.length} images: ${duraResults.length} with "Dura Bulk" detected, ${nonDuraResults.length} other.`;
+    `${allImages.length} images: ${duraResults.length} with "Dura Bulk", ${nonDuraResults.length} other.`;
   resultsSource.textContent = "Source: browser analysis (COCO-SSD + Tesseract.js)";
 
   duraResults.forEach(entry => {
     const img = document.createElement("img");
-    img.src = entry.src;
-    img.alt = entry.name;
-    img.loading = "lazy";
+    img.src = entry.src; img.alt = entry.name; img.loading = "lazy";
     img.onclick = () => openLightbox(entry.src);
     duraGallery.appendChild(img);
   });
 
   nonDuraResults.forEach(entry => {
     const img = document.createElement("img");
-    img.src = entry.src;
-    img.alt = entry.name;
-    img.loading = "lazy";
+    img.src = entry.src; img.alt = entry.name; img.loading = "lazy";
     img.onclick = () => openLightbox(entry.src);
     nonDuraGallery.appendChild(img);
   });
@@ -594,6 +631,8 @@ async function analyzeAll() {
   if (duraResults.length === 0) duraGallery.innerHTML = '<p class="empty-msg">No matches found.</p>';
   if (nonDuraResults.length === 0) nonDuraGallery.innerHTML = '<p class="empty-msg">No images.</p>';
 
+  dlDura.style.display = "none";
+  dlNonDura.style.display = "none";
   resultsSection.style.display = "block";
   statusEl.textContent = `Done — ${duraResults.length} Dura Bulk, ${nonDuraResults.length} other.`;
   statusEl.classList.add("ready");
@@ -607,15 +646,14 @@ clearBtn.addEventListener("click", () => {
   nonDuraGallery.innerHTML = "";
   resultsSection.style.display = "none";
   analyzeBtn.disabled = true;
-  statusEl.textContent = "Cleared. Upload images or reload to start again.";
+  dlDura.style.display = "none";
+  dlNonDura.style.display = "none";
+  statusEl.textContent = "Cleared.";
   statusEl.className = "status";
 });
 
 // --- Init ---
 async function init() {
-  // Check if backend is available
-  await checkBackend();
-
   // Try loading pre-computed results first
   const hasResults = await loadPrecomputedResults();
 
@@ -629,11 +667,11 @@ async function init() {
   if (allImages.length > 0) {
     analyzeBtn.disabled = false;
     if (!hasResults) {
-      statusEl.textContent = `${allImages.length} images loaded. Click "Re-analyze in Browser" to detect.`;
+      statusEl.textContent = `${allImages.length} images loaded. Click "Analyze in Browser" to detect.`;
       statusEl.classList.add("ready");
     }
   } else if (!hasResults) {
-    statusEl.textContent = "Models ready. Download images above, or drag & drop to get started.";
+    statusEl.textContent = "Ready. Download images from Instagram or upload your own.";
     statusEl.classList.add("ready");
   }
 }
