@@ -82,13 +82,20 @@ def resolve_version(model_ref):
 
 
 # Resolve all versions at startup so requests are fast
+# Official models (no colon) use the model parameter directly;
+# community models (with colon) use a pinned version hash.
 print("Resolving model versions...")
 VERSIONS = {}
+OFFICIAL = {}
 ERRORS = {}
 for key, ref in MODELS.items():
     try:
-        VERSIONS[key] = resolve_version(ref)
-        print(f"  {key}: {VERSIONS[key][:12]}...")
+        if ":" in ref:
+            VERSIONS[key] = resolve_version(ref)
+            print(f"  {key}: {VERSIONS[key][:12]}...")
+        else:
+            OFFICIAL[key] = ref
+            print(f"  {key}: official ({ref})")
     except Exception as e:
         ERRORS[key] = str(e)
         print(f"  {key}: FAILED — {e}")
@@ -97,6 +104,13 @@ print("Done.\n")
 
 def start_prediction(model_key, model_input):
     """Start an async prediction and return its ID immediately."""
+    if model_key in OFFICIAL:
+        prediction = replicate.predictions.create(
+            model=OFFICIAL[model_key],
+            input=model_input,
+        )
+        return prediction.id
+
     version = VERSIONS.get(model_key)
     if not version:
         err = ERRORS.get(model_key, "unknown error")
@@ -274,8 +288,8 @@ def get_prediction(prediction_id):
 def health():
     return jsonify({
         "status": "ok",
-        "version": 3,
-        "models_loaded": list(VERSIONS.keys()),
+        "version": 4,
+        "models_loaded": list(VERSIONS.keys()) + list(OFFICIAL.keys()),
         "models_failed": ERRORS,
     })
 
