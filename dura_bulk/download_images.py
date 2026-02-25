@@ -8,11 +8,17 @@ Usage:
     # Create a session first (one-time):
     python3 -m instaloader --login YOUR_USERNAME
 
+    # Set your username so you don't have to pass --login every time:
+    export INSTA_USERNAME=your_username  # add to ~/.zshrc to persist
+
     # Download by hashtag:
-    python3 download_images.py "#durabulk" --login YOUR_USERNAME --max 50
+    python3 download_images.py "#durabulk" --max 50
 
     # Download by profile:
-    python3 download_images.py "@durabulk" --login YOUR_USERNAME --max 50
+    python3 download_images.py "@durabulk" --max 50
+
+    # Or pass --login explicitly to override:
+    python3 download_images.py "#durabulk" --login OTHER_USERNAME --max 50
 """
 
 import argparse
@@ -33,14 +39,22 @@ def main():
     )
     parser.add_argument(
         "--login",
-        required=True,
-        help="Instagram username (must have a session file from: python3 -m instaloader --login USERNAME)",
+        default=os.environ.get("INSTA_USERNAME"),
+        help="Instagram username (default: $INSTA_USERNAME env var)",
     )
     parser.add_argument("--max", type=int, default=100, help="Max posts to download (default: 100)")
     parser.add_argument("--start", default="2025-01-01", help="Start date YYYY-MM-DD (default: 2025-01-01)")
     parser.add_argument("--end", default="2025-12-31", help="End date YYYY-MM-DD (default: 2025-12-31)")
     parser.add_argument("--output", default="images", help="Output directory (default: images)")
     args = parser.parse_args()
+
+    if not args.login:
+        print(
+            "ERROR: No Instagram username provided.\n"
+            "Either pass --login USERNAME or set the INSTA_USERNAME env var:\n"
+            "  export INSTA_USERNAME=your_username  # add to ~/.zshrc to persist"
+        )
+        return
 
     os.makedirs(args.output, exist_ok=True)
 
