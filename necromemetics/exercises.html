@@ -1016,7 +1016,7 @@ const FaceSwap = {
             });
           } catch (e2) {
             console.error('Could not load gallery image:', e2);
-            alert('Could not load this image. Please try uploading a custom target image instead.');
+            this.showError('Could not load this image. Please try uploading a custom target image instead.');
             return;
           }
         }
@@ -1026,25 +1026,39 @@ const FaceSwap = {
     });
 
     setupUploadArea('fs-source-area', 'fs-source-file', async (file) => {
-      this.sourceURI = await fileToDataURI(file);
-      const p = document.getElementById('fs-source-preview');
-      p.src = this.sourceURI;
-      p.classList.add('visible');
-      document.getElementById('fs-source-area').classList.add('has-file');
-      this.updateBtn();
+      try {
+        this.sourceURI = await fileToDataURI(file);
+        const p = document.getElementById('fs-source-preview');
+        p.src = this.sourceURI;
+        p.classList.add('visible');
+        document.getElementById('fs-source-area').classList.add('has-file');
+        this.updateBtn();
+      } catch (err) {
+        this.showError('Failed to load your photo: ' + err.message);
+      }
     });
 
     setupUploadArea('fs-custom-target-area', 'fs-custom-target-file', async (file) => {
-      this.targetURI = await fileToDataURI(file);
-      const p = document.getElementById('fs-custom-target-preview');
-      p.src = this.targetURI;
-      p.classList.add('visible');
-      document.getElementById('fs-custom-target-area').classList.add('has-file');
-      document.querySelectorAll('#fs-gallery .gallery-item').forEach(g => g.classList.remove('selected'));
-      this.updateBtn();
+      try {
+        this.targetURI = await fileToDataURI(file);
+        const p = document.getElementById('fs-custom-target-preview');
+        p.src = this.targetURI;
+        p.classList.add('visible');
+        document.getElementById('fs-custom-target-area').classList.add('has-file');
+        document.querySelectorAll('#fs-gallery .gallery-item').forEach(g => g.classList.remove('selected'));
+        this.updateBtn();
+      } catch (err) {
+        this.showError('Failed to load target image: ' + err.message);
+      }
     });
 
     document.getElementById('btn-faceswap').addEventListener('click', () => this.swap());
+  },
+
+  showError(msg) {
+    const errorEl = document.getElementById('fs-error');
+    errorEl.textContent = msg;
+    errorEl.classList.add('visible');
   },
 
   updateBtn() {
@@ -1093,7 +1107,8 @@ const FaceSwap = {
   }
 };
 
-tabInits['tab-faceswap'] = { init: () => FaceSwap.init(), done: false };
+// FaceSwap is the default active tab — init immediately
+FaceSwap.init();
 
 // ═══════════════════════════════════════════════════════════════════════
 // TAB 2: Deepfake Detector
