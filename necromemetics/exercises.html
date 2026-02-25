@@ -844,9 +844,8 @@ function loadScript(src) {
 function setupUploadArea(areaId, fileId, onFile) {
   const area = document.getElementById(areaId);
   const input = document.getElementById(fileId);
-  area.addEventListener('click', e => {
-    if (e.target !== input) input.click();
-  });
+  // The area is a <label> wrapping the <input>, so clicks natively trigger the file dialog.
+  // Do NOT add an extra input.click() — it causes a double-trigger that cancels the dialog.
   area.addEventListener('dragover', e => { e.preventDefault(); area.style.borderColor = 'var(--accent)'; });
   area.addEventListener('dragleave', () => { area.style.borderColor = ''; });
   area.addEventListener('drop', e => {
@@ -854,7 +853,10 @@ function setupUploadArea(areaId, fileId, onFile) {
     area.style.borderColor = '';
     if (e.dataTransfer.files.length) onFile(e.dataTransfer.files[0]);
   });
-  input.addEventListener('change', () => { if (input.files.length) onFile(input.files[0]); });
+  input.addEventListener('change', () => {
+    if (input.files.length) onFile(input.files[0]);
+    input.value = '';  // reset so re-uploading the same file triggers change
+  });
 }
 
 async function runPrediction(endpoint, body, onStatus, onProgress) {
