@@ -707,7 +707,7 @@ h1 {
         <img id="pose-face-img" style="max-height:200px; border-radius:var(--radius); border:1px solid #333;">
       </div>
 
-      <textarea class="text-input" id="pose-prompt" placeholder="Describe the pose or scene you want to generate..." style="width:100%; min-height:80px; background:var(--bg-card); border:1px solid #333; border-radius:var(--radius); color:var(--text); font-family:var(--sans); font-size:0.9rem; padding:12px; resize:vertical; margin-bottom:12px;">a photo of a person img, standing at a podium giving a speech, photorealistic</textarea>
+      <textarea class="text-input" id="pose-prompt" placeholder="Describe the pose or scene you want to generate..." style="width:100%; min-height:80px; background:var(--bg-card); border:1px solid #333; border-radius:var(--radius); color:var(--text); font-family:var(--sans); font-size:0.9rem; padding:12px; resize:vertical; margin-bottom:12px;">a person dancing in a red dress</textarea>
 
       <div style="margin-bottom:12px;">
         <label style="font-family:var(--mono); font-size:0.75rem; color:var(--text-dim);">Style:</label>
@@ -844,6 +844,9 @@ function loadScript(src) {
 function setupUploadArea(areaId, fileId, onFile) {
   const area = document.getElementById(areaId);
   const input = document.getElementById(fileId);
+  area.addEventListener('click', e => {
+    if (e.target !== input) input.click();
+  });
   area.addEventListener('dragover', e => { e.preventDefault(); area.style.borderColor = 'var(--accent)'; });
   area.addEventListener('dragleave', () => { area.style.borderColor = ''; });
   area.addEventListener('drop', e => {
@@ -982,10 +985,39 @@ const FaceSwap = {
       const el = document.createElement('div');
       el.className = 'gallery-item';
       el.textContent = fig.name;
-      el.addEventListener('click', () => {
+      el.addEventListener('click', async () => {
         document.querySelectorAll('#fs-gallery .gallery-item').forEach(g => g.classList.remove('selected'));
         el.classList.add('selected');
-        this.targetURI = fig.img;
+        // Convert external URL to data URI for the API
+        try {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = fig.img; });
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > 1024 || h > 1024) { const s = 1024 / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          this.targetURI = canvas.toDataURL('image/jpeg', 0.9);
+        } catch (e) {
+          // CORS blocked — fetch via proxy and convert to data URI
+          console.warn('CORS blocked, fetching via proxy...');
+          try {
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(fig.img)}`;
+            const resp = await fetch(proxyUrl);
+            const blob = await resp.blob();
+            this.targetURI = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+          } catch (e2) {
+            console.error('Could not load gallery image:', e2);
+            alert('Could not load this image. Please try uploading a custom target image instead.');
+            return;
+          }
+        }
         this.updateBtn();
       });
       gallery.appendChild(el);
