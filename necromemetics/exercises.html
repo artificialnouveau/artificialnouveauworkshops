@@ -1051,16 +1051,22 @@ const FaceSwap = {
         pct => { fill.style.width = pct + '%'; }
       );
 
-      const resultUrl = Array.isArray(output) ? String(output[0]) : String(output);
-      if (!resultUrl) throw new Error('No image returned');
+      const resultUrl = Array.isArray(output) ? output[0] : output;
+      if (!resultUrl || String(resultUrl) === 'undefined' || String(resultUrl) === 'null') {
+        throw new Error('No image was returned. The model may not have detected a face in one of the images.');
+      }
 
       document.getElementById('fs-result-original').src = this.targetDataURI;
       const outputEl = document.getElementById('fs-result-output');
-      outputEl.src = resultUrl;
       outputEl.onload = () => {
         setTimeout(() => loadingEl.classList.remove('visible'), 600);
         document.getElementById('fs-results').classList.add('visible');
       };
+      outputEl.onerror = () => {
+        loadingEl.classList.remove('visible');
+        this.showError('The generated image could not be loaded. Please try different photos.');
+      };
+      outputEl.src = String(resultUrl);
     } catch (err) {
       console.error('Face swap error:', err);
       loadingEl.classList.remove('visible');
