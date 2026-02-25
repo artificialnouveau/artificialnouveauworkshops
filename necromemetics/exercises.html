@@ -565,12 +565,12 @@ h1 {
       <div class="upload-row">
         <div>
           <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Your face</h4>
-          <label class="upload-area" id="fs-source-area">
+          <div class="upload-area" id="fs-source-area">
             <input type="file" id="fs-source-file" accept="image/*">
             <div class="upload-icon">&#x1f464;</div>
             <div class="upload-label">Upload your photo</div>
             <img id="fs-source-preview" class="upload-preview">
-          </label>
+          </div>
         </div>
         <div>
           <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Historical figure</h4>
@@ -578,11 +578,11 @@ h1 {
         </div>
       </div>
 
-      <label class="upload-area" id="fs-custom-target-area" style="margin-bottom:16px;">
+      <div class="upload-area" id="fs-custom-target-area" style="margin-bottom:16px;">
         <input type="file" id="fs-custom-target-file" accept="image/*">
         <div class="upload-label">...or upload a custom target image</div>
         <img id="fs-custom-target-preview" class="upload-preview">
-      </label>
+      </div>
 
       <button id="btn-faceswap" class="btn-primary btn-pink" disabled>Swap Face</button>
 
@@ -617,11 +617,11 @@ h1 {
       <h3>deepfake detector</h3>
       <p>Upload an image to run face detection, age/gender/expression analysis, and MobileNet classification. Then complete the forensic checklist.</p>
 
-      <label class="upload-area" id="detect-upload-area">
+      <div class="upload-area" id="detect-upload-area">
         <input type="file" id="detect-file" accept="image/*">
         <div class="upload-icon">&#x1f50d;</div>
         <div class="upload-label">Upload image to analyze</div>
-      </label>
+      </div>
 
       <div id="detect-loading" class="loading-bar">
         <span id="detect-loading-status">Loading models...</span>
@@ -672,11 +672,11 @@ h1 {
       <button id="btn-train-sentiment" class="btn-primary" style="background:var(--yellow); color:#000;" disabled>Train Classifier</button>
 
       <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 3: Classify a new image</h4>
-      <label class="upload-area" id="sent-test-area">
+      <div class="upload-area" id="sent-test-area">
         <input type="file" id="sent-test-file" accept="image/*">
         <div class="upload-icon">&#x1f9ea;</div>
         <div class="upload-label">Upload an image to classify</div>
-      </label>
+      </div>
 
       <div id="sent-test-results" class="results">
         <div style="text-align:center; margin:16px 0;">
@@ -697,11 +697,11 @@ h1 {
       <h3>pose the dead</h3>
       <p>Upload a photo of a deceased person, then describe a new pose or scene. PhotoMaker preserves their identity while generating them in new contexts.</p>
 
-      <label class="upload-area" id="pose-face-area">
+      <div class="upload-area" id="pose-face-area">
         <input type="file" id="pose-face-file" accept="image/*">
         <div class="upload-icon">&#x1f4f7;</div>
         <div class="upload-label">Upload a face photo of the person</div>
-      </label>
+      </div>
 
       <div id="pose-face-preview" style="text-align:center; margin-bottom:16px; display:none;">
         <img id="pose-face-img" style="max-height:200px; border-radius:var(--radius); border:1px solid #333;">
@@ -844,8 +844,7 @@ function loadScript(src) {
 function setupUploadArea(areaId, fileId, onFile) {
   const area = document.getElementById(areaId);
   const input = document.getElementById(fileId);
-  // The area is a <label> wrapping the <input>, so clicks natively trigger the file dialog.
-  // Do NOT add an extra input.click() — it causes a double-trigger that cancels the dialog.
+  area.addEventListener('click', () => input.click());
   area.addEventListener('dragover', e => { e.preventDefault(); area.style.borderColor = 'var(--accent)'; });
   area.addEventListener('dragleave', () => { area.style.borderColor = ''; });
   area.addEventListener('drop', e => {
@@ -855,7 +854,7 @@ function setupUploadArea(areaId, fileId, onFile) {
   });
   input.addEventListener('change', () => {
     if (input.files.length) onFile(input.files[0]);
-    input.value = '';  // reset so re-uploading the same file triggers change
+    input.value = '';
   });
 }
 
@@ -1365,16 +1364,18 @@ const Sentiment = {
           <h4 style="color:${cat.color}; margin:0;">${cat.name}</h4>
           ${!isDefault ? `<button onclick="Sentiment.removeCategory('${cat.id}')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.9rem;padding:0 2px;" title="Remove category">&times;</button>` : ''}
         </div>
-        <label class="upload-area" style="min-height:80px; margin-bottom:4px; padding:12px; cursor:pointer;">
+        <div class="upload-area" style="min-height:80px; margin-bottom:4px; padding:12px; cursor:pointer;">
           <input type="file" accept="image/*" multiple style="display:none;" data-bucket-cat="${cat.id}">
           <div class="upload-icon" style="font-size:1.2rem;">+</div>
           <div class="upload-label" style="font-size:0.7rem;">Upload images</div>
-        </label>
+        </div>
         <div class="bucket-images"></div>
         <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="bucket-count">${count} images</div>`;
 
-      // File input change handler
+      // File input + click handler
       const fileInput = bucket.querySelector('input[type="file"]');
+      const uploadArea = bucket.querySelector('.upload-area');
+      uploadArea.addEventListener('click', () => fileInput.click());
       fileInput.addEventListener('change', () => {
         [...fileInput.files].forEach(f => this.addImageToBucket(f, cat.id, bucket));
         fileInput.value = '';
