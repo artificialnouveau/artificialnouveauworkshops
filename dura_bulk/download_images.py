@@ -1,28 +1,48 @@
 #!/usr/bin/env python3
 """
-Download images from @durabulk on Instagram.
-Run this once locally before deploying the static site.
+Download images from Instagram by hashtag or profile.
 
 Usage:
-    pip install instaloader
-    python download_images.py
+    pip3 install instaloader
+
+    # Create a session first (one-time):
+    python3 -m instaloader --login YOUR_USERNAME
+
+    # Download by hashtag:
+    python3 download_images.py "#durabulk" --login YOUR_USERNAME --max 50
+
+    # Download by profile:
+    python3 download_images.py "@durabulk" --login YOUR_USERNAME --max 50
 """
 
+import argparse
 import instaloader
 import json
 import os
 import shutil
 from datetime import datetime
 
-PROFILE = "durabulk"
-OUTPUT_DIR = "images"
-MAX_POSTS = 100
-START_DATE = "2025-01-01"
-END_DATE = "2025-12-31"
-
 
 def main():
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    parser = argparse.ArgumentParser(
+        description="Download Instagram images by hashtag or profile."
+    )
+    parser.add_argument(
+        "target",
+        help='Hashtag (e.g. "#durabulk") or profile (e.g. "@durabulk")',
+    )
+    parser.add_argument(
+        "--login",
+        required=True,
+        help="Instagram username (must have a session file from: python3 -m instaloader --login USERNAME)",
+    )
+    parser.add_argument("--max", type=int, default=100, help="Max posts to download (default: 100)")
+    parser.add_argument("--start", default="2025-01-01", help="Start date YYYY-MM-DD (default: 2025-01-01)")
+    parser.add_argument("--end", default="2025-12-31", help="End date YYYY-MM-DD (default: 2025-12-31)")
+    parser.add_argument("--output", default="images", help="Output directory (default: images)")
+    args = parser.parse_args()
+
+    os.makedirs(args.output, exist_ok=True)
 
     L = instaloader.Instaloader(
         download_videos=False,
@@ -34,20 +54,43 @@ def main():
         post_metadata_txt_pattern="",
     )
 
-    # Optional: login for private profiles or higher rate limits
-    # L.login("your_username", "your_password")
+    # Load session file (created with: python3 -m instaloader --login USERNAME)
+    print(f"Loading session for @{args.login}...")
+    try:
+        L.load_session_from_file(args.login)
+        print("Session loaded successfully.")
+    except FileNotFoundError:
+        print(
+            f"ERROR: Session file not found for '{args.login}'.\n"
+            f"Create one first by running:\n"
+            f"  python3 -m instaloader --login {args.login}"
+        )
+        return
 
-    start_dt = datetime.strptime(START_DATE, "%Y-%m-%d")
-    end_dt = datetime.strptime(END_DATE, "%Y-%m-%d")
+    start_dt = datetime.strptime(args.start, "%Y-%m-%d")
+    end_dt = datetime.strptime(args.end, "%Y-%m-%d")
+    target = args.target.strip()
 
-    print(f"Fetching posts from @{PROFILE}...")
-    profile = instaloader.Profile.from_username(L.context, PROFILE)
+    # Determine if target is a hashtag or profile
+    if target.startswith("#"):
+        hashtag = target.lstrip("#")
+        print(f"Fetching posts from #{hashtag}...")
+        posts = instaloader.Hashtag.from_name(L.context, hashtag).get_posts()
+    elif target.startswith("@"):
+        profile_name = target.lstrip("@")
+        print(f"Fetching posts from @{profile_name}...")
+        profile = instaloader.Profile.from_username(L.context, profile_name)
+        posts = profile.get_posts()
+    else:
+        # Default to hashtag if no prefix
+        print(f"Fetching posts from #{target}...")
+        posts = instaloader.Hashtag.from_name(L.context, target).get_posts()
 
     image_files = []
     count = 0
 
-    for post in profile.get_posts():
-        if count >= MAX_POSTS:
+    for post in posts:
+        if count >= args.max:
             break
         post_date = post.date_utc
         if post_date.date() > end_dt.date():
@@ -58,7 +101,7 @@ def main():
             continue
 
         filename = f"{post.date_utc.strftime('%Y%m%d_%H%M%S')}_{post.shortcode}.jpg"
-        filepath = os.path.join(OUTPUT_DIR, filename)
+        filepath = os.path.join(args.output, filename)
 
         if not os.path.exists(filepath):
             try:
@@ -76,13 +119,13 @@ def main():
         if os.path.exists(filepath):
             image_files.append(filename)
             count += 1
-            print(f"  [{count}/{MAX_POSTS}] {filename}")
+            print(f"  [{count}/{args.max}] {filename}")
 
-    print(f"\nDownloaded {len(image_files)} images.")
+    print(f"\nDownloaded {len(image_files)} images to {args.output}/")
 
     # Generate image list JSON for the static site
     all_images = sorted(
-        f for f in os.listdir(OUTPUT_DIR)
+        f for f in os.listdir(args.output)
         if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
     )
 
