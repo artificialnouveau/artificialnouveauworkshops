@@ -587,7 +587,7 @@ h1 {
         <div class="loading-track"><div id="fs-loading-fill" class="loading-fill"></div></div>
       </div>
 
-      <div id="fs-results" class="results hidden">
+      <div id="fs-results" class="results">
         <div class="mirror-row">
           <div class="mirror-card">
             <h4>original</h4>
@@ -600,7 +600,7 @@ h1 {
         </div>
       </div>
 
-      <div id="fs-error" class="results hidden">
+      <div id="fs-error" style="display:none;">
         <div style="background:rgba(255,74,74,0.1); border:1px solid var(--red); border-radius:var(--radius); padding:12px 16px; font-family:var(--mono); font-size:0.8rem; color:var(--red);" id="fs-error-text"></div>
       </div>
     </div>
@@ -1023,10 +1023,10 @@ const FaceSwap = {
 
   showError(msg) {
     document.getElementById('fs-error-text').textContent = msg;
-    document.getElementById('fs-error').classList.remove('hidden');
+    document.getElementById('fs-error').style.display = 'block';
   },
   hideError() {
-    document.getElementById('fs-error').classList.add('hidden');
+    document.getElementById('fs-error').style.display = 'none';
   },
 
   async swap() {
@@ -1035,7 +1035,7 @@ const FaceSwap = {
 
     btn.disabled = true;
     btn.textContent = 'Swapping...';
-    document.getElementById('fs-results').classList.add('hidden');
+    document.getElementById('fs-results').classList.remove('visible');
     this.hideError();
 
     const loadingEl = document.getElementById('fs-loading');
@@ -1059,7 +1059,7 @@ const FaceSwap = {
       outputEl.src = resultUrl;
       outputEl.onload = () => {
         setTimeout(() => loadingEl.classList.remove('visible'), 600);
-        document.getElementById('fs-results').classList.remove('hidden');
+        document.getElementById('fs-results').classList.add('visible');
       };
     } catch (err) {
       console.error('Face swap error:', err);
