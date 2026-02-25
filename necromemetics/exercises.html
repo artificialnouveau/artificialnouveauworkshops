@@ -125,10 +125,7 @@ h1 {
 .upload-area.has-file { border-color: var(--green); border-style: solid; }
 
 .upload-area input[type="file"] {
-  position: absolute;
-  width: 0; height: 0;
-  opacity: 0;
-  pointer-events: none;
+  display: none;
 }
 
 .upload-icon {
@@ -560,28 +557,27 @@ h1 {
     <div class="card" style="border-left-color: var(--pink)">
       <span class="status-badge server">server-side</span>
       <h3>face of the dead</h3>
-      <p>Upload your face and pick a historical figure. The API will swap your face onto theirs.</p>
+      <p>Upload a source face and a target image. The model will swap your face onto theirs.</p>
 
-      <div class="upload-row">
-        <div>
-          <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Your face</h4>
-          <div class="upload-area" id="fs-source-area">
-            <input type="file" id="fs-source-file" accept="image/*">
-            <div class="upload-icon">&#x1f464;</div>
-            <div class="upload-label">Upload your photo</div>
-            <img id="fs-source-preview" class="upload-preview">
+      <div style="display:flex; gap:24px; flex-wrap:wrap; justify-content:center;">
+        <div style="flex:1; min-width:200px; max-width:300px;">
+          <p style="text-align:center; font-weight:600; margin-bottom:8px; font-family:var(--mono); font-size:0.85rem;">Source Face</p>
+          <div class="upload-area" id="upload-area-fs-source">
+            <div class="upload-icon">+</div>
+            <div class="upload-label">Upload source face</div>
+            <input type="file" id="file-fs-source" accept="image/*">
           </div>
+          <canvas id="canvas-fs-source" style="display:none; margin:8px auto 0; max-width:100%; border-radius:var(--radius);"></canvas>
         </div>
-        <div>
-          <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Historical figure</h4>
-          <div class="gallery-grid" id="fs-gallery"></div>
+        <div style="flex:1; min-width:200px; max-width:300px;">
+          <p style="text-align:center; font-weight:600; margin-bottom:8px; font-family:var(--mono); font-size:0.85rem;">Target Image</p>
+          <div class="upload-area" id="upload-area-fs-target">
+            <div class="upload-icon">+</div>
+            <div class="upload-label">Upload target image</div>
+            <input type="file" id="file-fs-target" accept="image/*">
+          </div>
+          <canvas id="canvas-fs-target" style="display:none; margin:8px auto 0; max-width:100%; border-radius:var(--radius);"></canvas>
         </div>
-      </div>
-
-      <div class="upload-area" id="fs-custom-target-area" style="margin-bottom:16px;">
-        <input type="file" id="fs-custom-target-file" accept="image/*">
-        <div class="upload-label">...or upload a custom target image</div>
-        <img id="fs-custom-target-preview" class="upload-preview">
       </div>
 
       <button id="btn-faceswap" class="btn-primary btn-pink" disabled>Swap Face</button>
@@ -591,19 +587,21 @@ h1 {
         <div class="loading-track"><div id="fs-loading-fill" class="loading-fill"></div></div>
       </div>
 
-      <div id="fs-error" class="error-msg"></div>
-
-      <div id="fs-results" class="results">
+      <div id="fs-results" class="results hidden">
         <div class="mirror-row">
           <div class="mirror-card">
             <h4>original</h4>
-            <img id="fs-result-original" class="result-img">
+            <img id="fs-result-original" style="max-width:100%; border-radius:var(--radius);">
           </div>
           <div class="mirror-card">
             <h4>swapped</h4>
-            <img id="fs-result-output" class="result-img">
+            <img id="fs-result-output" style="max-width:100%; border-radius:var(--radius);">
           </div>
         </div>
+      </div>
+
+      <div id="fs-error" class="results hidden">
+        <div style="background:rgba(255,74,74,0.1); border:1px solid var(--red); border-radius:var(--radius); padding:12px 16px; font-family:var(--mono); font-size:0.8rem; color:var(--red);" id="fs-error-text"></div>
       </div>
     </div>
   </div>
@@ -805,27 +803,22 @@ const API_BASE = window.location.hostname === 'localhost' || window.location.hos
 // ─── Shared Utilities ─────────────────────────────────────────────────
 function fileToDataURI(file, maxSize = 1024) {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('FileReader failed'));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('Image failed to load'));
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let w = img.width, h = img.height;
-        if (w > maxSize || h > maxSize) {
-          const scale = maxSize / Math.max(w, h);
-          w = Math.round(w * scale);
-          h = Math.round(h * scale);
-        }
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.9));
-      };
-      img.src = reader.result;
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        const scale = maxSize / Math.max(w, h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
     };
-    reader.readAsDataURL(file);
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
   });
 }
 
@@ -973,118 +966,87 @@ const Models = {
 // TAB 1: Face of the Dead
 // ═══════════════════════════════════════════════════════════════════════
 const FaceSwap = {
-  sourceURI: null,
-  targetURI: null,
-  figures: [
-    { name: 'MLK Jr.', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Martin_Luther_King_Jr_St_Paul_Campus_U_MN.jpg/220px-Martin_Luther_King_Jr_St_Paul_Campus_U_MN.jpg' },
-    { name: 'Frida Kahlo', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Frida_Kahlo%2C_by_Guillermo_Kahlo.jpg/220px-Frida_Kahlo%2C_by_Guillermo_Kahlo.jpg' },
-    { name: 'Einstein', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Albert_Einstein_Head.jpg/220px-Albert_Einstein_Head.jpg' },
-    { name: 'Cleopatra', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Kleopatra-VII.-Altes-Museum-Berlin1.jpg/220px-Kleopatra-VII.-Altes-Museum-Berlin1.jpg' },
-    { name: 'Tupac', img: 'https://upload.wikimedia.org/wikipedia/en/5/51/Tupac_Shakur.jpg' },
-    { name: 'Princess Diana', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Princess_Diana_Bristol_1987.jpg/220px-Princess_Diana_Bristol_1987.jpg' },
-  ],
+  sourceDataURI: null,
+  targetDataURI: null,
 
   init() {
-    const gallery = document.getElementById('fs-gallery');
-    this.figures.forEach((fig, i) => {
-      const el = document.createElement('div');
-      el.className = 'gallery-item';
-      el.textContent = fig.name;
-      el.addEventListener('click', async () => {
-        document.querySelectorAll('#fs-gallery .gallery-item').forEach(g => g.classList.remove('selected'));
-        el.classList.add('selected');
-        // Convert external URL to data URI for the API
-        try {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = fig.img; });
-          const canvas = document.createElement('canvas');
-          let w = img.width, h = img.height;
-          if (w > 1024 || h > 1024) { const s = 1024 / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          this.targetURI = canvas.toDataURL('image/jpeg', 0.9);
-        } catch (e) {
-          // CORS blocked — fetch via proxy and convert to data URI
-          console.warn('CORS blocked, fetching via proxy...');
-          try {
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(fig.img)}`;
-            const resp = await fetch(proxyUrl);
-            const blob = await resp.blob();
-            this.targetURI = await new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result);
-              reader.onerror = reject;
-              reader.readAsDataURL(blob);
-            });
-          } catch (e2) {
-            console.error('Could not load gallery image:', e2);
-            this.showError('Could not load this image. Please try uploading a custom target image instead.');
-            return;
-          }
-        }
-        this.updateBtn();
-      });
-      gallery.appendChild(el);
-    });
-
-    setupUploadArea('fs-source-area', 'fs-source-file', async (file) => {
-      try {
-        this.sourceURI = await fileToDataURI(file);
-        const p = document.getElementById('fs-source-preview');
-        p.src = this.sourceURI;
-        p.classList.add('visible');
-        document.getElementById('fs-source-area').classList.add('has-file');
-        this.updateBtn();
-      } catch (err) {
-        this.showError('Failed to load your photo: ' + err.message);
-      }
-    });
-
-    setupUploadArea('fs-custom-target-area', 'fs-custom-target-file', async (file) => {
-      try {
-        this.targetURI = await fileToDataURI(file);
-        const p = document.getElementById('fs-custom-target-preview');
-        p.src = this.targetURI;
-        p.classList.add('visible');
-        document.getElementById('fs-custom-target-area').classList.add('has-file');
-        document.querySelectorAll('#fs-gallery .gallery-item').forEach(g => g.classList.remove('selected'));
-        this.updateBtn();
-      } catch (err) {
-        this.showError('Failed to load target image: ' + err.message);
-      }
-    });
-
+    const srcInput = document.getElementById('file-fs-source');
+    const tgtInput = document.getElementById('file-fs-target');
+    document.getElementById('upload-area-fs-source').addEventListener('click', () => srcInput.click());
+    document.getElementById('upload-area-fs-target').addEventListener('click', () => tgtInput.click());
+    srcInput.addEventListener('change', e => this.handleUpload(e, 'source'));
+    tgtInput.addEventListener('change', e => this.handleUpload(e, 'target'));
     document.getElementById('btn-faceswap').addEventListener('click', () => this.swap());
   },
 
-  showError(msg) {
-    const errorEl = document.getElementById('fs-error');
-    errorEl.textContent = msg;
-    errorEl.classList.add('visible');
+  drawToCanvas(canvas, img, maxW) {
+    let w = img.width, h = img.height;
+    if (w > maxW) { const s = maxW / w; w = Math.round(w * s); h = Math.round(h * s); }
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
   },
 
-  updateBtn() {
-    document.getElementById('btn-faceswap').disabled = !(this.sourceURI && this.targetURI);
+  async handleUpload(e, which) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.showError(`"${file.name}" is not an image file.`);
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      this.showError(`"${file.name}" is too large. Please use an image under 20 MB.`);
+      return;
+    }
+    try {
+      const dataURI = await fileToDataURI(file);
+      const img = new Image();
+      img.onload = () => {
+        const canvasId = which === 'source' ? 'canvas-fs-source' : 'canvas-fs-target';
+        const areaId = which === 'source' ? 'upload-area-fs-source' : 'upload-area-fs-target';
+        const canvas = document.getElementById(canvasId);
+        this.drawToCanvas(canvas, img, 250);
+        canvas.style.display = 'block';
+        document.getElementById(areaId).classList.add('has-file');
+        if (which === 'source') this.sourceDataURI = dataURI;
+        else this.targetDataURI = dataURI;
+        if (this.sourceDataURI && this.targetDataURI) {
+          document.getElementById('btn-faceswap').disabled = false;
+        }
+      };
+      img.src = dataURI;
+      this.hideError();
+    } catch (err) {
+      this.showError(`Could not load "${file.name}". Try a JPG or PNG instead.`);
+    }
+  },
+
+  showError(msg) {
+    document.getElementById('fs-error-text').textContent = msg;
+    document.getElementById('fs-error').classList.remove('hidden');
+  },
+  hideError() {
+    document.getElementById('fs-error').classList.add('hidden');
   },
 
   async swap() {
     const btn = document.getElementById('btn-faceswap');
-    const loading = document.getElementById('fs-loading');
-    const fill = document.getElementById('fs-loading-fill');
-    const status = document.getElementById('fs-loading-status');
-    const errorEl = document.getElementById('fs-error');
-    const results = document.getElementById('fs-results');
+    if (!this.sourceDataURI || !this.targetDataURI) return;
 
     btn.disabled = true;
-    errorEl.classList.remove('visible');
-    results.classList.remove('visible');
-    loading.classList.add('visible');
+    btn.textContent = 'Swapping...';
+    document.getElementById('fs-results').classList.add('hidden');
+    this.hideError();
+
+    const loadingEl = document.getElementById('fs-loading');
+    const fill = document.getElementById('fs-loading-fill');
+    const status = document.getElementById('fs-loading-status');
+    loadingEl.classList.add('visible');
 
     try {
       const output = await runPrediction(
         '/api/faceswap',
-        { swap_image: this.sourceURI, target_image: this.targetURI },
+        { swap_image: this.sourceDataURI, target_image: this.targetDataURI },
         msg => { status.textContent = msg; },
         pct => { fill.style.width = pct + '%'; }
       );
@@ -1092,20 +1054,20 @@ const FaceSwap = {
       const resultUrl = Array.isArray(output) ? String(output[0]) : String(output);
       if (!resultUrl) throw new Error('No image returned');
 
-      document.getElementById('fs-result-original').src = this.targetURI;
+      document.getElementById('fs-result-original').src = this.targetDataURI;
       const outputEl = document.getElementById('fs-result-output');
       outputEl.src = resultUrl;
       outputEl.onload = () => {
-        loading.classList.remove('visible');
-        results.classList.add('visible');
+        setTimeout(() => loadingEl.classList.remove('visible'), 600);
+        document.getElementById('fs-results').classList.remove('hidden');
       };
     } catch (err) {
-      loading.classList.remove('visible');
-      console.error('FaceSwap error:', err);
-      errorEl.textContent = 'Error: ' + (err.message || String(err));
-      errorEl.classList.add('visible');
+      console.error('Face swap error:', err);
+      loadingEl.classList.remove('visible');
+      this.showError('Error: ' + err.message);
     } finally {
       btn.disabled = false;
+      btn.textContent = 'Swap Face';
     }
   }
 };
