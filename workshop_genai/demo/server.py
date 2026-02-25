@@ -61,9 +61,16 @@ MODELS = {
 
 
 def upload_data_uri(data_uri):
-    """Convert a data URI to a Replicate file upload URL."""
+    """Convert a data URI or URL to a Replicate file upload URL."""
+    # If it's already a URL (not a data URI), return it directly
+    if data_uri.startswith("http://") or data_uri.startswith("https://"):
+        return data_uri
+
+    if "," not in data_uri:
+        raise ValueError("Invalid image data: expected a data URI (data:image/...) or a URL")
+
     header, b64data = data_uri.split(",", 1)
-    mime = header.split(":")[1].split(";")[0]
+    mime = header.split(":")[1].split(";")[0] if ":" in header else "image/jpeg"
     ext = mime.split("/")[1].replace("jpeg", "jpg")
     raw = base64.b64decode(b64data)
     file_obj = io.BytesIO(raw)
