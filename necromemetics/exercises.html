@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Necromemetics Exercises</title>
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg-card: #141414;
+  --bg-hover: #1a1a1a;
+  --text: #e0e0e0;
+  --text-dim: #888;
+  --accent: #4a9eff;
+  --accent-glow: rgba(74, 158, 255, 0.15);
+  --green: #00ff66;
+  --red: #ff4a4a;
+  --yellow: #ffd94a;
+  --pink: #ff6ec7;
+  --purple: #a855f7;
+  --radius: 8px;
+  --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  margin-bottom: 24px;
+}
+
+.container { max-width: 900px; margin: 0 auto; }
+
+/* Tabs */
+#tab-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 12px 8px;
+  background: var(--bg-card);
+  border: 1px solid #222;
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.tab-btn:hover { background: var(--bg-hover); }
+
+.tab-btn.active {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 24px;
+  border-left: 3px solid var(--accent);
+  margin-bottom: 20px;
+}
+
+.card h3 {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.card p {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+/* Upload areas */
+.upload-area {
+  display: block;
+  border: 2px dashed #333;
+  border-radius: var(--radius);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.upload-area:hover { border-color: var(--accent); }
+.upload-area.has-file { border-color: var(--green); border-style: solid; }
+
+.upload-area input[type="file"] {
+  position: absolute;
+  width: 0; height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.upload-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid #333;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.upload-label {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.upload-preview {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: var(--radius);
+  margin-top: 12px;
+  display: none;
+}
+
+.upload-preview.visible { display: block; }
+
+/* Buttons */
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  color: #000;
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-secondary {
+  display: inline-block;
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover { background: var(--accent-glow); }
+
+.btn-green { background: var(--green); color: #000; }
+.btn-pink { background: var(--pink); color: #000; }
+.btn-purple { background: var(--purple); color: #fff; }
+
+/* Loading bar */
+.loading-bar {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--yellow);
+  display: none;
+  margin-bottom: 16px;
+}
+
+.loading-bar.visible { display: block; }
+
+.loading-track {
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.loading-fill {
+  height: 100%;
+  background: var(--yellow);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+/* Two-col layout */
+.upload-row, .mirror-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.mirror-card { text-align: center; }
+
+.mirror-card h4 {
+  font-size: 0.8rem;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.mirror-card img, .mirror-card canvas {
+  max-width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid #222;
+}
+
+/* Results */
+.results { display: none; }
+.results.visible { display: block; }
+
+.result-img {
+  max-width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid #222;
+}
+
+/* Error */
+.error-msg {
+  background: rgba(255, 74, 74, 0.1);
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--red);
+  display: none;
+  margin-bottom: 16px;
+}
+
+.error-msg.visible { display: block; }
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  margin-bottom: 12px;
+}
+
+.status-badge.client { background: rgba(0, 255, 102, 0.15); color: var(--green); }
+.status-badge.server { background: rgba(74, 158, 255, 0.15); color: var(--accent); }
+
+.hidden { display: none !important; }
+
+/* Quiz styles */
+.quiz-image-container {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.quiz-image-container img {
+  max-width: 100%;
+  max-height: 350px;
+  border-radius: var(--radius);
+  border: 1px solid #333;
+}
+
+.quiz-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.quiz-btn {
+  padding: 16px;
+  background: var(--bg-card);
+  border: 2px solid #333;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quiz-btn:hover { border-color: var(--accent); }
+.quiz-btn.correct { border-color: var(--green); background: rgba(0,255,102,0.1); }
+.quiz-btn.wrong { border-color: var(--red); background: rgba(255,74,74,0.1); }
+.quiz-btn:disabled { cursor: default; }
+
+.quiz-score {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.quiz-feedback {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  display: none;
+}
+
+.quiz-feedback.visible { display: block; }
+
+/* Gallery grid */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.gallery-item {
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  border: 2px solid #333;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 4px;
+}
+
+.gallery-item:hover { border-color: var(--accent); }
+.gallery-item.selected { border-color: var(--pink); border-width: 3px; }
+
+/* Checklist */
+.checklist { margin-bottom: 16px; }
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.checklist-item:hover { background: var(--bg-hover); }
+
+.checklist-item input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.checklist-item.user-added { border-left: 2px solid var(--pink); }
+
+/* Drag-drop buckets */
+.bucket-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.bucket {
+  background: var(--bg-card);
+  border: 2px dashed #333;
+  border-radius: var(--radius);
+  padding: 12px;
+  min-height: 150px;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.bucket.dragover {
+  border-color: var(--accent);
+  background: rgba(74, 158, 255, 0.05);
+}
+
+.bucket h4 {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.bucket-thumb {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin: 4px;
+  display: inline-block;
+}
+
+.drag-source-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+.drag-item {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius);
+  border: 1px solid #333;
+  cursor: grab;
+  object-fit: cover;
+}
+
+.drag-item:active { cursor: grabbing; }
+
+/* Confidence bars */
+.confidence-bars { margin-bottom: 16px; }
+
+.conf-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.conf-bar-label {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.conf-bar-track {
+  flex: 1;
+  height: 20px;
+  background: #222;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.conf-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: #000;
+  font-weight: 600;
+}
+
+/* Keypoint table */
+.kp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  margin-bottom: 16px;
+}
+
+.kp-table th, .kp-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #222;
+  text-align: left;
+}
+
+.kp-table th {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.kp-table td { color: var(--text); }
+
+.kp-table .higher { color: var(--green); }
+.kp-table .lower { color: var(--red); }
+
+/* Prompt input */
+.prompt-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid #333;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  padding: 12px;
+  resize: vertical;
+  min-height: 80px;
+  margin-bottom: 12px;
+}
+
+.prompt-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Canvas overlay container */
+.canvas-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.canvas-wrap canvas {
+  max-width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid #222;
+  display: block;
+}
+
+.canvas-wrap .overlay-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+/* Ethics gate */
+.ethics-gate {
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid var(--purple);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.ethics-gate h4 {
+  font-family: var(--mono);
+  color: var(--purple);
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.add-criteria-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.add-criteria-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid #333;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  padding: 8px 12px;
+}
+
+.add-criteria-input:focus {
+  outline: none;
+  border-color: var(--purple);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pulsing { animation: pulse 1.5s infinite; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .upload-row, .mirror-row { grid-template-columns: 1fr; }
+  .quiz-choices { grid-template-columns: 1fr; }
+  .bucket-row { grid-template-columns: 1fr; }
+  #tab-nav { gap: 4px; }
+  .tab-btn { min-width: 80px; font-size: 0.65rem; padding: 8px 4px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Necromemetics Exercises</h1>
+  <p class="subtitle">interactive tools for analyzing the memeification of the dead</p>
+
+  <!-- Tab navigation -->
+  <div id="tab-nav">
+    <button class="tab-btn active" data-tab="tab-quiz">1. Real or<br>Resurrected</button>
+    <button class="tab-btn" data-tab="tab-faceswap">2. Face of<br>the Dead</button>
+    <button class="tab-btn" data-tab="tab-detector">3. Deepfake<br>Detector</button>
+    <button class="tab-btn" data-tab="tab-sentiment">4. Sentiment<br>Autopsy</button>
+    <button class="tab-btn" data-tab="tab-pose">5. Pose<br>the Dead</button>
+    <button class="tab-btn" data-tab="tab-prompt">6. Prompt<br>Necromancy</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TAB 1: Real or Resurrected
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-quiz" class="tab-panel active">
+    <div class="card">
+      <span class="status-badge client">client-side</span>
+      <h3>real or resurrected?</h3>
+      <p>Can you tell a real photo from an AI-generated resurrection? Guess first, then see what MobileNet thinks.</p>
+
+      <div class="quiz-score" id="quiz-score">Round 1 / 10 &mdash; Score: 0</div>
+
+      <div class="quiz-image-container">
+        <img id="quiz-image" src="" alt="Quiz image">
+      </div>
+
+      <div class="quiz-choices" id="quiz-choices">
+        <button class="quiz-btn" data-answer="real" onclick="Quiz.guess('real')">Real Photo</button>
+        <button class="quiz-btn" data-answer="ai" onclick="Quiz.guess('ai')">AI Generated</button>
+      </div>
+
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+
+      <button class="btn-primary hidden" id="quiz-next" onclick="Quiz.next()">Next Image</button>
+      <div id="quiz-final" class="hidden" style="text-align:center; padding: 20px;">
+        <h3 style="color:var(--pink); font-family:var(--mono); margin-bottom:12px;" id="quiz-final-text"></h3>
+        <button class="btn-secondary" onclick="Quiz.restart()">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TAB 2: Face of the Dead
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-faceswap" class="tab-panel">
+    <div class="card" style="border-left-color: var(--pink)">
+      <span class="status-badge server">server-side</span>
+      <h3>face of the dead</h3>
+      <p>Upload your face and pick a historical figure. The API will swap your face onto theirs.</p>
+
+      <div class="upload-row">
+        <div>
+          <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Your face</h4>
+          <label class="upload-area" id="fs-source-area">
+            <input type="file" id="fs-source-file" accept="image/*">
+            <div class="upload-icon">&#x1f464;</div>
+            <div class="upload-label">Upload your photo</div>
+            <img id="fs-source-preview" class="upload-preview">
+          </label>
+        </div>
+        <div>
+          <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Historical figure</h4>
+          <div class="gallery-grid" id="fs-gallery"></div>
+        </div>
+      </div>
+
+      <label class="upload-area" id="fs-custom-target-area" style="margin-bottom:16px;">
+        <input type="file" id="fs-custom-target-file" accept="image/*">
+        <div class="upload-label">...or upload a custom target image</div>
+        <img id="fs-custom-target-preview" class="upload-preview">
+      </label>
+
+      <button id="btn-faceswap" class="btn-primary btn-pink" disabled>Swap Face</button>
+
+      <div id="fs-loading" class="loading-bar">
+        <span id="fs-loading-status">Submitting...</span>
+        <div class="loading-track"><div id="fs-loading-fill" class="loading-fill"></div></div>
+      </div>
+
+      <div id="fs-error" class="error-msg"></div>
+
+      <div id="fs-results" class="results">
+        <div class="mirror-row">
+          <div class="mirror-card">
+            <h4>original</h4>
+            <img id="fs-result-original" class="result-img">
+          </div>
+          <div class="mirror-card">
+            <h4>swapped</h4>
+            <img id="fs-result-output" class="result-img">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TAB 3: Deepfake Detector
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-detector" class="tab-panel">
+    <div class="card" style="border-left-color: var(--red)">
+      <span class="status-badge client">client-side</span>
+      <h3>deepfake detector</h3>
+      <p>Upload an image to run face detection, age/gender/expression analysis, and MobileNet classification. Then complete the forensic checklist.</p>
+
+      <label class="upload-area" id="detect-upload-area">
+        <input type="file" id="detect-file" accept="image/*">
+        <div class="upload-icon">&#x1f50d;</div>
+        <div class="upload-label">Upload image to analyze</div>
+      </label>
+
+      <div id="detect-loading" class="loading-bar">
+        <span id="detect-loading-status">Loading models...</span>
+        <div class="loading-track"><div id="detect-loading-fill" class="loading-fill"></div></div>
+      </div>
+
+      <div id="detect-results" class="results">
+        <div class="mirror-row" style="margin-bottom:16px;">
+          <div class="mirror-card">
+            <h4>annotated</h4>
+            <div class="canvas-wrap">
+              <canvas id="detect-canvas"></canvas>
+            </div>
+          </div>
+          <div class="mirror-card">
+            <h4>AI analysis</h4>
+            <div id="detect-analysis" style="text-align:left; font-size:0.8rem; font-family:var(--mono);"></div>
+          </div>
+        </div>
+
+        <h3 style="font-family:var(--mono); color:var(--text-dim); margin-bottom:12px;">Forensic Checklist</h3>
+        <div class="checklist" id="detect-checklist"></div>
+        <div id="detect-verdict" style="font-family:var(--mono); font-size:0.9rem; text-align:center; padding:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TAB 4: Sentiment Autopsy (Train Your Own)
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-sentiment" class="tab-panel">
+    <div class="card" style="border-left-color: var(--yellow)">
+      <span class="status-badge client">client-side</span>
+      <h3>sentiment autopsy &mdash; train your own classifier</h3>
+      <p>Drag images into three buckets to train a KNN classifier on MobileNet features. Then test it on new images.</p>
+
+      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 1: Add training images</h4>
+      <label class="upload-area" id="sent-train-area" style="margin-bottom:16px;">
+        <input type="file" id="sent-train-file" accept="image/*" multiple>
+        <div class="upload-icon">&#x1f4f7;</div>
+        <div class="upload-label">Upload images to sort into categories</div>
+      </label>
+
+      <div class="drag-source-area" id="sent-drag-source"></div>
+
+      <div class="bucket-row">
+        <div class="bucket" id="bucket-sincere" data-category="sincere">
+          <h4 style="color:var(--green);">Sincere Mourning</h4>
+          <div class="bucket-images"></div>
+          <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="bucket-count">0 images</div>
+        </div>
+        <div class="bucket" id="bucket-ironic" data-category="ironic">
+          <h4 style="color:var(--yellow);">Ironic Mockery</h4>
+          <div class="bucket-images"></div>
+          <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="bucket-count">0 images</div>
+        </div>
+        <div class="bucket" id="bucket-weaponized" data-category="weaponized">
+          <h4 style="color:var(--red);">Weaponized Propaganda</h4>
+          <div class="bucket-images"></div>
+          <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="bucket-count">0 images</div>
+        </div>
+      </div>
+
+      <div id="sent-train-status" style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); text-align:center; margin-bottom:16px;"></div>
+
+      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 2: Test your classifier</h4>
+      <label class="upload-area" id="sent-test-area">
+        <input type="file" id="sent-test-file" accept="image/*">
+        <div class="upload-icon">&#x1f9ea;</div>
+        <div class="upload-label">Upload a test image</div>
+      </label>
+
+      <div id="sent-test-results" class="results">
+        <div style="text-align:center; margin:16px 0;">
+          <img id="sent-test-img" style="max-height:200px; border-radius:var(--radius); border:1px solid #222;">
+        </div>
+        <div class="confidence-bars" id="sent-confidence"></div>
+        <div id="sent-prediction" style="font-family:var(--mono); font-size:1rem; text-align:center; padding:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TAB 5: Pose the Dead
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-pose" class="tab-panel">
+    <div class="card" style="border-left-color: var(--green)">
+      <span class="status-badge client">client-side</span>
+      <h3>pose the dead</h3>
+      <p>Upload a real photo and an AI-generated image side by side. MoveNet will overlay skeletons on both and compare keypoint confidence.</p>
+
+      <div class="upload-row">
+        <div>
+          <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Real photo</h4>
+          <label class="upload-area" id="pose-real-area">
+            <input type="file" id="pose-real-file" accept="image/*">
+            <div class="upload-icon">&#x1f4f7;</div>
+            <div class="upload-label">Upload real photo</div>
+          </label>
+        </div>
+        <div>
+          <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">AI-generated image</h4>
+          <label class="upload-area" id="pose-ai-area">
+            <input type="file" id="pose-ai-file" accept="image/*">
+            <div class="upload-icon">&#x1f916;</div>
+            <div class="upload-label">Upload AI image</div>
+          </label>
+        </div>
+      </div>
+
+      <button id="btn-pose" class="btn-primary btn-green" disabled>Analyze Poses</button>
+
+      <div id="pose-loading" class="loading-bar">
+        <span id="pose-loading-status">Loading MoveNet...</span>
+        <div class="loading-track"><div id="pose-loading-fill" class="loading-fill"></div></div>
+      </div>
+
+      <div id="pose-results" class="results">
+        <div class="mirror-row">
+          <div class="mirror-card">
+            <h4>Real photo</h4>
+            <div class="canvas-wrap">
+              <canvas id="pose-canvas-real"></canvas>
+            </div>
+          </div>
+          <div class="mirror-card">
+            <h4>AI-generated</h4>
+            <div class="canvas-wrap">
+              <canvas id="pose-canvas-ai"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Keypoint Confidence Comparison</h4>
+        <table class="kp-table" id="pose-kp-table">
+          <thead><tr><th>Keypoint</th><th>Real</th><th>AI</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TAB 6: Prompt Necromancy
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-prompt" class="tab-panel">
+    <div class="card" style="border-left-color: var(--purple)">
+      <span class="status-badge server">server-side</span>
+      <h3>prompt necromancy</h3>
+      <p>Before generating an image of the dead, you must build and complete an ethics checklist. What should we consider before digitally resurrecting someone?</p>
+
+      <div class="ethics-gate" id="ethics-gate">
+        <h4>Ethics Criteria</h4>
+        <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:12px;">Check each item you've considered. Add your own criteria using the field below. All items must be checked to unlock generation.</p>
+
+        <div class="checklist" id="ethics-checklist"></div>
+
+        <div class="add-criteria-row">
+          <input type="text" class="add-criteria-input" id="ethics-new-input" placeholder="Add your own ethical consideration...">
+          <button class="btn-secondary" onclick="PromptNecromancy.addCriteria()" style="white-space:nowrap;">+ Add</button>
+        </div>
+
+        <div id="ethics-progress" style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); text-align:center; margin-top:12px;"></div>
+      </div>
+
+      <textarea class="prompt-input" id="prompt-text" placeholder="Describe the image you want to generate... e.g. 'A photorealistic portrait of [historical figure] giving a TED talk in 2024'"></textarea>
+
+      <button id="btn-generate" class="btn-primary btn-purple" disabled>Complete Ethics Checklist to Unlock</button>
+
+      <div id="prompt-loading" class="loading-bar">
+        <span id="prompt-loading-status">Submitting...</span>
+        <div class="loading-track"><div id="prompt-loading-fill" class="loading-fill"></div></div>
+      </div>
+
+      <div id="prompt-error" class="error-msg"></div>
+
+      <div id="prompt-results" class="results">
+        <div class="mirror-row">
+          <div class="mirror-card">
+            <h4>generated image</h4>
+            <img id="prompt-output" class="result-img">
+          </div>
+          <div class="mirror-card">
+            <h4>ethics context</h4>
+            <div id="prompt-ethics-summary" style="text-align:left; font-size:0.8rem; font-family:var(--mono); color:var(--text-dim);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Config ───────────────────────────────────────────────────────────
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? ''
+  : 'https://genai-workshop-api.onrender.com';
+
+// ─── Shared Utilities ─────────────────────────────────────────────────
+function fileToDataURI(file, maxSize = 1024) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('FileReader failed'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Image failed to load'));
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxSize || h > maxSize) {
+          const scale = maxSize / Math.max(w, h);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.9));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) return resolve();
+    const s = document.createElement('script');
+    s.src = src;
+    s.crossOrigin = 'anonymous';
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Failed to load: ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+function setupUploadArea(areaId, fileId, onFile) {
+  const area = document.getElementById(areaId);
+  const input = document.getElementById(fileId);
+  area.addEventListener('dragover', e => { e.preventDefault(); area.style.borderColor = 'var(--accent)'; });
+  area.addEventListener('dragleave', () => { area.style.borderColor = ''; });
+  area.addEventListener('drop', e => {
+    e.preventDefault();
+    area.style.borderColor = '';
+    if (e.dataTransfer.files.length) onFile(e.dataTransfer.files[0]);
+  });
+  input.addEventListener('change', () => { if (input.files.length) onFile(input.files[0]); });
+}
+
+async function runPrediction(endpoint, body, onStatus, onProgress) {
+  onStatus('Submitting request...');
+  onProgress(10);
+
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  if (!data.prediction_id) throw new Error('No prediction ID returned');
+
+  const predId = data.prediction_id;
+  onStatus('Processing...');
+  onProgress(20);
+
+  const maxAttempts = 180;
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    const pollRes = await fetch(`${API_BASE}/api/prediction/${predId}`);
+    const pollData = await pollRes.json();
+
+    if (pollData.status === 'succeeded') {
+      onProgress(100);
+      onStatus('Done!');
+      return pollData.output;
+    }
+    if (pollData.status === 'failed') throw new Error(pollData.error || 'Prediction failed');
+
+    const pct = Math.min(20 + Math.round((i / maxAttempts) * 70), 90);
+    onProgress(pct);
+    onStatus(pollData.status === 'processing' ? 'Generating...' : 'Waiting for model...');
+  }
+  throw new Error('Timed out. Please try again.');
+}
+
+function imgToCanvas(imgEl, maxW = 400) {
+  const canvas = document.createElement('canvas');
+  let w = imgEl.naturalWidth || imgEl.width;
+  let h = imgEl.naturalHeight || imgEl.height;
+  if (w > maxW) { const s = maxW / w; w = Math.round(w * s); h = Math.round(h * s); }
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
+  return canvas;
+}
+
+// ─── Tab Switching ────────────────────────────────────────────────────
+const tabInits = {};
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    const tabId = btn.dataset.tab;
+    if (tabInits[tabId] && !tabInits[tabId].done) {
+      tabInits[tabId].init();
+      tabInits[tabId].done = true;
+    }
+  });
+});
+
+// ─── Lazy Model Cache ─────────────────────────────────────────────────
+const Models = {
+  _mobilenet: null,
+  _knn: null,
+  _blazeface: null,
+  _moveNet: null,
+
+  async mobilenet() {
+    if (this._mobilenet) return this._mobilenet;
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js');
+    this._mobilenet = await mobilenet.load({ version: 2, alpha: 1.0 });
+    return this._mobilenet;
+  },
+
+  async knnClassifier() {
+    if (this._knn) return this._knn;
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier@1.2.4/dist/knn-classifier.min.js');
+    this._knn = knnClassifier.create();
+    return this._knn;
+  },
+
+  async blazeface() {
+    if (this._blazeface) return this._blazeface;
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.js');
+    this._blazeface = await blazeface.load();
+    return this._blazeface;
+  },
+
+  async faceApi() {
+    await loadScript('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js');
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+    ]);
+  },
+
+  async moveNet() {
+    if (this._moveNet) return this._moveNet;
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js');
+    this._moveNet = await poseDetection.createDetector(
+      poseDetection.SupportedModels.MoveNet,
+      { modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER }
+    );
+    return this._moveNet;
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// TAB 1: Real or Resurrected
+// ═══════════════════════════════════════════════════════════════════════
+const Quiz = {
+  rounds: [
+    { img: 'harambe_zoo.jpg', answer: 'real', name: 'Harambe at Cincinnati Zoo', context: 'Original photo from 2016 before the incident.' },
+    { img: 'harambe_candle.webp', answer: 'ai', name: 'Harambe memorial candle', context: 'AI-generated memorial imagery that recontextualizes the animal as a saint-like figure.' },
+    { img: 'gfck.jpeg', answer: 'ai', name: 'George Floyd AI portrait', context: 'AI-generated reimagining. Note the smoothed features and idealized lighting.' },
+    { img: 'gfck2.jpeg', answer: 'ai', name: 'George Floyd AI alt', context: 'Another AI generation. Look for telltale signs in the background and skin texture.' },
+    { img: 'gfck3.jpeg', answer: 'ai', name: 'George Floyd AI memorial', context: 'AI-generated scene. The composition and lighting feel too "perfect."' },
+    { img: 'gfck4.jpeg', answer: 'ai', name: 'George Floyd AI reimagining', context: 'AI-generated. Notice how the background details blur in unnatural ways.' },
+    { img: 'bernice_king_sexyyred.jpeg', answer: 'real', name: 'Bernice King and Sexyy Red', context: 'Real photograph documenting an actual cultural moment.' },
+    { img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Martin_Luther_King_Jr_St_Paul_Campus_U_MN.jpg/440px-Martin_Luther_King_Jr_St_Paul_Campus_U_MN.jpg', answer: 'real', name: 'Martin Luther King Jr.', context: 'Historical photograph from the 1960s.' },
+    { img: 'https://upload.wikimedia.org/wikipedia/en/6/6e/Paul_Walker_poster.jpg', answer: 'real', name: 'Paul Walker', context: 'Real promotional photograph of the actor.' },
+    { img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Camponotus_flavomarginatus_ant.jpg/440px-Camponotus_flavomarginatus_ant.jpg', answer: 'real', name: 'Nature photo (control)', context: 'A real nature photograph used as a control round.' },
+  ],
+  current: 0,
+  score: 0,
+  shuffled: [],
+  mobilenetModel: null,
+
+  async init() {
+    this.shuffled = [...this.rounds].sort(() => Math.random() - 0.5);
+    this.current = 0;
+    this.score = 0;
+    this.show();
+  },
+
+  show() {
+    const round = this.shuffled[this.current];
+    const imgEl = document.getElementById('quiz-image');
+    imgEl.src = round.img.startsWith('http') ? round.img : round.img;
+    document.getElementById('quiz-score').textContent = `Round ${this.current + 1} / ${this.shuffled.length} \u2014 Score: ${this.score}`;
+    document.getElementById('quiz-feedback').classList.remove('visible');
+    document.getElementById('quiz-next').classList.add('hidden');
+    document.querySelectorAll('.quiz-btn').forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct', 'wrong');
+    });
+  },
+
+  async guess(answer) {
+    const round = this.shuffled[this.current];
+    const correct = answer === round.answer;
+    if (correct) this.score++;
+
+    document.querySelectorAll('.quiz-btn').forEach(b => {
+      b.disabled = true;
+      if (b.dataset.answer === round.answer) b.classList.add('correct');
+      else b.classList.add('wrong');
+    });
+
+    let mobilenetText = '';
+    try {
+      if (!this.mobilenetModel) this.mobilenetModel = await Models.mobilenet();
+      const imgEl = document.getElementById('quiz-image');
+      const preds = await this.mobilenetModel.classify(imgEl, 3);
+      mobilenetText = '<br><br><strong style="color:var(--accent);">MobileNet sees:</strong> ' +
+        preds.map(p => `${p.className} (${(p.probability * 100).toFixed(1)}%)`).join(', ');
+    } catch (e) {
+      mobilenetText = '<br><br><em style="color:var(--text-dim);">MobileNet analysis unavailable</em>';
+    }
+
+    const fb = document.getElementById('quiz-feedback');
+    fb.innerHTML = `<strong style="color:${correct ? 'var(--green)' : 'var(--red)'};">${correct ? 'Correct!' : 'Wrong!'}</strong>
+      This is <strong>${round.answer === 'real' ? 'a real photo' : 'AI-generated'}</strong>: ${round.name}.
+      <br>${round.context}${mobilenetText}`;
+    fb.classList.add('visible');
+
+    document.getElementById('quiz-score').textContent = `Round ${this.current + 1} / ${this.shuffled.length} \u2014 Score: ${this.score}`;
+
+    if (this.current < this.shuffled.length - 1) {
+      document.getElementById('quiz-next').classList.remove('hidden');
+    } else {
+      document.getElementById('quiz-final-text').textContent = `Final Score: ${this.score} / ${this.shuffled.length}`;
+      document.getElementById('quiz-final').classList.remove('hidden');
+    }
+  },
+
+  next() {
+    this.current++;
+    this.show();
+  },
+
+  restart() {
+    document.getElementById('quiz-final').classList.add('hidden');
+    this.init();
+  }
+};
+
+// Init quiz immediately
+Quiz.init();
+
+// ═══════════════════════════════════════════════════════════════════════
+// TAB 2: Face of the Dead
+// ═══════════════════════════════════════════════════════════════════════
+const FaceSwap = {
+  sourceURI: null,
+  targetURI: null,
+  figures: [
+    { name: 'MLK Jr.', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Martin_Luther_King_Jr_St_Paul_Campus_U_MN.jpg/220px-Martin_Luther_King_Jr_St_Paul_Campus_U_MN.jpg' },
+    { name: 'Frida Kahlo', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Frida_Kahlo%2C_by_Guillermo_Kahlo.jpg/220px-Frida_Kahlo%2C_by_Guillermo_Kahlo.jpg' },
+    { name: 'Einstein', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Albert_Einstein_Head.jpg/220px-Albert_Einstein_Head.jpg' },
+    { name: 'Cleopatra', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Kleopatra-VII.-Altes-Museum-Berlin1.jpg/220px-Kleopatra-VII.-Altes-Museum-Berlin1.jpg' },
+    { name: 'Tupac', img: 'https://upload.wikimedia.org/wikipedia/en/5/51/Tupac_Shakur.jpg' },
+    { name: 'Princess Diana', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Princess_Diana_Bristol_1987.jpg/220px-Princess_Diana_Bristol_1987.jpg' },
+  ],
+
+  init() {
+    const gallery = document.getElementById('fs-gallery');
+    this.figures.forEach((fig, i) => {
+      const el = document.createElement('div');
+      el.className = 'gallery-item';
+      el.textContent = fig.name;
+      el.addEventListener('click', () => {
+        document.querySelectorAll('#fs-gallery .gallery-item').forEach(g => g.classList.remove('selected'));
+        el.classList.add('selected');
+        this.targetURI = fig.img;
+        this.updateBtn();
+      });
+      gallery.appendChild(el);
+    });
+
+    setupUploadArea('fs-source-area', 'fs-source-file', async (file) => {
+      this.sourceURI = await fileToDataURI(file);
+      const p = document.getElementById('fs-source-preview');
+      p.src = this.sourceURI;
+      p.classList.add('visible');
+      document.getElementById('fs-source-area').classList.add('has-file');
+      this.updateBtn();
+    });
+
+    setupUploadArea('fs-custom-target-area', 'fs-custom-target-file', async (file) => {
+      this.targetURI = await fileToDataURI(file);
+      const p = document.getElementById('fs-custom-target-preview');
+      p.src = this.targetURI;
+      p.classList.add('visible');
+      document.getElementById('fs-custom-target-area').classList.add('has-file');
+      document.querySelectorAll('#fs-gallery .gallery-item').forEach(g => g.classList.remove('selected'));
+      this.updateBtn();
+    });
+
+    document.getElementById('btn-faceswap').addEventListener('click', () => this.swap());
+  },
+
+  updateBtn() {
+    document.getElementById('btn-faceswap').disabled = !(this.sourceURI && this.targetURI);
+  },
+
+  async swap() {
+    const btn = document.getElementById('btn-faceswap');
+    const loading = document.getElementById('fs-loading');
+    const fill = document.getElementById('fs-loading-fill');
+    const status = document.getElementById('fs-loading-status');
+    const errorEl = document.getElementById('fs-error');
+    const results = document.getElementById('fs-results');
+
+    btn.disabled = true;
+    errorEl.classList.remove('visible');
+    results.classList.remove('visible');
+    loading.classList.add('visible');
+
+    try {
+      const output = await runPrediction(
+        '/api/faceswap',
+        { swap_image: this.sourceURI, target_image: this.targetURI },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
+
+      const resultUrl = Array.isArray(output) ? String(output[0]) : String(output);
+      if (!resultUrl) throw new Error('No image returned');
+
+      document.getElementById('fs-result-original').src = this.targetURI;
+      const outputEl = document.getElementById('fs-result-output');
+      outputEl.src = resultUrl;
+      outputEl.onload = () => {
+        loading.classList.remove('visible');
+        results.classList.add('visible');
+      };
+    } catch (err) {
+      loading.classList.remove('visible');
+      errorEl.textContent = 'Error: ' + err.message;
+      errorEl.classList.add('visible');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+};
+
+tabInits['tab-faceswap'] = { init: () => FaceSwap.init(), done: false };
+
+// ═══════════════════════════════════════════════════════════════════════
+// TAB 3: Deepfake Detector
+// ═══════════════════════════════════════════════════════════════════════
+const Detector = {
+  FORENSIC_ITEMS: [
+    'Are the ears symmetric and detailed?',
+    'Do the eyes have consistent reflections?',
+    'Is the hair-to-skin boundary natural?',
+    'Are teeth and gums rendered correctly?',
+    'Does the background contain artifacts or warping?',
+    'Are fingers and hands anatomically correct?',
+    'Is the lighting consistent across the face?',
+    'Are there any blurred or smudged regions?',
+    'Does the skin texture look uniform or waxy?',
+    'Are there metadata inconsistencies (EXIF, resolution)?',
+  ],
+
+  init() {
+    const checklist = document.getElementById('detect-checklist');
+    this.FORENSIC_ITEMS.forEach((item, i) => {
+      const el = document.createElement('label');
+      el.className = 'checklist-item';
+      el.innerHTML = `<input type="checkbox" data-idx="${i}"> <span>${item}</span>`;
+      el.querySelector('input').addEventListener('change', () => this.updateVerdict());
+      checklist.appendChild(el);
+    });
+
+    setupUploadArea('detect-upload-area', 'detect-file', (file) => this.analyze(file));
+  },
+
+  async analyze(file) {
+    const loading = document.getElementById('detect-loading');
+    const fill = document.getElementById('detect-loading-fill');
+    const status = document.getElementById('detect-loading-status');
+    const results = document.getElementById('detect-results');
+
+    loading.classList.add('visible');
+    results.classList.remove('visible');
+
+    try {
+      status.textContent = 'Loading models...';
+      fill.style.width = '10%';
+
+      const uri = await fileToDataURI(file);
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = uri;
+      });
+
+      status.textContent = 'Running BlazeFace...';
+      fill.style.width = '30%';
+
+      const canvas = document.getElementById('detect-canvas');
+      const maxW = 400;
+      let w = img.width, h = img.height;
+      if (w > maxW) { const s = maxW / w; w = Math.round(w * s); h = Math.round(h * s); }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // BlazeFace
+      let blazeResults = [];
+      try {
+        const bf = await Models.blazeface();
+        blazeResults = await bf.estimateFaces(canvas, false);
+      } catch (e) { console.warn('BlazeFace failed:', e); }
+
+      status.textContent = 'Running face-api.js...';
+      fill.style.width = '50%';
+
+      // face-api.js
+      let faceApiResults = [];
+      try {
+        await Models.faceApi();
+        faceApiResults = await faceapi.detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions())
+          .withAgeAndGender()
+          .withFaceExpressions();
+      } catch (e) { console.warn('face-api failed:', e); }
+
+      status.textContent = 'Running MobileNet...';
+      fill.style.width = '70%';
+
+      // MobileNet
+      let mobileResults = [];
+      try {
+        const mn = await Models.mobilenet();
+        mobileResults = await mn.classify(canvas, 5);
+      } catch (e) { console.warn('MobileNet failed:', e); }
+
+      fill.style.width = '90%';
+
+      // Draw bounding boxes
+      ctx.lineWidth = 2;
+      ctx.font = '12px monospace';
+
+      blazeResults.forEach((face, i) => {
+        const [x, y] = face.topLeft;
+        const [bx, by] = face.bottomRight;
+        ctx.strokeStyle = '#00ff66';
+        ctx.strokeRect(x, y, bx - x, by - y);
+        ctx.fillStyle = '#00ff66';
+        ctx.fillText(`Face ${i + 1} (${(face.probability[0] * 100).toFixed(0)}%)`, x, y - 4);
+      });
+
+      faceApiResults.forEach(det => {
+        const { x, y, width, height } = det.detection.box;
+        ctx.strokeStyle = '#4a9eff';
+        ctx.strokeRect(x, y, width, height);
+        ctx.fillStyle = '#4a9eff';
+        ctx.fillText(`Age: ~${Math.round(det.age)} ${det.gender}`, x, y + height + 14);
+        const topExpr = Object.entries(det.expressions).sort((a, b) => b[1] - a[1])[0];
+        ctx.fillText(`${topExpr[0]} (${(topExpr[1] * 100).toFixed(0)}%)`, x, y + height + 28);
+      });
+
+      // Analysis panel
+      const analysisEl = document.getElementById('detect-analysis');
+      let html = '<div style="margin-bottom:12px;"><strong style="color:var(--green);">BlazeFace</strong><br>';
+      html += blazeResults.length ? `${blazeResults.length} face(s) detected` : 'No faces detected';
+      html += '</div>';
+
+      html += '<div style="margin-bottom:12px;"><strong style="color:var(--accent);">Age/Gender/Expression</strong><br>';
+      if (faceApiResults.length) {
+        faceApiResults.forEach(det => {
+          const topExpr = Object.entries(det.expressions).sort((a, b) => b[1] - a[1])[0];
+          html += `~${Math.round(det.age)} years, ${det.gender}<br>${topExpr[0]} (${(topExpr[1] * 100).toFixed(0)}%)<br>`;
+        });
+      } else {
+        html += 'No faces detected';
+      }
+      html += '</div>';
+
+      html += '<div><strong style="color:var(--pink);">MobileNet</strong><br>';
+      mobileResults.forEach(p => {
+        html += `${p.className}: ${(p.probability * 100).toFixed(1)}%<br>`;
+      });
+      html += '</div>';
+
+      analysisEl.innerHTML = html;
+
+      fill.style.width = '100%';
+      status.textContent = 'Done!';
+      setTimeout(() => loading.classList.remove('visible'), 500);
+      results.classList.add('visible');
+
+    } catch (err) {
+      loading.classList.remove('visible');
+      console.error('Detector error:', err);
+    }
+  },
+
+  updateVerdict() {
+    const checks = document.querySelectorAll('#detect-checklist input[type="checkbox"]');
+    const checked = [...checks].filter(c => c.checked).length;
+    const suspicious = [...checks].filter(c => !c.checked).length;
+    const el = document.getElementById('detect-verdict');
+    if (checked === 0) {
+      el.textContent = '';
+    } else if (suspicious > 5) {
+      el.innerHTML = `<span style="color:var(--red);">High suspicion (${suspicious} unchecked items)</span>`;
+    } else if (suspicious > 2) {
+      el.innerHTML = `<span style="color:var(--yellow);">Moderate suspicion (${suspicious} unchecked items)</span>`;
+    } else {
+      el.innerHTML = `<span style="color:var(--green);">Low suspicion (${suspicious} unchecked items)</span>`;
+    }
+  }
+};
+
+tabInits['tab-detector'] = { init: () => Detector.init(), done: false };
+
+// ═══════════════════════════════════════════════════════════════════════
+// TAB 4: Sentiment Autopsy
+// ═══════════════════════════════════════════════════════════════════════
+const Sentiment = {
+  knn: null,
+  mobilenetModel: null,
+  trainingCounts: { sincere: 0, ironic: 0, weaponized: 0 },
+
+  init() {
+    // Setup upload for training images
+    const trainInput = document.getElementById('sent-train-file');
+    const trainArea = document.getElementById('sent-train-area');
+
+    trainArea.addEventListener('dragover', e => { e.preventDefault(); trainArea.style.borderColor = 'var(--accent)'; });
+    trainArea.addEventListener('dragleave', () => { trainArea.style.borderColor = ''; });
+    trainArea.addEventListener('drop', e => {
+      e.preventDefault();
+      trainArea.style.borderColor = '';
+      [...e.dataTransfer.files].forEach(f => this.addTrainImage(f));
+    });
+    trainInput.addEventListener('change', () => {
+      [...trainInput.files].forEach(f => this.addTrainImage(f));
+      trainInput.value = '';
+    });
+
+    // Setup drag-drop on buckets
+    document.querySelectorAll('.bucket').forEach(bucket => {
+      bucket.addEventListener('dragover', e => {
+        e.preventDefault();
+        bucket.classList.add('dragover');
+      });
+      bucket.addEventListener('dragleave', () => bucket.classList.remove('dragover'));
+      bucket.addEventListener('drop', e => {
+        e.preventDefault();
+        bucket.classList.remove('dragover');
+        const uri = e.dataTransfer.getData('text/plain');
+        if (uri) this.trainOnImage(uri, bucket.dataset.category, bucket);
+      });
+    });
+
+    // Test upload
+    setupUploadArea('sent-test-area', 'sent-test-file', (file) => this.testImage(file));
+  },
+
+  addTrainImage(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const uri = reader.result;
+      const img = document.createElement('img');
+      img.className = 'drag-item';
+      img.src = uri;
+      img.draggable = true;
+      img.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', uri);
+      });
+      document.getElementById('sent-drag-source').appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  },
+
+  async trainOnImage(uri, category, bucket) {
+    try {
+      if (!this.mobilenetModel) this.mobilenetModel = await Models.mobilenet();
+      if (!this.knn) this.knn = await Models.knnClassifier();
+
+      const img = new Image();
+      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = uri; });
+
+      const activation = this.mobilenetModel.infer(img, true);
+      this.knn.addExample(activation, category);
+
+      // Add thumbnail to bucket
+      const thumb = document.createElement('img');
+      thumb.className = 'bucket-thumb';
+      thumb.src = uri;
+      bucket.querySelector('.bucket-images').appendChild(thumb);
+
+      this.trainingCounts[category]++;
+      bucket.querySelector('.bucket-count').textContent = this.trainingCounts[category] + ' images';
+
+      const total = Object.values(this.trainingCounts).reduce((a, b) => a + b, 0);
+      document.getElementById('sent-train-status').textContent = `${total} training examples added`;
+    } catch (err) {
+      console.error('Training error:', err);
+    }
+  },
+
+  async testImage(file) {
+    const total = Object.values(this.trainingCounts).reduce((a, b) => a + b, 0);
+    if (total < 3) {
+      alert('Add at least 3 training images (1 per bucket) before testing.');
+      return;
+    }
+
+    try {
+      const uri = await fileToDataURI(file);
+      document.getElementById('sent-test-img').src = uri;
+
+      const img = new Image();
+      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = uri; });
+
+      const activation = this.mobilenetModel.infer(img, true);
+      const result = await this.knn.predictClass(activation);
+
+      const colors = { sincere: 'var(--green)', ironic: 'var(--yellow)', weaponized: 'var(--red)' };
+      const labels = { sincere: 'Sincere Mourning', ironic: 'Ironic Mockery', weaponized: 'Weaponized Propaganda' };
+
+      // Confidence bars
+      const confEl = document.getElementById('sent-confidence');
+      confEl.innerHTML = '';
+      for (const [cat, conf] of Object.entries(result.confidences)) {
+        const pct = (conf * 100).toFixed(1);
+        confEl.innerHTML += `
+          <div class="conf-bar-row">
+            <div class="conf-bar-label">${labels[cat] || cat}</div>
+            <div class="conf-bar-track">
+              <div class="conf-bar-fill" style="width:${pct}%; background:${colors[cat] || 'var(--accent)'};">${pct}%</div>
+            </div>
+          </div>`;
+      }
+
+      document.getElementById('sent-prediction').innerHTML =
+        `Prediction: <strong style="color:${colors[result.label]}">${labels[result.label]}</strong>`;
+
+      document.getElementById('sent-test-results').classList.add('visible');
+    } catch (err) {
+      console.error('Test error:', err);
+    }
+  }
+};
+
+tabInits['tab-sentiment'] = { init: () => Sentiment.init(), done: false };
+
+// ═══════════════════════════════════════════════════════════════════════
+// TAB 5: Pose the Dead
+// ═══════════════════════════════════════════════════════════════════════
+const PoseCompare = {
+  realURI: null,
+  aiURI: null,
+
+  KP_NAMES: ['nose','left_eye','right_eye','left_ear','right_ear',
+    'left_shoulder','right_shoulder','left_elbow','right_elbow',
+    'left_wrist','right_wrist','left_hip','right_hip',
+    'left_knee','right_knee','left_ankle','right_ankle'],
+
+  SKELETON: [
+    [0,1],[0,2],[1,3],[2,4],
+    [5,6],[5,7],[7,9],[6,8],[8,10],
+    [5,11],[6,12],[11,12],
+    [11,13],[13,15],[12,14],[14,16]
+  ],
+
+  init() {
+    setupUploadArea('pose-real-area', 'pose-real-file', async (file) => {
+      this.realURI = await fileToDataURI(file);
+      this.updateBtn();
+    });
+    setupUploadArea('pose-ai-area', 'pose-ai-file', async (file) => {
+      this.aiURI = await fileToDataURI(file);
+      this.updateBtn();
+    });
+    document.getElementById('btn-pose').addEventListener('click', () => this.analyze());
+  },
+
+  updateBtn() {
+    document.getElementById('btn-pose').disabled = !(this.realURI && this.aiURI);
+  },
+
+  drawSkeleton(canvas, poses, confThreshold = 0.3) {
+    const ctx = canvas.getContext('2d');
+    if (!poses.length) return;
+    const kps = poses[0].keypoints;
+
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
+    ctx.lineWidth = 2;
+    this.SKELETON.forEach(([i1, i2]) => {
+      const p1 = kps[i1], p2 = kps[i2];
+      if (p1.score > confThreshold && p2.score > confThreshold) {
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+    });
+
+    kps.forEach(kp => {
+      if (kp.score > confThreshold) {
+        ctx.beginPath();
+        ctx.arc(kp.x, kp.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = kp.score > 0.5 ? '#00ff66' : '#ffd94a';
+        ctx.fill();
+      }
+    });
+  },
+
+  async analyze() {
+    const btn = document.getElementById('btn-pose');
+    const loading = document.getElementById('pose-loading');
+    const fill = document.getElementById('pose-loading-fill');
+    const status = document.getElementById('pose-loading-status');
+    const results = document.getElementById('pose-results');
+
+    btn.disabled = true;
+    loading.classList.add('visible');
+    results.classList.remove('visible');
+
+    try {
+      status.textContent = 'Loading MoveNet...';
+      fill.style.width = '20%';
+      const detector = await Models.moveNet();
+
+      // Analyze real image
+      status.textContent = 'Analyzing real photo...';
+      fill.style.width = '40%';
+
+      const realImg = new Image();
+      await new Promise((resolve, reject) => { realImg.onload = resolve; realImg.onerror = reject; realImg.src = this.realURI; });
+      const realCanvas = document.getElementById('pose-canvas-real');
+      const maxW = 400;
+      let rw = realImg.width, rh = realImg.height;
+      if (rw > maxW) { const s = maxW / rw; rw = Math.round(rw * s); rh = Math.round(rh * s); }
+      realCanvas.width = rw;
+      realCanvas.height = rh;
+      realCanvas.getContext('2d').drawImage(realImg, 0, 0, rw, rh);
+      const realPoses = await detector.estimatePoses(realCanvas);
+      this.drawSkeleton(realCanvas, realPoses);
+
+      // Analyze AI image
+      status.textContent = 'Analyzing AI image...';
+      fill.style.width = '70%';
+
+      const aiImg = new Image();
+      await new Promise((resolve, reject) => { aiImg.onload = resolve; aiImg.onerror = reject; aiImg.src = this.aiURI; });
+      const aiCanvas = document.getElementById('pose-canvas-ai');
+      let aw = aiImg.width, ah = aiImg.height;
+      if (aw > maxW) { const s = maxW / aw; aw = Math.round(aw * s); ah = Math.round(ah * s); }
+      aiCanvas.width = aw;
+      aiCanvas.height = ah;
+      aiCanvas.getContext('2d').drawImage(aiImg, 0, 0, aw, ah);
+      const aiPoses = await detector.estimatePoses(aiCanvas);
+      this.drawSkeleton(aiCanvas, aiPoses);
+
+      // Build comparison table
+      fill.style.width = '90%';
+      const tbody = document.querySelector('#pose-kp-table tbody');
+      tbody.innerHTML = '';
+
+      const realKps = realPoses.length ? realPoses[0].keypoints : [];
+      const aiKps = aiPoses.length ? aiPoses[0].keypoints : [];
+
+      this.KP_NAMES.forEach((name, i) => {
+        const rConf = realKps[i] ? realKps[i].score : 0;
+        const aConf = aiKps[i] ? aiKps[i].score : 0;
+        const tr = document.createElement('tr');
+        const rClass = rConf >= aConf ? 'higher' : 'lower';
+        const aClass = aConf >= rConf ? 'higher' : 'lower';
+        tr.innerHTML = `<td>${name}</td>
+          <td class="${rClass}">${(rConf * 100).toFixed(1)}%</td>
+          <td class="${aClass}">${(aConf * 100).toFixed(1)}%</td>`;
+        tbody.appendChild(tr);
+      });
+
+      fill.style.width = '100%';
+      status.textContent = 'Done!';
+      setTimeout(() => loading.classList.remove('visible'), 500);
+      results.classList.add('visible');
+    } catch (err) {
+      loading.classList.remove('visible');
+      console.error('Pose error:', err);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+};
+
+tabInits['tab-pose'] = { init: () => PoseCompare.init(), done: false };
+
+// ═══════════════════════════════════════════════════════════════════════
+// TAB 6: Prompt Necromancy
+// ═══════════════════════════════════════════════════════════════════════
+const PromptNecromancy = {
+  DEFAULT_CRITERIA: [
+    'I have considered whether the depicted person (or their family) would consent to this image.',
+    'I understand this image could be mistaken for a real photograph.',
+    'I have thought about how this image might affect living relatives or communities.',
+    'I recognize the difference between honoring the dead and exploiting their likeness.',
+    'I have considered the political or commercial motivations behind this generation.',
+  ],
+  allCriteria: [],
+
+  init() {
+    this.allCriteria = [...this.DEFAULT_CRITERIA];
+    this.renderChecklist();
+
+    document.getElementById('ethics-new-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') this.addCriteria();
+    });
+
+    document.getElementById('btn-generate').addEventListener('click', () => this.generate());
+  },
+
+  renderChecklist() {
+    const el = document.getElementById('ethics-checklist');
+    el.innerHTML = '';
+    this.allCriteria.forEach((text, i) => {
+      const item = document.createElement('label');
+      item.className = 'checklist-item' + (i >= this.DEFAULT_CRITERIA.length ? ' user-added' : '');
+      item.innerHTML = `<input type="checkbox" data-idx="${i}"> <span>${text}</span>`;
+      item.querySelector('input').addEventListener('change', () => this.updateGate());
+      el.appendChild(item);
+    });
+    this.updateGate();
+  },
+
+  addCriteria() {
+    const input = document.getElementById('ethics-new-input');
+    const text = input.value.trim();
+    if (!text) return;
+    this.allCriteria.push(text);
+    input.value = '';
+    this.renderChecklist();
+  },
+
+  updateGate() {
+    const checks = document.querySelectorAll('#ethics-checklist input[type="checkbox"]');
+    const total = checks.length;
+    const checked = [...checks].filter(c => c.checked).length;
+    const allChecked = checked === total && total > 0;
+
+    const btn = document.getElementById('btn-generate');
+    const prompt = document.getElementById('prompt-text').value.trim();
+    btn.disabled = !allChecked || !prompt;
+    btn.textContent = allChecked ? 'Generate Image' : `Complete Ethics Checklist to Unlock (${checked}/${total})`;
+
+    document.getElementById('ethics-progress').textContent =
+      allChecked ? 'All criteria acknowledged. Generation unlocked.' : `${checked} / ${total} criteria checked`;
+  },
+
+  async generate() {
+    const btn = document.getElementById('btn-generate');
+    const prompt = document.getElementById('prompt-text').value.trim();
+    if (!prompt) return;
+
+    const loading = document.getElementById('prompt-loading');
+    const fill = document.getElementById('prompt-loading-fill');
+    const status = document.getElementById('prompt-loading-status');
+    const errorEl = document.getElementById('prompt-error');
+    const results = document.getElementById('prompt-results');
+
+    btn.disabled = true;
+    errorEl.classList.remove('visible');
+    results.classList.remove('visible');
+    loading.classList.add('visible');
+
+    try {
+      const output = await runPrediction(
+        '/api/txt2img',
+        { prompt },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
+
+      const images = Array.isArray(output) ? output : [output];
+      if (!images.length) throw new Error('No image returned');
+
+      document.getElementById('prompt-output').src = String(images[0]);
+
+      // Ethics summary
+      const summary = document.getElementById('prompt-ethics-summary');
+      const checkedItems = this.allCriteria;
+      summary.innerHTML = '<strong style="color:var(--purple);">Ethics criteria acknowledged:</strong><br><br>' +
+        checkedItems.map((c, i) => `${i + 1}. ${c}`).join('<br>') +
+        `<br><br><strong>Prompt:</strong> "${prompt}"`;
+
+      document.getElementById('prompt-output').onload = () => {
+        loading.classList.remove('visible');
+        results.classList.add('visible');
+      };
+    } catch (err) {
+      loading.classList.remove('visible');
+      errorEl.textContent = 'Error: ' + err.message;
+      errorEl.classList.add('visible');
+    } finally {
+      btn.disabled = false;
+      this.updateGate();
+    }
+  }
+};
+
+tabInits['tab-prompt'] = { init: () => PromptNecromancy.init(), done: false };
+
+// ─── Prompt text triggers gate update ──────────────────────────────────
+document.getElementById('prompt-text').addEventListener('input', () => {
+  if (tabInits['tab-prompt'].done) PromptNecromancy.updateGate();
+});
+</script>
+</body>
+</html>
