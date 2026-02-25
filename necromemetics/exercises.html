@@ -844,7 +844,11 @@ function loadScript(src) {
 function setupUploadArea(areaId, fileId, onFile) {
   const area = document.getElementById(areaId);
   const input = document.getElementById(fileId);
-  area.addEventListener('click', () => input.click());
+  area.addEventListener('click', (e) => {
+    if (e.target === input) return;
+    e.stopPropagation();
+    input.click();
+  });
   area.addEventListener('dragover', e => { e.preventDefault(); area.style.borderColor = 'var(--accent)'; });
   area.addEventListener('dragleave', () => { area.style.borderColor = ''; });
   area.addEventListener('drop', e => {
@@ -1375,7 +1379,11 @@ const Sentiment = {
       // File input + click handler
       const fileInput = bucket.querySelector('input[type="file"]');
       const uploadArea = bucket.querySelector('.upload-area');
-      uploadArea.addEventListener('click', () => fileInput.click());
+      uploadArea.addEventListener('click', (e) => {
+        if (e.target === fileInput) return;
+        e.stopPropagation();
+        fileInput.click();
+      });
       fileInput.addEventListener('change', () => {
         [...fileInput.files].forEach(f => this.addImageToBucket(f, cat.id, bucket));
         fileInput.value = '';
