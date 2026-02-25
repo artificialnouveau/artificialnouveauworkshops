@@ -406,10 +406,21 @@ h1 {
 /* Drag-drop buckets */
 .bucket-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-bottom: 16px;
 }
+
+.bucket .remove-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 2px;
+}
+
+.bucket .remove-btn:hover { color: var(--red); }
 
 .bucket {
   background: var(--bg-card);
@@ -777,9 +788,17 @@ h1 {
     <div class="card" style="border-left-color: var(--yellow)">
       <span class="status-badge client">client-side</span>
       <h3>sentiment autopsy &mdash; train your own classifier</h3>
-      <p>Drag images into three buckets to train a KNN classifier on MobileNet features. Then test it on new images.</p>
+      <p>Drag images into buckets to train a KNN classifier on MobileNet features. Start with the default categories or add your own, then test on new images.</p>
 
-      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 1: Add training images</h4>
+      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 1: Set up categories</h4>
+      <div id="sent-bucket-container" class="bucket-row"></div>
+
+      <div class="add-criteria-row" style="margin-bottom:16px;">
+        <input type="text" class="add-criteria-input" id="sent-new-category" placeholder="Add a new category name...">
+        <button class="btn-secondary" onclick="Sentiment.addCategory()" style="white-space:nowrap;">+ Add Category</button>
+      </div>
+
+      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:0 0 8px;">Step 2: Upload &amp; drag images into buckets</h4>
       <label class="upload-area" id="sent-train-area" style="margin-bottom:16px;">
         <input type="file" id="sent-train-file" accept="image/*" multiple>
         <div class="upload-icon">&#x1f4f7;</div>
@@ -788,27 +807,9 @@ h1 {
 
       <div class="drag-source-area" id="sent-drag-source"></div>
 
-      <div class="bucket-row">
-        <div class="bucket" id="bucket-sincere" data-category="sincere">
-          <h4 style="color:var(--green);">Sincere Mourning</h4>
-          <div class="bucket-images"></div>
-          <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="bucket-count">0 images</div>
-        </div>
-        <div class="bucket" id="bucket-ironic" data-category="ironic">
-          <h4 style="color:var(--yellow);">Ironic Mockery</h4>
-          <div class="bucket-images"></div>
-          <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="bucket-count">0 images</div>
-        </div>
-        <div class="bucket" id="bucket-weaponized" data-category="weaponized">
-          <h4 style="color:var(--red);">Weaponized Propaganda</h4>
-          <div class="bucket-images"></div>
-          <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="bucket-count">0 images</div>
-        </div>
-      </div>
-
       <div id="sent-train-status" style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); text-align:center; margin-bottom:16px;"></div>
 
-      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 2: Test your classifier</h4>
+      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 3: Test your classifier</h4>
       <label class="upload-area" id="sent-test-area">
         <input type="file" id="sent-test-file" accept="image/*">
         <div class="upload-icon">&#x1f9ea;</div>
@@ -1481,9 +1482,25 @@ tabInits['tab-detector'] = { init: () => Detector.init(), done: false };
 const Sentiment = {
   knn: null,
   mobilenetModel: null,
-  trainingCounts: { sincere: 0, ironic: 0, weaponized: 0 },
+  // categories: array of { id, name, color }
+  categories: [],
+  trainingCounts: {},
+  nextColorIdx: 0,
+  PALETTE: ['var(--green)', 'var(--yellow)', 'var(--red)', 'var(--accent)', 'var(--pink)', 'var(--purple)',
+    '#ff8c00', '#00ced1', '#ff1493', '#7fff00', '#dc143c', '#00bfff'],
+
+  DEFAULT_CATEGORIES: [
+    { id: 'sincere', name: 'Sincere Mourning', color: 'var(--green)' },
+    { id: 'ironic', name: 'Ironic Mockery', color: 'var(--yellow)' },
+    { id: 'weaponized', name: 'Weaponized Propaganda', color: 'var(--red)' },
+  ],
 
   init() {
+    // Add default categories
+    this.DEFAULT_CATEGORIES.forEach(c => this._registerCategory(c.id, c.name, c.color));
+    this.nextColorIdx = this.DEFAULT_CATEGORIES.length;
+    this.renderBuckets();
+
     // Setup upload for training images
     const trainInput = document.getElementById('sent-train-file');
     const trainArea = document.getElementById('sent-train-area');
@@ -1500,23 +1517,80 @@ const Sentiment = {
       trainInput.value = '';
     });
 
-    // Setup drag-drop on buckets
-    document.querySelectorAll('.bucket').forEach(bucket => {
-      bucket.addEventListener('dragover', e => {
-        e.preventDefault();
-        bucket.classList.add('dragover');
-      });
+    document.getElementById('sent-new-category').addEventListener('keydown', e => {
+      if (e.key === 'Enter') this.addCategory();
+    });
+
+    // Test upload
+    setupUploadArea('sent-test-area', 'sent-test-file', (file) => this.testImage(file));
+  },
+
+  _registerCategory(id, name, color) {
+    this.categories.push({ id, name, color });
+    this.trainingCounts[id] = 0;
+  },
+
+  addCategory() {
+    const input = document.getElementById('sent-new-category');
+    const name = input.value.trim();
+    if (!name) return;
+
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    if (this.categories.find(c => c.id === id)) {
+      alert('A category with that name already exists.');
+      return;
+    }
+
+    const color = this.PALETTE[this.nextColorIdx % this.PALETTE.length];
+    this.nextColorIdx++;
+    this._registerCategory(id, name, color);
+
+    input.value = '';
+    this.renderBuckets();
+  },
+
+  removeCategory(id) {
+    // Don't allow removing if it has training data in the KNN
+    if (this.trainingCounts[id] > 0) {
+      alert('Cannot remove a category that already has training images. Reload the page to reset.');
+      return;
+    }
+    this.categories = this.categories.filter(c => c.id !== id);
+    delete this.trainingCounts[id];
+    this.renderBuckets();
+  },
+
+  renderBuckets() {
+    const container = document.getElementById('sent-bucket-container');
+    container.innerHTML = '';
+    // Adjust grid columns based on count
+    const cols = Math.min(this.categories.length, 4);
+    container.style.gridTemplateColumns = `repeat(${cols || 1}, 1fr)`;
+
+    this.categories.forEach(cat => {
+      const bucket = document.createElement('div');
+      bucket.className = 'bucket';
+      bucket.dataset.category = cat.id;
+      const isDefault = this.DEFAULT_CATEGORIES.some(d => d.id === cat.id);
+      bucket.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:4px;">
+          <h4 style="color:${cat.color}; margin:0;">${cat.name}</h4>
+          ${!isDefault ? `<button onclick="Sentiment.removeCategory('${cat.id}')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.9rem;padding:0 2px;" title="Remove category">&times;</button>` : ''}
+        </div>
+        <div class="bucket-images"></div>
+        <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="bucket-count">${this.trainingCounts[cat.id] || 0} images</div>`;
+
+      bucket.addEventListener('dragover', e => { e.preventDefault(); bucket.classList.add('dragover'); });
       bucket.addEventListener('dragleave', () => bucket.classList.remove('dragover'));
       bucket.addEventListener('drop', e => {
         e.preventDefault();
         bucket.classList.remove('dragover');
         const uri = e.dataTransfer.getData('text/plain');
-        if (uri) this.trainOnImage(uri, bucket.dataset.category, bucket);
+        if (uri) this.trainOnImage(uri, cat.id, bucket);
       });
-    });
 
-    // Test upload
-    setupUploadArea('sent-test-area', 'sent-test-file', (file) => this.testImage(file));
+      container.appendChild(bucket);
+    });
   },
 
   addTrainImage(file) {
@@ -1556,7 +1630,7 @@ const Sentiment = {
       bucket.querySelector('.bucket-count').textContent = this.trainingCounts[category] + ' images';
 
       const total = Object.values(this.trainingCounts).reduce((a, b) => a + b, 0);
-      document.getElementById('sent-train-status').textContent = `${total} training examples added`;
+      document.getElementById('sent-train-status').textContent = `${total} training examples added across ${this.categories.length} categories`;
     } catch (err) {
       console.error('Training error:', err);
     }
@@ -1564,8 +1638,9 @@ const Sentiment = {
 
   async testImage(file) {
     const total = Object.values(this.trainingCounts).reduce((a, b) => a + b, 0);
-    if (total < 3) {
-      alert('Add at least 3 training images (1 per bucket) before testing.');
+    const activeCats = this.categories.filter(c => this.trainingCounts[c.id] > 0).length;
+    if (total < 2 || activeCats < 2) {
+      alert('Add training images to at least 2 categories before testing.');
       return;
     }
 
@@ -1579,8 +1654,10 @@ const Sentiment = {
       const activation = this.mobilenetModel.infer(img, true);
       const result = await this.knn.predictClass(activation);
 
-      const colors = { sincere: 'var(--green)', ironic: 'var(--yellow)', weaponized: 'var(--red)' };
-      const labels = { sincere: 'Sincere Mourning', ironic: 'Ironic Mockery', weaponized: 'Weaponized Propaganda' };
+      // Build lookup maps from current categories
+      const colorMap = {};
+      const labelMap = {};
+      this.categories.forEach(c => { colorMap[c.id] = c.color; labelMap[c.id] = c.name; });
 
       // Confidence bars
       const confEl = document.getElementById('sent-confidence');
@@ -1589,15 +1666,15 @@ const Sentiment = {
         const pct = (conf * 100).toFixed(1);
         confEl.innerHTML += `
           <div class="conf-bar-row">
-            <div class="conf-bar-label">${labels[cat] || cat}</div>
+            <div class="conf-bar-label">${labelMap[cat] || cat}</div>
             <div class="conf-bar-track">
-              <div class="conf-bar-fill" style="width:${pct}%; background:${colors[cat] || 'var(--accent)'};">${pct}%</div>
+              <div class="conf-bar-fill" style="width:${pct}%; background:${colorMap[cat] || 'var(--accent)'};">${pct}%</div>
             </div>
           </div>`;
       }
 
       document.getElementById('sent-prediction').innerHTML =
-        `Prediction: <strong style="color:${colors[result.label]}">${labels[result.label]}</strong>`;
+        `Prediction: <strong style="color:${colorMap[result.label] || 'var(--accent)'}">${labelMap[result.label] || result.label}</strong>`;
 
       document.getElementById('sent-test-results').classList.add('visible');
     } catch (err) {
