@@ -1084,7 +1084,8 @@ const FaceSwap = {
       };
     } catch (err) {
       loading.classList.remove('visible');
-      errorEl.textContent = 'Error: ' + err.message;
+      console.error('FaceSwap error:', err);
+      errorEl.textContent = 'Error: ' + (err.message || String(err));
       errorEl.classList.add('visible');
     } finally {
       btn.disabled = false;
