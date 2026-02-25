@@ -291,62 +291,6 @@ h1 {
 
 .hidden { display: none !important; }
 
-/* Quiz styles */
-.quiz-image-container {
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-.quiz-image-container img {
-  max-width: 100%;
-  max-height: 350px;
-  border-radius: var(--radius);
-  border: 1px solid #333;
-}
-
-.quiz-choices {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.quiz-btn {
-  padding: 16px;
-  background: var(--bg-card);
-  border: 2px solid #333;
-  border-radius: var(--radius);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.quiz-btn:hover { border-color: var(--accent); }
-.quiz-btn.correct { border-color: var(--green); background: rgba(0,255,102,0.1); }
-.quiz-btn.wrong { border-color: var(--red); background: rgba(255,74,74,0.1); }
-.quiz-btn:disabled { cursor: default; }
-
-.quiz-score {
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-.quiz-feedback {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 16px;
-  font-size: 0.85rem;
-  display: none;
-}
-
-.quiz-feedback.visible { display: block; }
-
 /* Gallery grid */
 .gallery-grid {
   display: grid;
@@ -453,25 +397,6 @@ h1 {
   display: inline-block;
 }
 
-.drag-source-area {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-  justify-content: center;
-}
-
-.drag-item {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius);
-  border: 1px solid #333;
-  cursor: grab;
-  object-fit: cover;
-}
-
-.drag-item:active { cursor: grabbing; }
-
 /* Confidence bars */
 .confidence-bars { margin-bottom: 16px; }
 
@@ -511,31 +436,6 @@ h1 {
   color: #000;
   font-weight: 600;
 }
-
-/* Keypoint table */
-.kp-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  margin-bottom: 16px;
-}
-
-.kp-table th, .kp-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #222;
-  text-align: left;
-}
-
-.kp-table th {
-  color: var(--text-dim);
-  font-weight: 600;
-}
-
-.kp-table td { color: var(--text); }
-
-.kp-table .higher { color: var(--green); }
-.kp-table .lower { color: var(--red); }
 
 /* Prompt input */
 .prompt-input {
@@ -632,7 +532,6 @@ h1 {
 /* Responsive */
 @media (max-width: 600px) {
   .upload-row, .mirror-row { grid-template-columns: 1fr; }
-  .quiz-choices { grid-template-columns: 1fr; }
   .bucket-row { grid-template-columns: 1fr; }
   #tab-nav { gap: 4px; }
   .tab-btn { min-width: 80px; font-size: 0.65rem; padding: 8px 4px; }
@@ -647,48 +546,17 @@ h1 {
 
   <!-- Tab navigation -->
   <div id="tab-nav">
-    <button class="tab-btn active" data-tab="tab-quiz">1. Real or<br>Resurrected</button>
-    <button class="tab-btn" data-tab="tab-faceswap">2. Face of<br>the Dead</button>
-    <button class="tab-btn" data-tab="tab-detector">3. Deepfake<br>Detector</button>
-    <button class="tab-btn" data-tab="tab-sentiment">4. Sentiment<br>Autopsy</button>
-    <button class="tab-btn" data-tab="tab-pose">5. Pose<br>the Dead</button>
-    <button class="tab-btn" data-tab="tab-prompt">6. Prompt<br>Necromancy</button>
+    <button class="tab-btn active" data-tab="tab-faceswap">1. Face of<br>the Dead</button>
+    <button class="tab-btn" data-tab="tab-detector">2. Deepfake<br>Detector</button>
+    <button class="tab-btn" data-tab="tab-sentiment">3. Sentiment<br>Autopsy</button>
+    <button class="tab-btn" data-tab="tab-pose">4. Pose<br>the Dead</button>
+    <button class="tab-btn" data-tab="tab-prompt">5. Prompt<br>Necromancy</button>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       TAB 1: Real or Resurrected
+       TAB 1: Face of the Dead
        ═══════════════════════════════════════════════════════════════════ -->
-  <div id="tab-quiz" class="tab-panel active">
-    <div class="card">
-      <span class="status-badge client">client-side</span>
-      <h3>real or resurrected?</h3>
-      <p>Can you tell a real photo from an AI-generated resurrection? Guess first, then see what MobileNet thinks.</p>
-
-      <div class="quiz-score" id="quiz-score">Round 1 / 10 &mdash; Score: 0</div>
-
-      <div class="quiz-image-container">
-        <img id="quiz-image" src="" alt="Quiz image">
-      </div>
-
-      <div class="quiz-choices" id="quiz-choices">
-        <button class="quiz-btn" data-answer="real" onclick="Quiz.guess('real')">Real Photo</button>
-        <button class="quiz-btn" data-answer="ai" onclick="Quiz.guess('ai')">AI Generated</button>
-      </div>
-
-      <div class="quiz-feedback" id="quiz-feedback"></div>
-
-      <button class="btn-primary hidden" id="quiz-next" onclick="Quiz.next()">Next Image</button>
-      <div id="quiz-final" class="hidden" style="text-align:center; padding: 20px;">
-        <h3 style="color:var(--pink); font-family:var(--mono); margin-bottom:12px;" id="quiz-final-text"></h3>
-        <button class="btn-secondary" onclick="Quiz.restart()">Play Again</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════════════════════
-       TAB 2: Face of the Dead
-       ═══════════════════════════════════════════════════════════════════ -->
-  <div id="tab-faceswap" class="tab-panel">
+  <div id="tab-faceswap" class="tab-panel active">
     <div class="card" style="border-left-color: var(--pink)">
       <span class="status-badge server">server-side</span>
       <h3>face of the dead</h3>
@@ -741,7 +609,7 @@ h1 {
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       TAB 3: Deepfake Detector
+       TAB 2: Deepfake Detector
        ═══════════════════════════════════════════════════════════════════ -->
   <div id="tab-detector" class="tab-panel">
     <div class="card" style="border-left-color: var(--red)">
@@ -782,15 +650,15 @@ h1 {
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       TAB 4: Sentiment Autopsy (Train Your Own)
+       TAB 3: Sentiment Autopsy (Train Your Own)
        ═══════════════════════════════════════════════════════════════════ -->
   <div id="tab-sentiment" class="tab-panel">
     <div class="card" style="border-left-color: var(--yellow)">
       <span class="status-badge client">client-side</span>
       <h3>sentiment autopsy &mdash; train your own classifier</h3>
-      <p>Drag images into buckets to train a KNN classifier on MobileNet features. Start with the default categories or add your own, then test on new images.</p>
+      <p>Upload images directly into category buckets to train a KNN classifier on MobileNet features. Then click Train and test on new images.</p>
 
-      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 1: Set up categories</h4>
+      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 1: Upload images into categories</h4>
       <div id="sent-bucket-container" class="bucket-row"></div>
 
       <div class="add-criteria-row" style="margin-bottom:16px;">
@@ -798,22 +666,16 @@ h1 {
         <button class="btn-secondary" onclick="Sentiment.addCategory()" style="white-space:nowrap;">+ Add Category</button>
       </div>
 
-      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:0 0 8px;">Step 2: Upload &amp; drag images into buckets</h4>
-      <label class="upload-area" id="sent-train-area" style="margin-bottom:16px;">
-        <input type="file" id="sent-train-file" accept="image/*" multiple>
-        <div class="upload-icon">&#x1f4f7;</div>
-        <div class="upload-label">Upload images to sort into categories</div>
-      </label>
-
-      <div class="drag-source-area" id="sent-drag-source"></div>
-
       <div id="sent-train-status" style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); text-align:center; margin-bottom:16px;"></div>
 
-      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 3: Test your classifier</h4>
+      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 2: Train the classifier</h4>
+      <button id="btn-train-sentiment" class="btn-primary" style="background:var(--yellow); color:#000;" disabled>Train Classifier</button>
+
+      <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin:16px 0 8px;">Step 3: Classify a new image</h4>
       <label class="upload-area" id="sent-test-area">
         <input type="file" id="sent-test-file" accept="image/*">
         <div class="upload-icon">&#x1f9ea;</div>
-        <div class="upload-label">Upload a test image</div>
+        <div class="upload-label">Upload an image to classify</div>
       </label>
 
       <div id="sent-test-results" class="results">
@@ -827,67 +689,65 @@ h1 {
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       TAB 5: Pose the Dead
+       TAB 4: Pose the Dead
        ═══════════════════════════════════════════════════════════════════ -->
   <div id="tab-pose" class="tab-panel">
     <div class="card" style="border-left-color: var(--green)">
-      <span class="status-badge client">client-side</span>
+      <span class="status-badge server">server-side</span>
       <h3>pose the dead</h3>
-      <p>Upload a real photo and an AI-generated image side by side. MoveNet will overlay skeletons on both and compare keypoint confidence.</p>
+      <p>Upload a photo of a deceased person, then describe a new pose or scene. PhotoMaker preserves their identity while generating them in new contexts.</p>
 
-      <div class="upload-row">
-        <div>
-          <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Real photo</h4>
-          <label class="upload-area" id="pose-real-area">
-            <input type="file" id="pose-real-file" accept="image/*">
-            <div class="upload-icon">&#x1f4f7;</div>
-            <div class="upload-label">Upload real photo</div>
-          </label>
-        </div>
-        <div>
-          <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">AI-generated image</h4>
-          <label class="upload-area" id="pose-ai-area">
-            <input type="file" id="pose-ai-file" accept="image/*">
-            <div class="upload-icon">&#x1f916;</div>
-            <div class="upload-label">Upload AI image</div>
-          </label>
-        </div>
+      <label class="upload-area" id="pose-face-area">
+        <input type="file" id="pose-face-file" accept="image/*">
+        <div class="upload-icon">&#x1f4f7;</div>
+        <div class="upload-label">Upload a face photo of the person</div>
+      </label>
+
+      <div id="pose-face-preview" style="text-align:center; margin-bottom:16px; display:none;">
+        <img id="pose-face-img" style="max-height:200px; border-radius:var(--radius); border:1px solid #333;">
       </div>
 
-      <button id="btn-pose" class="btn-primary btn-green" disabled>Analyze Poses</button>
+      <textarea class="text-input" id="pose-prompt" placeholder="Describe the pose or scene you want to generate..." style="width:100%; min-height:80px; background:var(--bg-card); border:1px solid #333; border-radius:var(--radius); color:var(--text); font-family:var(--sans); font-size:0.9rem; padding:12px; resize:vertical; margin-bottom:12px;">a photo of a person img, standing at a podium giving a speech, photorealistic</textarea>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-family:var(--mono); font-size:0.75rem; color:var(--text-dim);">Style:</label>
+        <select id="pose-style" style="background:var(--bg-card); border:1px solid #333; border-radius:var(--radius); color:var(--text); font-family:var(--mono); font-size:0.8rem; padding:6px 10px; margin-left:8px;">
+          <option value="(No style)">No style</option>
+          <option value="Cinematic">Cinematic</option>
+          <option value="Photographic">Photographic</option>
+          <option value="Disney Character">Disney Character</option>
+          <option value="Fantasy art">Fantasy art</option>
+        </select>
+      </div>
+
+      <button id="btn-pose" class="btn-primary btn-green" disabled>Generate</button>
 
       <div id="pose-loading" class="loading-bar">
-        <span id="pose-loading-status">Loading MoveNet...</span>
+        <span id="pose-loading-status">Generating...</span>
         <div class="loading-track"><div id="pose-loading-fill" class="loading-fill"></div></div>
       </div>
 
       <div id="pose-results" class="results">
         <div class="mirror-row">
           <div class="mirror-card">
-            <h4>Real photo</h4>
-            <div class="canvas-wrap">
-              <canvas id="pose-canvas-real"></canvas>
+            <h4>Original</h4>
+            <div style="text-align:center;">
+              <img id="pose-original-img" style="max-width:100%; max-height:350px; border-radius:var(--radius);">
             </div>
           </div>
           <div class="mirror-card">
-            <h4>AI-generated</h4>
-            <div class="canvas-wrap">
-              <canvas id="pose-canvas-ai"></canvas>
+            <h4>Generated</h4>
+            <div style="text-align:center;">
+              <img id="pose-generated-img" style="max-width:100%; max-height:350px; border-radius:var(--radius);">
             </div>
           </div>
         </div>
-
-        <h4 style="font-family:var(--mono); font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Keypoint Confidence Comparison</h4>
-        <table class="kp-table" id="pose-kp-table">
-          <thead><tr><th>Keypoint</th><th>Real</th><th>AI</th></tr></thead>
-          <tbody></tbody>
-        </table>
       </div>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       TAB 6: Prompt Necromancy
+       TAB 5: Prompt Necromancy
        ═══════════════════════════════════════════════════════════════════ -->
   <div id="tab-prompt" class="tab-panel">
     <div class="card" style="border-left-color: var(--purple)">
@@ -1064,7 +924,6 @@ const Models = {
   _mobilenet: null,
   _knn: null,
   _blazeface: null,
-  _moveNet: null,
 
   async mobilenet() {
     if (this._mobilenet) return this._mobilenet;
@@ -1100,113 +959,10 @@ const Models = {
     ]);
   },
 
-  async moveNet() {
-    if (this._moveNet) return this._moveNet;
-    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
-    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js');
-    this._moveNet = await poseDetection.createDetector(
-      poseDetection.SupportedModels.MoveNet,
-      { modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER }
-    );
-    return this._moveNet;
-  }
 };
 
 // ═══════════════════════════════════════════════════════════════════════
-// TAB 1: Real or Resurrected
-// ═══════════════════════════════════════════════════════════════════════
-const Quiz = {
-  rounds: [
-    { img: 'harambe_zoo.jpg', answer: 'real', name: 'Harambe at Cincinnati Zoo', context: 'Original photo from 2016 before the incident.' },
-    { img: 'harambe_candle.webp', answer: 'ai', name: 'Harambe memorial candle', context: 'AI-generated memorial imagery that recontextualizes the animal as a saint-like figure.' },
-    { img: 'gfck.jpeg', answer: 'ai', name: 'George Floyd AI portrait', context: 'AI-generated reimagining. Note the smoothed features and idealized lighting.' },
-    { img: 'gfck2.jpeg', answer: 'ai', name: 'George Floyd AI alt', context: 'Another AI generation. Look for telltale signs in the background and skin texture.' },
-    { img: 'gfck3.jpeg', answer: 'ai', name: 'George Floyd AI memorial', context: 'AI-generated scene. The composition and lighting feel too "perfect."' },
-    { img: 'gfck4.jpeg', answer: 'ai', name: 'George Floyd AI reimagining', context: 'AI-generated. Notice how the background details blur in unnatural ways.' },
-    { img: 'bernice_king_sexyyred.jpeg', answer: 'real', name: 'Bernice King and Sexyy Red', context: 'Real photograph documenting an actual cultural moment.' },
-    { img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Martin_Luther_King_Jr_St_Paul_Campus_U_MN.jpg/440px-Martin_Luther_King_Jr_St_Paul_Campus_U_MN.jpg', answer: 'real', name: 'Martin Luther King Jr.', context: 'Historical photograph from the 1960s.' },
-    { img: 'https://upload.wikimedia.org/wikipedia/en/6/6e/Paul_Walker_poster.jpg', answer: 'real', name: 'Paul Walker', context: 'Real promotional photograph of the actor.' },
-    { img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Camponotus_flavomarginatus_ant.jpg/440px-Camponotus_flavomarginatus_ant.jpg', answer: 'real', name: 'Nature photo (control)', context: 'A real nature photograph used as a control round.' },
-  ],
-  current: 0,
-  score: 0,
-  shuffled: [],
-  mobilenetModel: null,
-
-  async init() {
-    this.shuffled = [...this.rounds].sort(() => Math.random() - 0.5);
-    this.current = 0;
-    this.score = 0;
-    this.show();
-  },
-
-  show() {
-    const round = this.shuffled[this.current];
-    const imgEl = document.getElementById('quiz-image');
-    imgEl.src = round.img.startsWith('http') ? round.img : round.img;
-    document.getElementById('quiz-score').textContent = `Round ${this.current + 1} / ${this.shuffled.length} \u2014 Score: ${this.score}`;
-    document.getElementById('quiz-feedback').classList.remove('visible');
-    document.getElementById('quiz-next').classList.add('hidden');
-    document.querySelectorAll('.quiz-btn').forEach(b => {
-      b.disabled = false;
-      b.classList.remove('correct', 'wrong');
-    });
-  },
-
-  async guess(answer) {
-    const round = this.shuffled[this.current];
-    const correct = answer === round.answer;
-    if (correct) this.score++;
-
-    document.querySelectorAll('.quiz-btn').forEach(b => {
-      b.disabled = true;
-      if (b.dataset.answer === round.answer) b.classList.add('correct');
-      else b.classList.add('wrong');
-    });
-
-    let mobilenetText = '';
-    try {
-      if (!this.mobilenetModel) this.mobilenetModel = await Models.mobilenet();
-      const imgEl = document.getElementById('quiz-image');
-      const preds = await this.mobilenetModel.classify(imgEl, 3);
-      mobilenetText = '<br><br><strong style="color:var(--accent);">MobileNet sees:</strong> ' +
-        preds.map(p => `${p.className} (${(p.probability * 100).toFixed(1)}%)`).join(', ');
-    } catch (e) {
-      mobilenetText = '<br><br><em style="color:var(--text-dim);">MobileNet analysis unavailable</em>';
-    }
-
-    const fb = document.getElementById('quiz-feedback');
-    fb.innerHTML = `<strong style="color:${correct ? 'var(--green)' : 'var(--red)'};">${correct ? 'Correct!' : 'Wrong!'}</strong>
-      This is <strong>${round.answer === 'real' ? 'a real photo' : 'AI-generated'}</strong>: ${round.name}.
-      <br>${round.context}${mobilenetText}`;
-    fb.classList.add('visible');
-
-    document.getElementById('quiz-score').textContent = `Round ${this.current + 1} / ${this.shuffled.length} \u2014 Score: ${this.score}`;
-
-    if (this.current < this.shuffled.length - 1) {
-      document.getElementById('quiz-next').classList.remove('hidden');
-    } else {
-      document.getElementById('quiz-final-text').textContent = `Final Score: ${this.score} / ${this.shuffled.length}`;
-      document.getElementById('quiz-final').classList.remove('hidden');
-    }
-  },
-
-  next() {
-    this.current++;
-    this.show();
-  },
-
-  restart() {
-    document.getElementById('quiz-final').classList.add('hidden');
-    this.init();
-  }
-};
-
-// Init quiz immediately
-Quiz.init();
-
-// ═══════════════════════════════════════════════════════════════════════
-// TAB 2: Face of the Dead
+// TAB 1: Face of the Dead
 // ═══════════════════════════════════════════════════════════════════════
 const FaceSwap = {
   sourceURI: null,
@@ -1305,7 +1061,7 @@ const FaceSwap = {
 tabInits['tab-faceswap'] = { init: () => FaceSwap.init(), done: false };
 
 // ═══════════════════════════════════════════════════════════════════════
-// TAB 3: Deepfake Detector
+// TAB 2: Deepfake Detector
 // ═══════════════════════════════════════════════════════════════════════
 const Detector = {
   FORENSIC_ITEMS: [
@@ -1477,14 +1233,14 @@ const Detector = {
 tabInits['tab-detector'] = { init: () => Detector.init(), done: false };
 
 // ═══════════════════════════════════════════════════════════════════════
-// TAB 4: Sentiment Autopsy
+// TAB 3: Sentiment Autopsy
 // ═══════════════════════════════════════════════════════════════════════
 const Sentiment = {
   knn: null,
   mobilenetModel: null,
-  // categories: array of { id, name, color }
+  trained: false,
   categories: [],
-  trainingCounts: {},
+  bucketImages: {},  // category id -> array of data URIs
   nextColorIdx: 0,
   PALETTE: ['var(--green)', 'var(--yellow)', 'var(--red)', 'var(--accent)', 'var(--pink)', 'var(--purple)',
     '#ff8c00', '#00ced1', '#ff1493', '#7fff00', '#dc143c', '#00bfff'],
@@ -1496,38 +1252,21 @@ const Sentiment = {
   ],
 
   init() {
-    // Add default categories
     this.DEFAULT_CATEGORIES.forEach(c => this._registerCategory(c.id, c.name, c.color));
     this.nextColorIdx = this.DEFAULT_CATEGORIES.length;
     this.renderBuckets();
-
-    // Setup upload for training images
-    const trainInput = document.getElementById('sent-train-file');
-    const trainArea = document.getElementById('sent-train-area');
-
-    trainArea.addEventListener('dragover', e => { e.preventDefault(); trainArea.style.borderColor = 'var(--accent)'; });
-    trainArea.addEventListener('dragleave', () => { trainArea.style.borderColor = ''; });
-    trainArea.addEventListener('drop', e => {
-      e.preventDefault();
-      trainArea.style.borderColor = '';
-      [...e.dataTransfer.files].forEach(f => this.addTrainImage(f));
-    });
-    trainInput.addEventListener('change', () => {
-      [...trainInput.files].forEach(f => this.addTrainImage(f));
-      trainInput.value = '';
-    });
 
     document.getElementById('sent-new-category').addEventListener('keydown', e => {
       if (e.key === 'Enter') this.addCategory();
     });
 
-    // Test upload
+    document.getElementById('btn-train-sentiment').addEventListener('click', () => this.train());
     setupUploadArea('sent-test-area', 'sent-test-file', (file) => this.testImage(file));
   },
 
   _registerCategory(id, name, color) {
     this.categories.push({ id, name, color });
-    this.trainingCounts[id] = 0;
+    this.bucketImages[id] = [];
   },
 
   addCategory() {
@@ -1550,20 +1289,18 @@ const Sentiment = {
   },
 
   removeCategory(id) {
-    // Don't allow removing if it has training data in the KNN
-    if (this.trainingCounts[id] > 0) {
-      alert('Cannot remove a category that already has training images. Reload the page to reset.');
+    if (this.trained) {
+      alert('Cannot remove categories after training. Reload the page to reset.');
       return;
     }
     this.categories = this.categories.filter(c => c.id !== id);
-    delete this.trainingCounts[id];
+    delete this.bucketImages[id];
     this.renderBuckets();
   },
 
   renderBuckets() {
     const container = document.getElementById('sent-bucket-container');
     container.innerHTML = '';
-    // Adjust grid columns based on count
     const cols = Math.min(this.categories.length, 4);
     container.style.gridTemplateColumns = `repeat(${cols || 1}, 1fr)`;
 
@@ -1572,75 +1309,103 @@ const Sentiment = {
       bucket.className = 'bucket';
       bucket.dataset.category = cat.id;
       const isDefault = this.DEFAULT_CATEGORIES.some(d => d.id === cat.id);
+      const count = this.bucketImages[cat.id] ? this.bucketImages[cat.id].length : 0;
       bucket.innerHTML = `
         <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:4px;">
           <h4 style="color:${cat.color}; margin:0;">${cat.name}</h4>
           ${!isDefault ? `<button onclick="Sentiment.removeCategory('${cat.id}')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.9rem;padding:0 2px;" title="Remove category">&times;</button>` : ''}
         </div>
+        <label class="upload-area" style="min-height:80px; margin-bottom:4px; padding:12px; cursor:pointer;">
+          <input type="file" accept="image/*" multiple style="display:none;" data-bucket-cat="${cat.id}">
+          <div class="upload-icon" style="font-size:1.2rem;">+</div>
+          <div class="upload-label" style="font-size:0.7rem;">Upload images</div>
+        </label>
         <div class="bucket-images"></div>
-        <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="bucket-count">${this.trainingCounts[cat.id] || 0} images</div>`;
+        <div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="bucket-count">${count} images</div>`;
 
+      // File input change handler
+      const fileInput = bucket.querySelector('input[type="file"]');
+      fileInput.addEventListener('change', () => {
+        [...fileInput.files].forEach(f => this.addImageToBucket(f, cat.id, bucket));
+        fileInput.value = '';
+      });
+
+      // Drag-and-drop on the bucket
       bucket.addEventListener('dragover', e => { e.preventDefault(); bucket.classList.add('dragover'); });
       bucket.addEventListener('dragleave', () => bucket.classList.remove('dragover'));
       bucket.addEventListener('drop', e => {
         e.preventDefault();
         bucket.classList.remove('dragover');
-        const uri = e.dataTransfer.getData('text/plain');
-        if (uri) this.trainOnImage(uri, cat.id, bucket);
+        if (e.dataTransfer.files.length) {
+          [...e.dataTransfer.files].forEach(f => this.addImageToBucket(f, cat.id, bucket));
+        }
       });
 
       container.appendChild(bucket);
     });
   },
 
-  addTrainImage(file) {
+  addImageToBucket(file, categoryId, bucket) {
     const reader = new FileReader();
     reader.onload = () => {
       const uri = reader.result;
-      const img = document.createElement('img');
-      img.className = 'drag-item';
-      img.src = uri;
-      img.draggable = true;
-      img.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', uri);
-      });
-      document.getElementById('sent-drag-source').appendChild(img);
-    };
-    reader.readAsDataURL(file);
-  },
+      this.bucketImages[categoryId].push(uri);
 
-  async trainOnImage(uri, category, bucket) {
-    try {
-      if (!this.mobilenetModel) this.mobilenetModel = await Models.mobilenet();
-      if (!this.knn) this.knn = await Models.knnClassifier();
-
-      const img = new Image();
-      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = uri; });
-
-      const activation = this.mobilenetModel.infer(img, true);
-      this.knn.addExample(activation, category);
-
-      // Add thumbnail to bucket
       const thumb = document.createElement('img');
       thumb.className = 'bucket-thumb';
       thumb.src = uri;
       bucket.querySelector('.bucket-images').appendChild(thumb);
 
-      this.trainingCounts[category]++;
-      bucket.querySelector('.bucket-count').textContent = this.trainingCounts[category] + ' images';
+      const count = this.bucketImages[categoryId].length;
+      bucket.querySelector('.bucket-count').textContent = count + ' images';
 
-      const total = Object.values(this.trainingCounts).reduce((a, b) => a + b, 0);
-      document.getElementById('sent-train-status').textContent = `${total} training examples added across ${this.categories.length} categories`;
+      this.updateTrainBtn();
+    };
+    reader.readAsDataURL(file);
+  },
+
+  updateTrainBtn() {
+    const activeCats = this.categories.filter(c => this.bucketImages[c.id] && this.bucketImages[c.id].length > 0).length;
+    const total = Object.values(this.bucketImages).reduce((a, b) => a + b.length, 0);
+    document.getElementById('btn-train-sentiment').disabled = activeCats < 2 || total < 2;
+    document.getElementById('sent-train-status').textContent = `${total} images across ${activeCats} categories`;
+  },
+
+  async train() {
+    const btn = document.getElementById('btn-train-sentiment');
+    btn.disabled = true;
+    btn.textContent = 'Training...';
+
+    try {
+      if (!this.mobilenetModel) this.mobilenetModel = await Models.mobilenet();
+      if (!this.knn) this.knn = await Models.knnClassifier();
+
+      let total = 0;
+      for (const cat of this.categories) {
+        for (const uri of this.bucketImages[cat.id]) {
+          const img = new Image();
+          await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = uri; });
+          const activation = this.mobilenetModel.infer(img, true);
+          this.knn.addExample(activation, cat.id);
+          total++;
+          document.getElementById('sent-train-status').textContent = `Training... (${total} images processed)`;
+        }
+      }
+
+      this.trained = true;
+      btn.textContent = 'Trained!';
+      btn.style.background = 'var(--green)';
+      document.getElementById('sent-train-status').textContent = `Classifier trained on ${total} images. Upload a new image to classify.`;
     } catch (err) {
       console.error('Training error:', err);
+      btn.textContent = 'Train Classifier';
+      btn.disabled = false;
     }
   },
 
   async testImage(file) {
-    const total = Object.values(this.trainingCounts).reduce((a, b) => a + b, 0);
-    const activeCats = this.categories.filter(c => this.trainingCounts[c.id] > 0).length;
-    if (total < 2 || activeCats < 2) {
-      alert('Add training images to at least 2 categories before testing.');
+    if (!this.trained) {
+      alert('Train the classifier first by adding images to categories and clicking Train.');
       return;
     }
 
@@ -1654,12 +1419,10 @@ const Sentiment = {
       const activation = this.mobilenetModel.infer(img, true);
       const result = await this.knn.predictClass(activation);
 
-      // Build lookup maps from current categories
       const colorMap = {};
       const labelMap = {};
       this.categories.forEach(c => { colorMap[c.id] = c.color; labelMap[c.id] = c.name; });
 
-      // Confidence bars
       const confEl = document.getElementById('sent-confidence');
       confEl.innerHTML = '';
       for (const [cat, conf] of Object.entries(result.confidences)) {
@@ -1686,151 +1449,74 @@ const Sentiment = {
 tabInits['tab-sentiment'] = { init: () => Sentiment.init(), done: false };
 
 // ═══════════════════════════════════════════════════════════════════════
-// TAB 5: Pose the Dead
+// TAB 4: Pose the Dead
 // ═══════════════════════════════════════════════════════════════════════
-const PoseCompare = {
-  realURI: null,
-  aiURI: null,
-
-  KP_NAMES: ['nose','left_eye','right_eye','left_ear','right_ear',
-    'left_shoulder','right_shoulder','left_elbow','right_elbow',
-    'left_wrist','right_wrist','left_hip','right_hip',
-    'left_knee','right_knee','left_ankle','right_ankle'],
-
-  SKELETON: [
-    [0,1],[0,2],[1,3],[2,4],
-    [5,6],[5,7],[7,9],[6,8],[8,10],
-    [5,11],[6,12],[11,12],
-    [11,13],[13,15],[12,14],[14,16]
-  ],
+const PoseDead = {
+  faceURI: null,
 
   init() {
-    setupUploadArea('pose-real-area', 'pose-real-file', async (file) => {
-      this.realURI = await fileToDataURI(file);
+    setupUploadArea('pose-face-area', 'pose-face-file', async (file) => {
+      this.faceURI = await fileToDataURI(file);
+      document.getElementById('pose-face-img').src = this.faceURI;
+      document.getElementById('pose-face-preview').style.display = 'block';
       this.updateBtn();
     });
-    setupUploadArea('pose-ai-area', 'pose-ai-file', async (file) => {
-      this.aiURI = await fileToDataURI(file);
-      this.updateBtn();
-    });
-    document.getElementById('btn-pose').addEventListener('click', () => this.analyze());
+    document.getElementById('btn-pose').addEventListener('click', () => this.generate());
+    document.getElementById('pose-prompt').addEventListener('input', () => this.updateBtn());
   },
 
   updateBtn() {
-    document.getElementById('btn-pose').disabled = !(this.realURI && this.aiURI);
+    const prompt = document.getElementById('pose-prompt').value.trim();
+    document.getElementById('btn-pose').disabled = !this.faceURI || !prompt;
   },
 
-  drawSkeleton(canvas, poses, confThreshold = 0.3) {
-    const ctx = canvas.getContext('2d');
-    if (!poses.length) return;
-    const kps = poses[0].keypoints;
-
-    ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
-    ctx.lineWidth = 2;
-    this.SKELETON.forEach(([i1, i2]) => {
-      const p1 = kps[i1], p2 = kps[i2];
-      if (p1.score > confThreshold && p2.score > confThreshold) {
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.stroke();
-      }
-    });
-
-    kps.forEach(kp => {
-      if (kp.score > confThreshold) {
-        ctx.beginPath();
-        ctx.arc(kp.x, kp.y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = kp.score > 0.5 ? '#00ff66' : '#ffd94a';
-        ctx.fill();
-      }
-    });
-  },
-
-  async analyze() {
+  async generate() {
     const btn = document.getElementById('btn-pose');
+    const prompt = document.getElementById('pose-prompt').value.trim();
+    const style = document.getElementById('pose-style').value;
     const loading = document.getElementById('pose-loading');
     const fill = document.getElementById('pose-loading-fill');
     const status = document.getElementById('pose-loading-status');
     const results = document.getElementById('pose-results');
 
+    if (!this.faceURI || !prompt) return;
+
     btn.disabled = true;
+    btn.textContent = 'Generating...';
     loading.classList.add('visible');
     results.classList.remove('visible');
 
     try {
-      status.textContent = 'Loading MoveNet...';
-      fill.style.width = '20%';
-      const detector = await Models.moveNet();
+      const output = await runPrediction(
+        '/api/photomaker',
+        { image: this.faceURI, prompt, style, num_outputs: 1 },
+        msg => { status.textContent = msg; },
+        pct => { fill.style.width = pct + '%'; }
+      );
 
-      // Analyze real image
-      status.textContent = 'Analyzing real photo...';
-      fill.style.width = '40%';
+      const images = Array.isArray(output) ? output : [output];
+      if (images.length === 0) throw new Error('No image returned');
 
-      const realImg = new Image();
-      await new Promise((resolve, reject) => { realImg.onload = resolve; realImg.onerror = reject; realImg.src = this.realURI; });
-      const realCanvas = document.getElementById('pose-canvas-real');
-      const maxW = 400;
-      let rw = realImg.width, rh = realImg.height;
-      if (rw > maxW) { const s = maxW / rw; rw = Math.round(rw * s); rh = Math.round(rh * s); }
-      realCanvas.width = rw;
-      realCanvas.height = rh;
-      realCanvas.getContext('2d').drawImage(realImg, 0, 0, rw, rh);
-      const realPoses = await detector.estimatePoses(realCanvas);
-      this.drawSkeleton(realCanvas, realPoses);
+      document.getElementById('pose-original-img').src = this.faceURI;
+      document.getElementById('pose-generated-img').src = String(images[0]);
 
-      // Analyze AI image
-      status.textContent = 'Analyzing AI image...';
-      fill.style.width = '70%';
-
-      const aiImg = new Image();
-      await new Promise((resolve, reject) => { aiImg.onload = resolve; aiImg.onerror = reject; aiImg.src = this.aiURI; });
-      const aiCanvas = document.getElementById('pose-canvas-ai');
-      let aw = aiImg.width, ah = aiImg.height;
-      if (aw > maxW) { const s = maxW / aw; aw = Math.round(aw * s); ah = Math.round(ah * s); }
-      aiCanvas.width = aw;
-      aiCanvas.height = ah;
-      aiCanvas.getContext('2d').drawImage(aiImg, 0, 0, aw, ah);
-      const aiPoses = await detector.estimatePoses(aiCanvas);
-      this.drawSkeleton(aiCanvas, aiPoses);
-
-      // Build comparison table
-      fill.style.width = '90%';
-      const tbody = document.querySelector('#pose-kp-table tbody');
-      tbody.innerHTML = '';
-
-      const realKps = realPoses.length ? realPoses[0].keypoints : [];
-      const aiKps = aiPoses.length ? aiPoses[0].keypoints : [];
-
-      this.KP_NAMES.forEach((name, i) => {
-        const rConf = realKps[i] ? realKps[i].score : 0;
-        const aConf = aiKps[i] ? aiKps[i].score : 0;
-        const tr = document.createElement('tr');
-        const rClass = rConf >= aConf ? 'higher' : 'lower';
-        const aClass = aConf >= rConf ? 'higher' : 'lower';
-        tr.innerHTML = `<td>${name}</td>
-          <td class="${rClass}">${(rConf * 100).toFixed(1)}%</td>
-          <td class="${aClass}">${(aConf * 100).toFixed(1)}%</td>`;
-        tbody.appendChild(tr);
-      });
-
-      fill.style.width = '100%';
-      status.textContent = 'Done!';
-      setTimeout(() => loading.classList.remove('visible'), 500);
+      loading.classList.remove('visible');
       results.classList.add('visible');
     } catch (err) {
       loading.classList.remove('visible');
-      console.error('Pose error:', err);
+      console.error('PhotoMaker error:', err);
+      status.textContent = 'Error: ' + err.message;
     } finally {
       btn.disabled = false;
+      btn.textContent = 'Generate';
     }
   }
 };
 
-tabInits['tab-pose'] = { init: () => PoseCompare.init(), done: false };
+tabInits['tab-pose'] = { init: () => PoseDead.init(), done: false };
 
 // ═══════════════════════════════════════════════════════════════════════
-// TAB 6: Prompt Necromancy
+// TAB 5: Prompt Necromancy
 // ═══════════════════════════════════════════════════════════════════════
 const PromptNecromancy = {
   DEFAULT_CRITERIA: [
