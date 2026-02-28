@@ -365,6 +365,7 @@
     <button class="btn" onclick="showImportModal()">Import HTML</button>
     <button class="btn" onclick="showThemeModal()">Theme</button>
     <button class="btn btn-primary" onclick="exportHTML()">Export HTML</button>
+    <button class="btn btn-primary" onclick="exportPDF()" style="background:#b48eff; border-color:#b48eff;">Export PDF</button>
   </div>
 
   <!-- MAIN LAYOUT -->
@@ -1776,6 +1777,147 @@
       a.href = URL.createObjectURL(blob);
       a.download = (t.title || 'workshop').replace(/[^a-zA-Z0-9]/g, '_') + '.html';
       a.click();
+    }
+
+    // =========================================
+    // EXPORT PDF
+    // =========================================
+
+    function exportPDF() {
+      if (!slides.length) { alert('No slides to export.'); return; }
+
+      const t = theme;
+      const printWin = window.open('', '_blank');
+      let html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<title>${escapeHtml(t.title)} — PDF</title>
+<style>
+  @page { size: landscape; margin: 0; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body { background: ${t.bg}; margin: 0; padding: 0; }
+
+  .pdf-slide {
+    width: 100vw;
+    height: 100vh;
+    background: ${t.bg};
+    color: ${t.text};
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 80px;
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+    position: relative;
+
+    --bg: ${t.bg};
+    --bg-card: ${t.bgCard};
+    --text: ${t.text};
+    --dim: ${t.dim};
+    --accent: ${t.accent};
+    --green: ${t.green};
+    --red: ${t.red};
+    --yellow: ${t.yellow};
+    --pink: ${t.pink};
+    --orange: ${t.orange};
+    --purple: ${t.purple};
+    --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  .pdf-slide:last-child { page-break-after: auto; break-after: auto; }
+  .pdf-slide::before, .pdf-slide::after { content: ''; flex: 1 0 0px; }
+
+  .pdf-slide h1 { font-size: 3.2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 16px; color: var(--text); }
+  .pdf-slide h2 { font-size: 2.4rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 20px; color: var(--text); }
+  .pdf-slide h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
+  .pdf-slide p, .pdf-slide li { font-size: 1.15rem; line-height: 1.7; color: var(--dim); }
+  .pdf-slide ul { list-style: none; padding: 0; text-align: left; }
+  .pdf-slide ul li { padding: 6px 0; padding-left: 24px; position: relative; }
+  .pdf-slide ul li::before { content: '\\2192'; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); }
+  .pdf-slide strong { color: var(--text); font-weight: 600; }
+  .pdf-slide em { color: var(--accent); font-style: normal; }
+
+  .accent { color: var(--accent); }
+  .green { color: var(--green); }
+  .red { color: var(--red); }
+  .yellow { color: var(--yellow); }
+  .pink { color: var(--pink); }
+  .orange { color: var(--orange); }
+  .purple { color: var(--purple); }
+
+  .title-slide { align-items: center; text-align: center; justify-content: center; }
+  .title-slide h1 { font-size: 3.8rem; }
+  .title-slide .subtitle { font-size: 1.2rem; color: var(--dim); font-family: var(--mono); margin-top: 12px; }
+
+  .section-title { align-items: center; text-align: center; justify-content: center; }
+  .section-title h2 { font-size: 3rem; color: var(--accent); }
+  .section-title .divider { width: 80px; height: 3px; background: var(--accent); margin: 20px auto; border-radius: 2px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; width: 100%; text-align: left; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; width: 100%; text-align: left; }
+
+  .img-row { display: flex; gap: 16px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+  .img-row img { max-height: 280px; border-radius: 8px; object-fit: contain; }
+
+  .card { background: var(--bg-card); border-radius: 12px; padding: 24px; border-left: 3px solid var(--accent); text-align: left; }
+  .card.green-border { border-left-color: var(--green); }
+  .card.red-border { border-left-color: var(--red); }
+  .card.yellow-border { border-left-color: var(--yellow); }
+  .card.pink-border { border-left-color: var(--pink); }
+  .card.orange-border { border-left-color: var(--orange); }
+  .card.purple-border { border-left-color: var(--purple); }
+
+  .pdf-slide img { max-width: 100%; max-height: 55vh; border-radius: 8px; object-fit: contain; }
+  .pdf-slide img.full { max-height: 70vh; margin: 0 auto; display: block; }
+  .pdf-slide img.small { max-height: 180px; }
+  .pdf-slide img.medium { max-height: 300px; }
+
+  .caption { font-size: 0.85rem; color: var(--dim); font-family: var(--mono); text-align: center; margin-top: 8px; }
+
+  .quote { font-size: 1.4rem; font-style: italic; line-height: 1.6; color: var(--text); border-left: 4px solid var(--accent); padding: 20px 30px; background: var(--bg-card); border-radius: 0 12px 12px 0; max-width: 700px; text-align: left; }
+
+  /* Fragments are fully visible in PDF */
+  .fragment { opacity: 1 !important; }
+
+  /* Hide videos/iframes — show placeholder */
+  .pdf-slide video, .pdf-slide iframe { display: none; }
+  .video-placeholder {
+    background: var(--bg-card); border: 2px dashed var(--dim); border-radius: 12px;
+    padding: 40px 60px; color: var(--dim); font-family: var(--mono); font-size: 1rem;
+    text-align: center;
+  }
+
+  @media print {
+    body { background: ${t.bg} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+    .pdf-slide { background: ${t.bg} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+    .card { background: ${t.bgCard} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .quote { background: ${t.bgCard} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head><body>`;
+
+      slides.forEach((slide, i) => {
+        // Render using a pdf-slide class instead of .slide
+        let slideHtml = renderSlideHTML(slide, false);
+        // Replace class="slide with class="pdf-slide
+        slideHtml = slideHtml.replace(/class="slide\b/g, 'class="pdf-slide');
+        // Replace video/iframe with placeholders
+        slideHtml = slideHtml.replace(/<video[^>]*src="([^"]*)"[^>]*><\/video>/g,
+          '<div class="video-placeholder">Video: $1</div>');
+        slideHtml = slideHtml.replace(/<iframe[^>]*src="([^"]*)"[^>]*><\/iframe>/g,
+          '<div class="video-placeholder">Embed: $1</div>');
+        html += slideHtml + '\n';
+      });
+
+      html += '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},500);};</' + 'script></body></html>';
+
+      printWin.document.open();
+      printWin.document.write(html);
+      printWin.document.close();
     }
 
     // =========================================
