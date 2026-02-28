@@ -358,9 +358,8 @@
     <button class="btn" onclick="duplicateSlide()">Duplicate</button>
     <button class="btn btn-danger" onclick="deleteSlide()">Delete</button>
     <div class="toolbar-spacer"></div>
-    <button class="btn" onclick="saveToLocalStorage()">Save</button>
-    <button class="btn" onclick="downloadJSON()">Download JSON</button>
-    <button class="btn" onclick="document.getElementById('jsonUpload').click()">Load JSON</button>
+    <button class="btn" onclick="saveProject()">Save</button>
+    <button class="btn" onclick="document.getElementById('jsonUpload').click()">Open</button>
     <input type="file" id="jsonUpload" accept=".json" style="display:none" onchange="loadJSON(event)">
     <button class="btn" onclick="showImportModal()">Import HTML</button>
     <button class="btn" onclick="showThemeModal()">Theme</button>
@@ -1189,16 +1188,14 @@
       renderPreview();
     }
 
-    function saveToLocalStorage() {
-      localStorage.setItem('workshop-editor-project', JSON.stringify(getProjectData()));
-      alert('Saved to browser storage.');
-    }
-
-    function downloadJSON() {
+    function saveProject() {
+      const defaultName = (theme.title || 'workshop').replace(/[^a-zA-Z0-9_ -]/g, '_') + '.json';
+      const filename = prompt('Save as:', defaultName);
+      if (!filename) return;
       const blob = new Blob([JSON.stringify(getProjectData(), null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = (theme.title || 'workshop').replace(/[^a-zA-Z0-9]/g, '_') + '.json';
+      a.download = filename.endsWith('.json') ? filename : filename + '.json';
       a.click();
     }
 
