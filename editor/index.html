@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workshop Slide Editor</title>
+  <style>
+    /* ============ EDITOR CHROME ============ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ed-bg: #1a1a2e;
+      --ed-panel: #16213e;
+      --ed-card: #1f2b47;
+      --ed-border: #2a3a5c;
+      --ed-text: #e0e0e0;
+      --ed-dim: #8899aa;
+      --ed-accent: #4a9eff;
+      --ed-green: #00ff66;
+      --ed-red: #ff4a4a;
+      --ed-input-bg: #0d1b2a;
+    }
+
+    body {
+      background: var(--ed-bg);
+      color: var(--ed-text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top bar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--ed-panel);
+      border-bottom: 1px solid var(--ed-border);
+      flex-shrink: 0;
+    }
+    .toolbar h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ed-accent);
+      margin-right: 16px;
+    }
+    .toolbar-spacer { flex: 1; }
+
+    /* Buttons */
+    .btn {
+      padding: 6px 14px;
+      border: 1px solid var(--ed-border);
+      background: var(--ed-card);
+      color: var(--ed-text);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .btn:hover { border-color: var(--ed-accent); color: var(--ed-accent); }
+    .btn-primary { background: var(--ed-accent); color: #000; border-color: var(--ed-accent); font-weight: 600; }
+    .btn-primary:hover { background: #3a8aef; }
+    .btn-danger { border-color: var(--ed-red); color: var(--ed-red); }
+    .btn-danger:hover { background: rgba(255,74,74,0.15); }
+    .btn-sm { padding: 3px 8px; font-size: 0.75rem; }
+
+    /* Main layout */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Slide list panel */
+    .slide-list-panel {
+      width: 200px;
+      background: var(--ed-panel);
+      border-right: 1px solid var(--ed-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .slide-list-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--ed-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--ed-dim);
+    }
+    .slide-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px;
+    }
+    .slide-list-item {
+      padding: 8px 10px;
+      margin-bottom: 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .slide-list-item:hover { background: var(--ed-card); }
+    .slide-list-item.active { background: var(--ed-card); border-color: var(--ed-accent); }
+    .slide-list-item .slide-num {
+      flex-shrink: 0;
+      width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--ed-input-bg);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-family: 'SF Mono', monospace;
+      color: var(--ed-dim);
+    }
+    .slide-list-item .slide-label {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .slide-list-item .slide-type-tag {
+      font-size: 0.6rem;
+      color: var(--ed-accent);
+      font-family: 'SF Mono', monospace;
+    }
+    .slide-list-item.dragging { opacity: 0.4; }
+    .slide-list-item.drag-over { border-top: 2px solid var(--ed-accent); }
+
+    /* Editor form panel */
+    .editor-panel {
+      flex: 1;
+      min-width: 320px;
+      max-width: 480px;
+      overflow-y: auto;
+      padding: 16px;
+      border-right: 1px solid var(--ed-border);
+    }
+
+    /* Form controls */
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--ed-dim);
+      margin-bottom: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .form-group input[type="text"],
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--ed-input-bg);
+      border: 1px solid var(--ed-border);
+      border-radius: 6px;
+      color: var(--ed-text);
+      font-family: inherit;
+      font-size: 0.85rem;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--ed-accent);
+    }
+    .form-group textarea { resize: vertical; min-height: 60px; }
+    .form-group select { cursor: pointer; }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+    }
+    .form-row .form-group { flex: 1; }
+
+    .form-section {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--ed-border);
+    }
+    .form-section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--ed-accent);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Bullet/card list editor */
+    .list-editor-item {
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .list-editor-item input { flex: 1; }
+    .list-editor-item .btn-sm { flex-shrink: 0; margin-top: 4px; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--ed-dim);
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .checkbox-row input[type="checkbox"] { cursor: pointer; }
+
+    /* Preview panel */
+    .preview-panel {
+      flex: 2;
+      background: #0a0a0a;
+      position: relative;
+      overflow: hidden;
+    }
+    .preview-container {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    /* === WORKSHOP CSS (scoped to preview) === */
+    .preview-container {
+      color: #e8e8e8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      --bg: #0a0a0a;
+      --bg-card: #141414;
+      --text: #e8e8e8;
+      --dim: #777;
+      --accent: #4a9eff;
+      --green: #00ff66;
+      --red: #ff4a4a;
+      --yellow: #ffd94a;
+      --pink: #ff6ec7;
+      --orange: #ff8c42;
+      --purple: #b48eff;
+      --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .preview-container .prev-slide {
+      position: absolute;
+      inset: 0;
+      padding: 40px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+    }
+    .preview-container .prev-slide::before,
+    .preview-container .prev-slide::after { content: ''; flex: 1 0 0px; }
+
+    .preview-container .prev-slide h1 { font-size: 3.2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 16px; color: var(--text); }
+    .preview-container .prev-slide h2 { font-size: 2.4rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 20px; color: var(--text); }
+    .preview-container .prev-slide h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
+    .preview-container .prev-slide p,
+    .preview-container .prev-slide li { font-size: 1.15rem; line-height: 1.7; color: var(--dim); }
+    .preview-container .prev-slide ul { list-style: none; padding: 0; text-align: left; }
+    .preview-container .prev-slide ul li { padding: 6px 0; padding-left: 24px; position: relative; }
+    .preview-container .prev-slide ul li::before { content: '\2192'; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); }
+    .preview-container .prev-slide strong { color: var(--text); font-weight: 600; }
+    .preview-container .prev-slide em { color: var(--accent); font-style: normal; }
+    .preview-container .prev-slide a { color: var(--accent); text-decoration: none; }
+
+    .preview-container .accent { color: var(--accent); }
+    .preview-container .green { color: var(--green); }
+    .preview-container .red { color: var(--red); }
+    .preview-container .yellow { color: var(--yellow); }
+    .preview-container .pink { color: var(--pink); }
+    .preview-container .orange { color: var(--orange); }
+    .preview-container .purple { color: var(--purple); }
+
+    .preview-container .title-slide { align-items: center; text-align: center; justify-content: center; }
+    .preview-container .title-slide h1 { font-size: 3.8rem; }
+    .preview-container .title-slide .subtitle { font-size: 1.2rem; color: var(--dim); font-family: var(--mono); margin-top: 12px; }
+
+    .preview-container .section-title { align-items: center; text-align: center; justify-content: center; }
+    .preview-container .section-title h2 { font-size: 3rem; color: var(--accent); }
+    .preview-container .section-title .divider { width: 80px; height: 3px; background: var(--accent); margin: 20px auto; border-radius: 2px; }
+
+    .preview-container .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; width: 100%; text-align: left; }
+    .preview-container .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; width: 100%; text-align: left; }
+
+    .preview-container .img-row { display: flex; gap: 16px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+    .preview-container .img-row img { max-height: 280px; border-radius: 8px; object-fit: contain; }
+
+    .preview-container .card { background: var(--bg-card); border-radius: 12px; padding: 24px; border-left: 3px solid var(--accent); text-align: left; }
+    .preview-container .card.green-border { border-left-color: var(--green); }
+    .preview-container .card.red-border { border-left-color: var(--red); }
+    .preview-container .card.yellow-border { border-left-color: var(--yellow); }
+    .preview-container .card.pink-border { border-left-color: var(--pink); }
+    .preview-container .card.orange-border { border-left-color: var(--orange); }
+    .preview-container .card.purple-border { border-left-color: var(--purple); }
+
+    .preview-container .prev-slide img { max-width: 100%; max-height: 65vh; border-radius: 8px; object-fit: contain; }
+    .preview-container .prev-slide img.full { max-height: 80vh; margin: 0 auto; display: block; }
+    .preview-container .prev-slide img.small { max-height: 200px; }
+    .preview-container .prev-slide img.medium { max-height: 350px; }
+    .preview-container .prev-slide video,
+    .preview-container .prev-slide iframe { border-radius: 8px; }
+
+    .preview-container .caption { font-size: 0.85rem; color: var(--dim); font-family: var(--mono); text-align: center; margin-top: 8px; }
+
+    .preview-container .quote { font-size: 1.4rem; font-style: italic; line-height: 1.6; color: var(--text); border-left: 4px solid var(--accent); padding: 20px 30px; background: var(--bg-card); border-radius: 0 12px 12px 0; max-width: 700px; text-align: left; }
+
+    .preview-container .fragment { opacity: 0.35; border: 1px dashed rgba(255,255,255,0.2); }
+
+    /* Preview empty state */
+    .preview-empty {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #444; font-size: 1.2rem; font-family: 'SF Mono', monospace;
+    }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--ed-panel); border: 1px solid var(--ed-border);
+      border-radius: 12px; padding: 24px; max-width: 600px; width: 90%;
+      max-height: 80vh; overflow-y: auto;
+    }
+    .modal h2 { font-size: 1.1rem; margin-bottom: 16px; color: var(--ed-accent); }
+    .modal .form-group { margin-bottom: 12px; }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--ed-border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--ed-accent); }
+  </style>
+</head>
+<body>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <h1>Workshop Slide Editor</h1>
+    <button class="btn" onclick="addSlide()">+ Add Slide</button>
+    <button class="btn" onclick="duplicateSlide()">Duplicate</button>
+    <button class="btn btn-danger" onclick="deleteSlide()">Delete</button>
+    <div class="toolbar-spacer"></div>
+    <button class="btn" onclick="saveToLocalStorage()">Save</button>
+    <button class="btn" onclick="downloadJSON()">Download JSON</button>
+    <button class="btn" onclick="document.getElementById('jsonUpload').click()">Load JSON</button>
+    <input type="file" id="jsonUpload" accept=".json" style="display:none" onchange="loadJSON(event)">
+    <button class="btn" onclick="showImportModal()">Import HTML</button>
+    <button class="btn" onclick="showThemeModal()">Theme</button>
+    <button class="btn btn-primary" onclick="exportHTML()">Export HTML</button>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main">
+
+    <!-- SLIDE LIST -->
+    <div class="slide-list-panel">
+      <div class="slide-list-header">
+        <span>SLIDES</span>
+        <span id="slideCount">0</span>
+      </div>
+      <div class="slide-list" id="slideList"></div>
+    </div>
+
+    <!-- EDITOR FORM -->
+    <div class="editor-panel" id="editorPanel">
+      <div id="editorContent">
+        <p style="color:var(--ed-dim); text-align:center; margin-top: 40px;">Click "+ Add Slide" to get started</p>
+      </div>
+    </div>
+
+    <!-- LIVE PREVIEW -->
+    <div class="preview-panel">
+      <div class="preview-container" id="previewContainer">
+        <div class="preview-empty">Live Preview</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME MODAL -->
+  <div class="modal-overlay hidden" id="themeModal">
+    <div class="modal">
+      <h2>Theme Settings</h2>
+      <div class="form-group">
+        <label>Presentation Title</label>
+        <input type="text" id="themeTitle" value="Workshop Presentation" oninput="updateTheme()">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Background</label>
+          <input type="text" id="themeBg" value="#0a0a0a" oninput="updateTheme()">
+        </div>
+        <div class="form-group">
+          <label>Card Background</label>
+          <input type="text" id="themeBgCard" value="#141414" oninput="updateTheme()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Text Color</label>
+          <input type="text" id="themeText" value="#e8e8e8" oninput="updateTheme()">
+        </div>
+        <div class="form-group">
+          <label>Dim Color</label>
+          <input type="text" id="themeDim" value="#777" oninput="updateTheme()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Accent</label>
+          <input type="text" id="themeAccent" value="#4a9eff" oninput="updateTheme()">
+        </div>
+        <div class="form-group">
+          <label>Green</label>
+          <input type="text" id="themeGreen" value="#00ff66" oninput="updateTheme()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Red</label>
+          <input type="text" id="themeRed" value="#ff4a4a" oninput="updateTheme()">
+        </div>
+        <div class="form-group">
+          <label>Yellow</label>
+          <input type="text" id="themeYellow" value="#ffd94a" oninput="updateTheme()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Pink</label>
+          <input type="text" id="themePink" value="#ff6ec7" oninput="updateTheme()">
+        </div>
+        <div class="form-group">
+          <label>Orange</label>
+          <input type="text" id="themeOrange" value="#ff8c42" oninput="updateTheme()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Purple</label>
+        <input type="text" id="themePurple" value="#b48eff" oninput="updateTheme()">
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:16px">
+        <button class="btn" onclick="closeModal('themeModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORT HTML MODAL -->
+  <div class="modal-overlay hidden" id="importModal">
+    <div class="modal">
+      <h2>Import Existing Workshop HTML</h2>
+      <div class="form-group">
+        <label>Paste HTML source or select a file</label>
+        <textarea id="importHtmlText" rows="10" placeholder="Paste the full HTML source here..."></textarea>
+      </div>
+      <div class="form-group">
+        <input type="file" id="importHtmlFile" accept=".html,.htm" onchange="loadImportFile(event)">
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:16px">
+        <button class="btn" onclick="closeModal('importModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="importHTML()">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================
+    // DATA MODEL
+    // =========================================
+
+    let slides = [];
+    let currentSlideIndex = -1;
+    let theme = {
+      title: 'Workshop Presentation',
+      bg: '#0a0a0a',
+      bgCard: '#141414',
+      text: '#e8e8e8',
+      dim: '#777',
+      accent: '#4a9eff',
+      green: '#00ff66',
+      red: '#ff4a4a',
+      yellow: '#ffd94a',
+      pink: '#ff6ec7',
+      orange: '#ff8c42',
+      purple: '#b48eff'
+    };
+
+    const SLIDE_TYPES = [
+      { value: 'title', label: 'Title Slide' },
+      { value: 'section', label: 'Section Title' },
+      { value: 'content', label: 'Content (Bullets)' },
+      { value: 'two-col', label: 'Two Column' },
+      { value: 'three-col', label: 'Three Column (Cards)' },
+      { value: 'image', label: 'Image' },
+      { value: 'image-row', label: 'Image Row' },
+      { value: 'quote', label: 'Quote' },
+      { value: 'video', label: 'Video' }
+    ];
+
+    const COLOR_OPTIONS = [
+      { value: 'accent', label: 'Accent (Blue)' },
+      { value: 'green', label: 'Green' },
+      { value: 'red', label: 'Red' },
+      { value: 'yellow', label: 'Yellow' },
+      { value: 'pink', label: 'Pink' },
+      { value: 'orange', label: 'Orange' },
+      { value: 'purple', label: 'Purple' }
+    ];
+
+    function createSlide(type) {
+      return {
+        type: type || 'content',
+        title: '',
+        subtitle: '',
+        author: '',
+        bullets: [],
+        media: [],
+        cards: [],
+        quoteText: '',
+        quoteAttribution: '',
+        notes: '',
+        accentColor: 'accent',
+        caption: '',
+        dividerColor: 'accent',
+        videoSrc: '',
+        videoCaption: ''
+      };
+    }
+
+    // =========================================
+    // SLIDE LIST
+    // =========================================
+
+    function renderSlideList() {
+      const list = document.getElementById('slideList');
+      list.innerHTML = '';
+      document.getElementById('slideCount').textContent = slides.length;
+
+      slides.forEach((slide, i) => {
+        const item = document.createElement('div');
+        item.className = 'slide-list-item' + (i === currentSlideIndex ? ' active' : '');
+        item.draggable = true;
+        item.dataset.index = i;
+
+        const label = slide.title || slide.quoteText || `(Slide ${i + 1})`;
+        const typeLabel = SLIDE_TYPES.find(t => t.value === slide.type)?.label || slide.type;
+
+        item.innerHTML = `
+          <span class="slide-num">${i + 1}</span>
+          <span>
+            <span class="slide-label">${escapeHtml(label).substring(0, 30)}</span><br>
+            <span class="slide-type-tag">${typeLabel}</span>
+          </span>
+        `;
+
+        item.addEventListener('click', () => selectSlide(i));
+        item.addEventListener('dragstart', onDragStart);
+        item.addEventListener('dragover', onDragOver);
+        item.addEventListener('dragleave', onDragLeave);
+        item.addEventListener('drop', onDrop);
+        item.addEventListener('dragend', onDragEnd);
+
+        list.appendChild(item);
+      });
+    }
+
+    // Drag and drop reorder
+    let dragIndex = -1;
+
+    function onDragStart(e) {
+      dragIndex = parseInt(e.currentTarget.dataset.index);
+      e.currentTarget.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+    function onDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+    function onDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+    function onDrop(e) {
+      e.preventDefault();
+      const dropIndex = parseInt(e.currentTarget.dataset.index);
+      e.currentTarget.classList.remove('drag-over');
+      if (dragIndex !== dropIndex) {
+        const [moved] = slides.splice(dragIndex, 1);
+        slides.splice(dropIndex, 0, moved);
+        if (currentSlideIndex === dragIndex) currentSlideIndex = dropIndex;
+        else if (dragIndex < currentSlideIndex && dropIndex >= currentSlideIndex) currentSlideIndex--;
+        else if (dragIndex > currentSlideIndex && dropIndex <= currentSlideIndex) currentSlideIndex++;
+        renderSlideList();
+        renderPreview();
+      }
+    }
+    function onDragEnd(e) {
+      e.currentTarget.classList.remove('dragging');
+      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    }
+
+    // =========================================
+    // SLIDE OPERATIONS
+    // =========================================
+
+    function addSlide(type) {
+      const slide = createSlide(type || 'content');
+      slides.push(slide);
+      currentSlideIndex = slides.length - 1;
+      renderSlideList();
+      renderEditor();
+      renderPreview();
+    }
+
+    function duplicateSlide() {
+      if (currentSlideIndex < 0) return;
+      const copy = JSON.parse(JSON.stringify(slides[currentSlideIndex]));
+      slides.splice(currentSlideIndex + 1, 0, copy);
+      currentSlideIndex++;
+      renderSlideList();
+      renderEditor();
+      renderPreview();
+    }
+
+    function deleteSlide() {
+      if (currentSlideIndex < 0) return;
+      if (slides.length === 1) {
+        if (!confirm('Delete the last slide?')) return;
+      }
+      slides.splice(currentSlideIndex, 1);
+      if (currentSlideIndex >= slides.length) currentSlideIndex = slides.length - 1;
+      renderSlideList();
+      renderEditor();
+      renderPreview();
+    }
+
+    function selectSlide(i) {
+      currentSlideIndex = i;
+      renderSlideList();
+      renderEditor();
+      renderPreview();
+    }
+
+    function moveSlide(direction) {
+      const newIndex = currentSlideIndex + direction;
+      if (newIndex < 0 || newIndex >= slides.length) return;
+      [slides[currentSlideIndex], slides[newIndex]] = [slides[newIndex], slides[currentSlideIndex]];
+      currentSlideIndex = newIndex;
+      renderSlideList();
+      renderPreview();
+    }
+
+    // =========================================
+    // EDITOR FORM
+    // =========================================
+
+    function renderEditor() {
+      const container = document.getElementById('editorContent');
+      if (currentSlideIndex < 0 || !slides.length) {
+        container.innerHTML = '<p style="color:var(--ed-dim); text-align:center; margin-top:40px;">Click "+ Add Slide" to get started</p>';
+        return;
+      }
+
+      const slide = slides[currentSlideIndex];
+      let html = '';
+
+      // Slide type + move buttons
+      html += `
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:14px;">
+          <div class="form-group" style="flex:1; margin-bottom:0;">
+            <label>Slide Type</label>
+            <select onchange="changeSlideType(this.value)">
+              ${SLIDE_TYPES.map(t => `<option value="${t.value}" ${t.value === slide.type ? 'selected' : ''}>${t.label}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn btn-sm" onclick="moveSlide(-1)" title="Move Up" style="margin-top:16px;">&#9650;</button>
+          <button class="btn btn-sm" onclick="moveSlide(1)" title="Move Down" style="margin-top:16px;">&#9660;</button>
+        </div>
+      `;
+
+      // Type-specific fields
+      switch (slide.type) {
+        case 'title':
+          html += textField('Title', 'title', slide.title);
+          html += textField('Subtitle', 'subtitle', slide.subtitle);
+          html += textField('Author', 'author', slide.author);
+          break;
+
+        case 'section':
+          html += textField('Section Title', 'title', slide.title);
+          html += colorPicker('Divider Color', 'dividerColor', slide.dividerColor || 'accent');
+          break;
+
+        case 'content':
+          html += textField('Heading', 'title', slide.title);
+          html += bulletsEditor(slide.bullets);
+          break;
+
+        case 'two-col':
+          html += textField('Heading', 'title', slide.title);
+          html += `<div class="form-section"><div class="form-section-title">Left Column — Bullets</div></div>`;
+          html += bulletsEditor(slide.bullets);
+          html += `<div class="form-section"><div class="form-section-title">Right Column — Media</div></div>`;
+          html += mediaEditor(slide.media, 0);
+          break;
+
+        case 'three-col':
+          html += textField('Heading', 'title', slide.title);
+          html += cardsEditor(slide.cards);
+          break;
+
+        case 'image':
+          html += textField('Heading (optional)', 'title', slide.title);
+          html += mediaEditor(slide.media, 0);
+          html += textField('Caption', 'caption', slide.caption);
+          break;
+
+        case 'image-row':
+          html += textField('Heading (optional)', 'title', slide.title);
+          html += mediaListEditor(slide.media);
+          html += textField('Caption', 'caption', slide.caption);
+          break;
+
+        case 'quote':
+          html += areaField('Quote Text', 'quoteText', slide.quoteText);
+          html += textField('Attribution', 'quoteAttribution', slide.quoteAttribution);
+          html += colorPicker('Border Color', 'accentColor', slide.accentColor);
+          break;
+
+        case 'video':
+          html += textField('Heading (optional)', 'title', slide.title);
+          html += textField('Video Source (path or URL)', 'videoSrc', slide.videoSrc);
+          html += textField('Caption', 'videoCaption', slide.videoCaption);
+          break;
+      }
+
+      // Speaker notes (all types)
+      html += `
+        <div class="form-section">
+          <div class="form-section-title">Speaker Notes</div>
+          ${areaField('Notes (visible in presenter mode)', 'notes', slide.notes)}
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function textField(label, field, value) {
+      return `
+        <div class="form-group">
+          <label>${label}</label>
+          <input type="text" value="${escapeAttr(value || '')}" oninput="updateField('${field}', this.value)">
+        </div>
+      `;
+    }
+
+    function areaField(label, field, value) {
+      return `
+        <div class="form-group">
+          <label>${label}</label>
+          <textarea oninput="updateField('${field}', this.value)">${escapeHtml(value || '')}</textarea>
+        </div>
+      `;
+    }
+
+    function colorPicker(label, field, value) {
+      return `
+        <div class="form-group">
+          <label>${label}</label>
+          <select onchange="updateField('${field}', this.value)">
+            ${COLOR_OPTIONS.map(c => `<option value="${c.value}" ${c.value === value ? 'selected' : ''}>${c.label}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    }
+
+    function bulletsEditor(bullets) {
+      let html = '<div class="form-section"><div class="form-section-title">Bullet Points</div>';
+      bullets.forEach((b, i) => {
+        html += `
+          <div class="list-editor-item">
+            <input type="text" value="${escapeAttr(b.text)}" oninput="updateBullet(${i}, 'text', this.value)" placeholder="Bullet text...">
+            <button class="btn btn-sm btn-danger" onclick="removeBullet(${i})">&times;</button>
+          </div>
+          <div style="display:flex; gap:12px; margin-bottom:8px; margin-left:4px;">
+            <label class="checkbox-row"><input type="checkbox" ${b.fragment ? 'checked' : ''} onchange="updateBullet(${i}, 'fragment', this.checked)"> Fragment</label>
+            <label class="checkbox-row"><input type="checkbox" ${b.bold ? 'checked' : ''} onchange="updateBullet(${i}, 'bold', this.checked)"> Bold</label>
+          </div>
+        `;
+      });
+      html += `<button class="btn btn-sm" onclick="addBullet()">+ Add Bullet</button></div>`;
+      return html;
+    }
+
+    function mediaEditor(mediaList, index) {
+      const m = mediaList[index] || { src: '', type: 'image', size: 'medium' };
+      return `
+        <div class="form-group">
+          <label>Media Source (path or URL)</label>
+          <input type="text" value="${escapeAttr(m.src)}" oninput="updateMedia(${index}, 'src', this.value)">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type</label>
+            <select onchange="updateMedia(${index}, 'type', this.value)">
+              <option value="image" ${m.type === 'image' ? 'selected' : ''}>Image</option>
+              <option value="video" ${m.type === 'video' ? 'selected' : ''}>Video</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Size</label>
+            <select onchange="updateMedia(${index}, 'size', this.value)">
+              <option value="small" ${m.size === 'small' ? 'selected' : ''}>Small</option>
+              <option value="medium" ${m.size === 'medium' ? 'selected' : ''}>Medium</option>
+              <option value="full" ${m.size === 'full' ? 'selected' : ''}>Full</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }
+
+    function mediaListEditor(mediaList) {
+      let html = '<div class="form-section"><div class="form-section-title">Images</div>';
+      mediaList.forEach((m, i) => {
+        html += `
+          <div class="list-editor-item">
+            <input type="text" value="${escapeAttr(m.src)}" oninput="updateMediaList(${i}, 'src', this.value)" placeholder="Image path or URL...">
+            <select style="width:80px" onchange="updateMediaList(${i}, 'size', this.value)">
+              <option value="small" ${m.size === 'small' ? 'selected' : ''}>Small</option>
+              <option value="medium" ${m.size === 'medium' ? 'selected' : ''}>Medium</option>
+              <option value="full" ${m.size === 'full' ? 'selected' : ''}>Full</option>
+            </select>
+            <button class="btn btn-sm btn-danger" onclick="removeMediaItem(${i})">&times;</button>
+          </div>
+        `;
+      });
+      html += `<button class="btn btn-sm" onclick="addMediaItem()">+ Add Image</button></div>`;
+      return html;
+    }
+
+    function cardsEditor(cards) {
+      let html = '<div class="form-section"><div class="form-section-title">Cards</div>';
+      cards.forEach((c, i) => {
+        html += `
+          <div style="background:var(--ed-input-bg); border-radius:8px; padding:10px; margin-bottom:8px; border:1px solid var(--ed-border);">
+            <div style="display:flex; gap:6px; margin-bottom:6px;">
+              <input type="text" value="${escapeAttr(c.title)}" oninput="updateCard(${i}, 'title', this.value)" placeholder="Card title..." style="flex:1">
+              <select style="width:90px" onchange="updateCard(${i}, 'color', this.value)">
+                ${COLOR_OPTIONS.map(co => `<option value="${co.value}" ${co.value === c.color ? 'selected' : ''}>${co.label}</option>`).join('')}
+              </select>
+              <button class="btn btn-sm btn-danger" onclick="removeCard(${i})">&times;</button>
+            </div>
+            <textarea rows="2" oninput="updateCard(${i}, 'content', this.value)" placeholder="Card content (one bullet per line)...">${escapeHtml(c.content || '')}</textarea>
+            <label class="checkbox-row"><input type="checkbox" ${c.fragment ? 'checked' : ''} onchange="updateCard(${i}, 'fragment', this.checked)"> Fragment reveal</label>
+          </div>
+        `;
+      });
+      html += `<button class="btn btn-sm" onclick="addCard()">+ Add Card</button></div>`;
+      return html;
+    }
+
+    // =========================================
+    // FIELD UPDATERS
+    // =========================================
+
+    function updateField(field, value) {
+      if (currentSlideIndex < 0) return;
+      slides[currentSlideIndex][field] = value;
+      renderPreview();
+      // Update slide list label
+      renderSlideList();
+    }
+
+    function changeSlideType(type) {
+      if (currentSlideIndex < 0) return;
+      slides[currentSlideIndex].type = type;
+      renderEditor();
+      renderPreview();
+      renderSlideList();
+    }
+
+    function updateBullet(i, field, value) {
+      slides[currentSlideIndex].bullets[i][field] = value;
+      renderPreview();
+    }
+
+    function addBullet() {
+      slides[currentSlideIndex].bullets.push({ text: '', fragment: false, bold: false });
+      renderEditor();
+      renderPreview();
+    }
+
+    function removeBullet(i) {
+      slides[currentSlideIndex].bullets.splice(i, 1);
+      renderEditor();
+      renderPreview();
+    }
+
+    function updateMedia(index, field, value) {
+      const slide = slides[currentSlideIndex];
+      if (!slide.media[index]) slide.media[index] = { src: '', type: 'image', size: 'medium' };
+      slide.media[index][field] = value;
+      renderPreview();
+    }
+
+    function updateMediaList(i, field, value) {
+      slides[currentSlideIndex].media[i][field] = value;
+      renderPreview();
+    }
+
+    function addMediaItem() {
+      slides[currentSlideIndex].media.push({ src: '', type: 'image', size: 'medium' });
+      renderEditor();
+      renderPreview();
+    }
+
+    function removeMediaItem(i) {
+      slides[currentSlideIndex].media.splice(i, 1);
+      renderEditor();
+      renderPreview();
+    }
+
+    function updateCard(i, field, value) {
+      slides[currentSlideIndex].cards[i][field] = value;
+      renderPreview();
+    }
+
+    function addCard() {
+      slides[currentSlideIndex].cards.push({ title: '', color: 'accent', content: '', fragment: false });
+      renderEditor();
+      renderPreview();
+    }
+
+    function removeCard(i) {
+      slides[currentSlideIndex].cards.splice(i, 1);
+      renderEditor();
+      renderPreview();
+    }
+
+    // =========================================
+    // PREVIEW RENDERING
+    // =========================================
+
+    function renderPreview() {
+      const container = document.getElementById('previewContainer');
+      if (currentSlideIndex < 0 || !slides.length) {
+        container.innerHTML = '<div class="preview-empty">Live Preview</div>';
+        return;
+      }
+      container.innerHTML = renderSlideHTML(slides[currentSlideIndex], true);
+    }
+
+    function renderSlideHTML(slide, isPreview) {
+      const cls = isPreview ? 'prev-slide' : 'slide';
+      let inner = '';
+
+      switch (slide.type) {
+        case 'title':
+          inner = `
+            <h1>${escapeHtml(slide.title)}</h1>
+            ${slide.subtitle ? `<p class="subtitle">${escapeHtml(slide.subtitle)}</p>` : ''}
+            ${slide.author ? `<p class="subtitle" style="margin-top:8px">${escapeHtml(slide.author)}</p>` : ''}
+          `;
+          return `<div class="${cls} title-slide"${notesAttr(slide, isPreview)}>${inner}</div>`;
+
+        case 'section': {
+          const color = slide.dividerColor || 'accent';
+          const colorVar = color === 'accent' ? 'var(--accent)' : `var(--${color})`;
+          inner = `
+            <h2>${escapeHtml(slide.title)}</h2>
+            <div class="divider" style="background:${colorVar}"></div>
+          `;
+          return `<div class="${cls} section-title"${notesAttr(slide, isPreview)}>${inner}</div>`;
+        }
+
+        case 'content':
+          inner = slide.title ? `<h2>${escapeHtml(slide.title)}</h2>` : '';
+          if (slide.bullets.length) {
+            inner += '<ul>';
+            slide.bullets.forEach(b => {
+              const frag = b.fragment ? ' class="fragment"' : '';
+              const text = b.bold ? `<strong>${escapeHtml(b.text)}</strong>` : escapeHtml(b.text);
+              inner += `<li${frag}>${text}</li>`;
+            });
+            inner += '</ul>';
+          }
+          return `<div class="${cls}"${notesAttr(slide, isPreview)}>${inner}</div>`;
+
+        case 'two-col':
+          inner = slide.title ? `<h2>${escapeHtml(slide.title)}</h2>` : '';
+          inner += '<div class="two-col">';
+          // Left: bullets
+          if (slide.bullets.length) {
+            inner += '<ul>';
+            slide.bullets.forEach(b => {
+              const frag = b.fragment ? ' class="fragment"' : '';
+              const text = b.bold ? `<strong>${escapeHtml(b.text)}</strong>` : escapeHtml(b.text);
+              inner += `<li${frag}>${text}</li>`;
+            });
+            inner += '</ul>';
+          } else {
+            inner += '<div></div>';
+          }
+          // Right: media
+          if (slide.media[0] && slide.media[0].src) {
+            const m = slide.media[0];
+            if (m.type === 'video') {
+              inner += `<video src="${escapeAttr(m.src)}" controls style="width:100%"></video>`;
+            } else {
+              inner += `<img src="${escapeAttr(m.src)}" class="${m.size}">`;
+            }
+          } else {
+            inner += '<div></div>';
+          }
+          inner += '</div>';
+          return `<div class="${cls}"${notesAttr(slide, isPreview)}>${inner}</div>`;
+
+        case 'three-col':
+          inner = slide.title ? `<h2>${escapeHtml(slide.title)}</h2>` : '';
+          inner += '<div class="three-col">';
+          (slide.cards || []).forEach(c => {
+            const borderCls = c.color !== 'accent' ? ` ${c.color}-border` : '';
+            const frag = c.fragment ? ' fragment' : '';
+            const colorVar = c.color === 'accent' ? 'var(--accent)' : `var(--${c.color})`;
+            inner += `<div class="card${borderCls}${frag}">`;
+            if (c.title) inner += `<h3 style="color:${colorVar}">${escapeHtml(c.title)}</h3>`;
+            if (c.content) {
+              const lines = c.content.split('\n').filter(l => l.trim());
+              if (lines.length > 1) {
+                inner += '<ul>' + lines.map(l => `<li>${escapeHtml(l.trim())}</li>`).join('') + '</ul>';
+              } else {
+                inner += `<p>${escapeHtml(c.content)}</p>`;
+              }
+            }
+            inner += '</div>';
+          });
+          inner += '</div>';
+          return `<div class="${cls}"${notesAttr(slide, isPreview)}>${inner}</div>`;
+
+        case 'image':
+          inner = slide.title ? `<h2>${escapeHtml(slide.title)}</h2>` : '';
+          if (slide.media[0] && slide.media[0].src) {
+            const m = slide.media[0];
+            inner += `<div style="text-align:center"><img src="${escapeAttr(m.src)}" class="${m.size}"></div>`;
+          }
+          if (slide.caption) inner += `<p class="caption">${escapeHtml(slide.caption)}</p>`;
+          return `<div class="${cls}"${notesAttr(slide, isPreview)}>${inner}</div>`;
+
+        case 'image-row':
+          inner = slide.title ? `<h2>${escapeHtml(slide.title)}</h2>` : '';
+          inner += '<div class="img-row">';
+          (slide.media || []).forEach(m => {
+            if (m.src) inner += `<img src="${escapeAttr(m.src)}" class="${m.size}">`;
+          });
+          inner += '</div>';
+          if (slide.caption) inner += `<p class="caption">${escapeHtml(slide.caption)}</p>`;
+          return `<div class="${cls}"${notesAttr(slide, isPreview)}>${inner}</div>`;
+
+        case 'quote': {
+          const color = slide.accentColor || 'accent';
+          const colorVar = color === 'accent' ? 'var(--accent)' : `var(--${color})`;
+          inner = `
+            <div class="quote" style="border-left-color:${colorVar}">
+              <p>${escapeHtml(slide.quoteText)}</p>
+            </div>
+          `;
+          if (slide.quoteAttribution) {
+            inner += `<p style="color:var(--dim); margin-top:12px; font-size:0.95rem;">— ${escapeHtml(slide.quoteAttribution)}</p>`;
+          }
+          return `<div class="${cls}"${notesAttr(slide, isPreview)}>${inner}</div>`;
+        }
+
+        case 'video':
+          inner = slide.title ? `<h2>${escapeHtml(slide.title)}</h2>` : '';
+          if (slide.videoSrc) {
+            if (slide.videoSrc.includes('youtube.com') || slide.videoSrc.includes('youtu.be') || slide.videoSrc.includes('vimeo.com')) {
+              let embedUrl = slide.videoSrc;
+              if (embedUrl.includes('youtube.com/watch')) {
+                embedUrl = embedUrl.replace('youtube.com/watch?v=', 'youtube.com/embed/');
+              } else if (embedUrl.includes('youtu.be/')) {
+                embedUrl = embedUrl.replace('youtu.be/', 'youtube.com/embed/');
+              } else if (embedUrl.includes('vimeo.com/') && !embedUrl.includes('player.vimeo.com')) {
+                embedUrl = embedUrl.replace('vimeo.com/', 'player.vimeo.com/video/');
+              }
+              inner += `<div style="text-align:center"><iframe src="${escapeAttr(embedUrl)}" style="width:80%; max-width:800px; aspect-ratio:16/9; border:none; border-radius:8px" allowfullscreen></iframe></div>`;
+            } else {
+              inner += `<div style="text-align:center"><video src="${escapeAttr(slide.videoSrc)}" controls style="width:90%; max-height:70vh"></video></div>`;
+            }
+          }
+          if (slide.videoCaption) inner += `<p class="caption">${escapeHtml(slide.videoCaption)}</p>`;
+          return `<div class="${cls}"${notesAttr(slide, isPreview)}>${inner}</div>`;
+
+        default:
+          return `<div class="${cls}"><p>Unknown slide type</p></div>`;
+      }
+    }
+
+    function notesAttr(slide, isPreview) {
+      if (isPreview || !slide.notes) return '';
+      return ` data-notes="${escapeAttr(slide.notes)}"`;
+    }
+
+    // =========================================
+    // THEME
+    // =========================================
+
+    function showThemeModal() {
+      document.getElementById('themeTitle').value = theme.title;
+      document.getElementById('themeBg').value = theme.bg;
+      document.getElementById('themeBgCard').value = theme.bgCard;
+      document.getElementById('themeText').value = theme.text;
+      document.getElementById('themeDim').value = theme.dim;
+      document.getElementById('themeAccent').value = theme.accent;
+      document.getElementById('themeGreen').value = theme.green;
+      document.getElementById('themeRed').value = theme.red;
+      document.getElementById('themeYellow').value = theme.yellow;
+      document.getElementById('themePink').value = theme.pink;
+      document.getElementById('themeOrange').value = theme.orange;
+      document.getElementById('themePurple').value = theme.purple;
+      document.getElementById('themeModal').classList.remove('hidden');
+    }
+
+    function updateTheme() {
+      theme.title = document.getElementById('themeTitle').value;
+      theme.bg = document.getElementById('themeBg').value;
+      theme.bgCard = document.getElementById('themeBgCard').value;
+      theme.text = document.getElementById('themeText').value;
+      theme.dim = document.getElementById('themeDim').value;
+      theme.accent = document.getElementById('themeAccent').value;
+      theme.green = document.getElementById('themeGreen').value;
+      theme.red = document.getElementById('themeRed').value;
+      theme.yellow = document.getElementById('themeYellow').value;
+      theme.pink = document.getElementById('themePink').value;
+      theme.orange = document.getElementById('themeOrange').value;
+      theme.purple = document.getElementById('themePurple').value;
+
+      // Update preview CSS vars
+      const pc = document.getElementById('previewContainer');
+      pc.style.setProperty('--bg', theme.bg);
+      pc.style.setProperty('--bg-card', theme.bgCard);
+      pc.style.setProperty('--text', theme.text);
+      pc.style.setProperty('--dim', theme.dim);
+      pc.style.setProperty('--accent', theme.accent);
+      pc.style.setProperty('--green', theme.green);
+      pc.style.setProperty('--red', theme.red);
+      pc.style.setProperty('--yellow', theme.yellow);
+      pc.style.setProperty('--pink', theme.pink);
+      pc.style.setProperty('--orange', theme.orange);
+      pc.style.setProperty('--purple', theme.purple);
+      pc.parentElement.style.background = theme.bg;
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    // =========================================
+    // SAVE / LOAD
+    // =========================================
+
+    function getProjectData() {
+      return { slides, theme, version: 1 };
+    }
+
+    function loadProjectData(data) {
+      slides = data.slides || [];
+      if (data.theme) theme = { ...theme, ...data.theme };
+      currentSlideIndex = slides.length > 0 ? 0 : -1;
+      updateTheme();
+      renderSlideList();
+      renderEditor();
+      renderPreview();
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem('workshop-editor-project', JSON.stringify(getProjectData()));
+      alert('Saved to browser storage.');
+    }
+
+    function downloadJSON() {
+      const blob = new Blob([JSON.stringify(getProjectData(), null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (theme.title || 'workshop').replace(/[^a-zA-Z0-9]/g, '_') + '.json';
+      a.click();
+    }
+
+    function loadJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          loadProjectData(JSON.parse(e.target.result));
+        } catch (err) {
+          alert('Invalid JSON file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    // Auto-load from localStorage on start
+    (function() {
+      const saved = localStorage.getItem('workshop-editor-project');
+      if (saved) {
+        try {
+          loadProjectData(JSON.parse(saved));
+        } catch(e) {}
+      }
+    })();
+
+    // =========================================
+    // IMPORT HTML
+    // =========================================
+
+    function showImportModal() {
+      document.getElementById('importHtmlText').value = '';
+      document.getElementById('importHtmlFile').value = '';
+      document.getElementById('importModal').classList.remove('hidden');
+    }
+
+    function loadImportFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('importHtmlText').value = e.target.result;
+      };
+      reader.readAsText(file);
+    }
+
+    function importHTML() {
+      const htmlStr = document.getElementById('importHtmlText').value.trim();
+      if (!htmlStr) { alert('No HTML provided.'); return; }
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlStr, 'text/html');
+      const slideDivs = doc.querySelectorAll('.slide');
+
+      if (slideDivs.length === 0) {
+        alert('No slides found (no elements with class "slide").');
+        return;
+      }
+
+      // Try to extract title
+      const titleEl = doc.querySelector('title');
+      if (titleEl) theme.title = titleEl.textContent;
+
+      // Extract CSS variables from :root if present
+      const styleEl = doc.querySelector('style');
+      if (styleEl) {
+        const css = styleEl.textContent;
+        const varMatch = (name) => {
+          const m = css.match(new RegExp(`--${name}:\\s*([^;]+);`));
+          return m ? m[1].trim() : null;
+        };
+        theme.bg = varMatch('bg') || theme.bg;
+        theme.bgCard = varMatch('bg-card') || theme.bgCard;
+        theme.text = varMatch('text') || theme.text;
+        theme.dim = varMatch('dim') || theme.dim;
+        theme.accent = varMatch('accent') || theme.accent;
+        theme.green = varMatch('green') || theme.green;
+        theme.red = varMatch('red') || theme.red;
+        theme.yellow = varMatch('yellow') || theme.yellow;
+        theme.pink = varMatch('pink') || theme.pink;
+        theme.orange = varMatch('orange') || theme.orange;
+        theme.purple = varMatch('purple') || theme.purple;
+      }
+
+      slides = [];
+      slideDivs.forEach(div => {
+        const slide = createSlide('content');
+        slide.notes = div.getAttribute('data-notes') || '';
+
+        // Detect slide type
+        if (div.classList.contains('title-slide')) {
+          slide.type = 'title';
+          const h1 = div.querySelector('h1');
+          if (h1) slide.title = h1.textContent;
+          const subs = div.querySelectorAll('.subtitle');
+          if (subs[0]) slide.subtitle = subs[0].textContent;
+          if (subs[1]) slide.author = subs[1].textContent;
+
+        } else if (div.classList.contains('section-title')) {
+          slide.type = 'section';
+          const h2 = div.querySelector('h2');
+          if (h2) slide.title = h2.textContent;
+          const divider = div.querySelector('.divider');
+          if (divider) {
+            const bg = divider.style.background || divider.style.backgroundColor || '';
+            if (bg.includes('red')) slide.dividerColor = 'red';
+            else if (bg.includes('green')) slide.dividerColor = 'green';
+            else if (bg.includes('yellow')) slide.dividerColor = 'yellow';
+            else if (bg.includes('pink')) slide.dividerColor = 'pink';
+            else if (bg.includes('orange')) slide.dividerColor = 'orange';
+            else if (bg.includes('purple')) slide.dividerColor = 'purple';
+            else slide.dividerColor = 'accent';
+          }
+
+        } else if (div.querySelector('.quote')) {
+          slide.type = 'quote';
+          const q = div.querySelector('.quote');
+          slide.quoteText = q.textContent.trim();
+
+        } else if (div.querySelector('.three-col')) {
+          slide.type = 'three-col';
+          const h2 = div.querySelector('h2');
+          if (h2) slide.title = h2.textContent;
+          div.querySelectorAll('.card').forEach(card => {
+            const c = { title: '', color: 'accent', content: '', fragment: card.classList.contains('fragment') };
+            const h3 = card.querySelector('h3');
+            if (h3) c.title = h3.textContent;
+            // Detect color
+            if (card.classList.contains('green-border')) c.color = 'green';
+            else if (card.classList.contains('red-border')) c.color = 'red';
+            else if (card.classList.contains('yellow-border')) c.color = 'yellow';
+            else if (card.classList.contains('pink-border')) c.color = 'pink';
+            else if (card.classList.contains('orange-border')) c.color = 'orange';
+            else if (card.classList.contains('purple-border')) c.color = 'purple';
+            // Content
+            const lis = card.querySelectorAll('li');
+            if (lis.length) {
+              c.content = Array.from(lis).map(li => li.textContent).join('\n');
+            } else {
+              const p = card.querySelector('p');
+              if (p) c.content = p.textContent;
+            }
+            slide.cards.push(c);
+          });
+
+        } else if (div.querySelector('.two-col')) {
+          slide.type = 'two-col';
+          const h2 = div.querySelector('h2');
+          if (h2) slide.title = h2.textContent;
+          const twoCol = div.querySelector('.two-col');
+          // Left bullets
+          twoCol.querySelectorAll('ul li').forEach(li => {
+            slide.bullets.push({
+              text: li.textContent,
+              fragment: li.classList.contains('fragment'),
+              bold: !!li.querySelector('strong')
+            });
+          });
+          // Right media
+          const img = twoCol.querySelector('img');
+          const vid = twoCol.querySelector('video');
+          if (img) {
+            slide.media.push({
+              src: img.getAttribute('src') || '',
+              type: 'image',
+              size: img.classList.contains('full') ? 'full' : img.classList.contains('small') ? 'small' : 'medium'
+            });
+          } else if (vid) {
+            slide.media.push({
+              src: vid.getAttribute('src') || '',
+              type: 'video',
+              size: 'medium'
+            });
+          }
+
+        } else if (div.querySelector('.img-row') && !div.querySelector('ul')) {
+          slide.type = 'image-row';
+          const h2 = div.querySelector('h2');
+          if (h2) slide.title = h2.textContent;
+          div.querySelectorAll('.img-row img').forEach(img => {
+            slide.media.push({
+              src: img.getAttribute('src') || '',
+              type: 'image',
+              size: img.classList.contains('full') ? 'full' : img.classList.contains('small') ? 'small' : 'medium'
+            });
+          });
+          const cap = div.querySelector('.caption');
+          if (cap) slide.caption = cap.textContent;
+
+        } else if (div.querySelector('video') || div.querySelector('iframe')) {
+          const vid = div.querySelector('video');
+          const iframe = div.querySelector('iframe');
+          if (vid || iframe) {
+            slide.type = 'video';
+            const h2 = div.querySelector('h2');
+            if (h2) slide.title = h2.textContent;
+            slide.videoSrc = vid ? (vid.getAttribute('src') || '') : (iframe.getAttribute('src') || '');
+            const cap = div.querySelector('.caption');
+            if (cap) slide.videoCaption = cap.textContent;
+          }
+
+        } else {
+          // Default: content slide
+          const h2 = div.querySelector('h2');
+          const h3 = div.querySelector('h3');
+          if (h2) slide.title = h2.textContent;
+          else if (h3) slide.title = h3.textContent;
+
+          // Check for single image (no img-row)
+          const imgs = div.querySelectorAll('img');
+          if (imgs.length === 1 && !div.querySelector('ul')) {
+            slide.type = 'image';
+            slide.media.push({
+              src: imgs[0].getAttribute('src') || '',
+              type: 'image',
+              size: imgs[0].classList.contains('full') ? 'full' : imgs[0].classList.contains('small') ? 'small' : 'medium'
+            });
+            const cap = div.querySelector('.caption');
+            if (cap) slide.caption = cap.textContent;
+          } else {
+            // Bullets
+            div.querySelectorAll('ul li').forEach(li => {
+              slide.bullets.push({
+                text: li.textContent,
+                fragment: li.classList.contains('fragment'),
+                bold: !!li.querySelector('strong')
+              });
+            });
+          }
+        }
+
+        slides.push(slide);
+      });
+
+      currentSlideIndex = 0;
+      closeModal('importModal');
+      updateTheme();
+      renderSlideList();
+      renderEditor();
+      renderPreview();
+      alert(`Imported ${slides.length} slides.`);
+    }
+
+    // =========================================
+    // EXPORT HTML
+    // =========================================
+
+    function exportHTML() {
+      const t = theme;
+      let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(t.title)}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: ${t.bg};
+      --bg-card: ${t.bgCard};
+      --text: ${t.text};
+      --dim: ${t.dim};
+      --accent: ${t.accent};
+      --green: ${t.green};
+      --red: ${t.red};
+      --yellow: ${t.yellow};
+      --pink: ${t.pink};
+      --orange: ${t.orange};
+      --purple: ${t.purple};
+      --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow: hidden;
+      height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .slide {
+      display: none;
+      position: absolute;
+      inset: 0;
+      padding: 40px 80px;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+    }
+
+    .slide::before, .slide::after { content: ''; flex: 1 0 0px; }
+    .slide > *:first-child { margin-top: 0; }
+    .slide.active { display: flex; animation: fadeIn 0.35s ease; }
+    .slide.fade-out { display: flex; animation: fadeOut 0.25s ease forwards; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+    .fragment { opacity: 0; transition: opacity 0.4s ease; }
+    .fragment.visible { opacity: 1; }
+
+    .slide h1 { font-size: 3.2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 16px; }
+    .slide h2 { font-size: 2.4rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 20px; }
+    .slide h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
+    .slide p, .slide li { font-size: 1.15rem; line-height: 1.7; color: var(--dim); }
+    .slide ul { list-style: none; padding: 0; text-align: left; }
+    .slide ul li { padding: 6px 0; padding-left: 24px; position: relative; }
+    .slide ul li::before { content: '\\2192'; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); }
+    .slide strong { color: var(--text); font-weight: 600; }
+    .slide em { color: var(--accent); font-style: normal; }
+    .slide a { color: var(--accent); text-decoration: none; }
+    .slide a:hover { text-decoration: underline; }
+
+    .accent { color: var(--accent); }
+    .green { color: var(--green); }
+    .red { color: var(--red); }
+    .yellow { color: var(--yellow); }
+    .pink { color: var(--pink); }
+    .orange { color: var(--orange); }
+    .purple { color: var(--purple); }
+
+    .title-slide { align-items: center; text-align: center; justify-content: center; }
+    .title-slide h1 { font-size: 3.8rem; }
+    .title-slide .subtitle { font-size: 1.2rem; color: var(--dim); font-family: var(--mono); margin-top: 12px; }
+
+    .section-title { align-items: center; text-align: center; justify-content: center; }
+    .section-title h2 { font-size: 3rem; color: var(--accent); }
+    .section-title .divider { width: 80px; height: 3px; background: var(--accent); margin: 20px auto; border-radius: 2px; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; width: 100%; text-align: left; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; width: 100%; text-align: left; }
+
+    .img-row { display: flex; gap: 16px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+    .img-row img { max-height: 350px; border-radius: 8px; object-fit: contain; }
+
+    .card { background: var(--bg-card); border-radius: 12px; padding: 24px; border-left: 3px solid var(--accent); text-align: left; }
+    .card.green-border { border-left-color: var(--green); }
+    .card.red-border { border-left-color: var(--red); }
+    .card.yellow-border { border-left-color: var(--yellow); }
+    .card.pink-border { border-left-color: var(--pink); }
+    .card.orange-border { border-left-color: var(--orange); }
+    .card.purple-border { border-left-color: var(--purple); }
+
+    .slide img { max-width: 100%; max-height: 65vh; border-radius: 8px; object-fit: contain; }
+    .slide img.full { max-height: 80vh; margin: 0 auto; display: block; }
+    .slide img.small { max-height: 200px; }
+    .slide img.medium { max-height: 350px; }
+    .slide video, .slide iframe { border-radius: 8px; }
+
+    .caption { font-size: 0.85rem; color: var(--dim); font-family: var(--mono); text-align: center; margin-top: 8px; }
+
+    .quote { font-size: 1.6rem; font-style: italic; line-height: 1.6; color: var(--text); border-left: 4px solid var(--accent); padding: 20px 30px; background: var(--bg-card); border-radius: 0 12px 12px 0; max-width: 700px; text-align: left; }
+
+    #nav { position: fixed; bottom: 24px; right: 30px; display: flex; gap: 8px; z-index: 100; }
+    #nav button { width: 40px; height: 40px; border: 1px solid #333; background: var(--bg-card); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all 0.2s; }
+    #nav button:hover { border-color: var(--accent); color: var(--accent); }
+    #slide-counter { position: fixed; bottom: 30px; left: 30px; font-family: var(--mono); font-size: 0.8rem; color: var(--dim); z-index: 100; }
+    #progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); transition: width 0.3s ease; z-index: 100; }
+
+    @media (max-width: 900px) {
+      .slide { padding: 30px 24px; }
+      .slide h1 { font-size: 2.2rem; }
+      .title-slide h1 { font-size: 2.6rem; }
+      .slide h2 { font-size: 1.8rem; }
+      .two-col, .three-col { grid-template-columns: 1fr; gap: 20px; }
+      .quote { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress"></div>
+
+`;
+
+      // Render each slide
+      slides.forEach((slide, i) => {
+        const activeClass = i === 0 ? ' active' : '';
+        let slideHtml = renderSlideHTML(slide, false);
+        // Add active class to first slide
+        if (i === 0) {
+          slideHtml = slideHtml.replace('class="slide', 'class="slide' + activeClass);
+        }
+        html += `  <!-- ${i + 1}: ${escapeHtml((slide.title || slide.type).substring(0, 40))} -->\n`;
+        html += '  ' + slideHtml + '\n\n';
+      });
+
+      // Nav + JS
+      html += `  <!-- NAV -->
+  <div id="slide-counter"></div>
+  <div id="nav">
+    <button onclick="prev()" title="Previous">&#8592;</button>
+    <button onclick="next()" title="Next">&#8594;</button>
+    <button onclick="toggleFullscreen()" title="Fullscreen (F)" style="font-size:0.8rem">&#x26F6;</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+    let transitioning = false;
+
+    function show(n) {
+      n = Math.max(0, Math.min(n, total - 1));
+      if (n === current || transitioning) return;
+      transitioning = true;
+      const prev = slides[current];
+      const next = slides[n];
+      prev.classList.add('fade-out');
+      prev.addEventListener('animationend', function handler() {
+        prev.removeEventListener('animationend', handler);
+        prev.classList.remove('active', 'fade-out');
+        current = n;
+        var nextFrags = next.querySelectorAll('.fragment');
+        nextFrags.forEach(function(f) {
+          if (n < prevIndex) f.classList.add('visible');
+          else f.classList.remove('visible');
+        });
+        next.classList.add('active');
+        document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+        document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+        transitioning = false;
+      }, { once: true });
+      var prevIndex = current;
+      setTimeout(function() {
+        if (transitioning) {
+          prev.classList.remove('active', 'fade-out');
+          current = n;
+          var nextFrags = next.querySelectorAll('.fragment');
+          nextFrags.forEach(function(f) {
+            if (n < prevIndex) f.classList.add('visible');
+            else f.classList.remove('visible');
+          });
+          next.classList.add('active');
+          document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+          document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+          transitioning = false;
+        }
+      }, 400);
+    }
+
+    function next() {
+      var frags = slides[current].querySelectorAll('.fragment:not(.visible)');
+      if (frags.length > 0) { frags[0].classList.add('visible'); return; }
+      show(current + 1);
+    }
+
+    function prev() {
+      var frags = slides[current].querySelectorAll('.fragment.visible');
+      if (frags.length > 0) { frags[frags.length - 1].classList.remove('visible'); return; }
+      show(current - 1);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+      else document.exitFullscreen();
+    }
+
+    var presenterWin = null;
+    var presenterStartTime = null;
+    var presenterTimerInterval = null;
+
+    function updatePresenter() {
+      if (!presenterWin || presenterWin.closed) return;
+      var doc = presenterWin.document;
+      var notes = slides[current].getAttribute('data-notes') || '(no notes for this slide)';
+      var title = slides[current].querySelector('h1, h2');
+      var titleText = title ? title.textContent : 'Slide ' + (current + 1);
+      var nextTitle = '(end)';
+      if (current + 1 < total) {
+        var nt = slides[current + 1].querySelector('h1, h2');
+        nextTitle = nt ? nt.textContent : 'Slide ' + (current + 2);
+      }
+      var el = doc.getElementById('p-slide-num');
+      if (el) el.textContent = 'Slide ' + (current + 1) + ' / ' + total;
+      el = doc.getElementById('p-title');
+      if (el) el.textContent = titleText;
+      el = doc.getElementById('p-notes');
+      if (el) el.textContent = notes;
+      el = doc.getElementById('p-next');
+      if (el) el.textContent = nextTitle;
+    }
+
+    function formatTime(ms) {
+      var s = Math.floor(ms / 1000);
+      var m = Math.floor(s / 60);
+      var h = Math.floor(m / 60);
+      s = s % 60; m = m % 60;
+      return (h > 0 ? h + ':' : '') + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function openPresenter() {
+      if (presenterWin && !presenterWin.closed) { presenterWin.focus(); return; }
+      presenterWin = window.open('', 'presenter', 'width=500,height=400,toolbar=no,menubar=no');
+      var doc = presenterWin.document;
+      doc.open();
+      doc.write('<!DOCTYPE html><html><head><title>Presenter Notes<\\/title><style>' +
+        'body{background:#111;color:#e8e8e8;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px;margin:0}' +
+        '.timer{font-size:3rem;font-family:monospace;color:#4a9eff;margin-bottom:8px}' +
+        '.slide-num{font-size:0.85rem;color:#777;margin-bottom:16px}' +
+        '.title{font-size:1.3rem;color:#fff;margin-bottom:16px;border-bottom:1px solid #333;padding-bottom:12px}' +
+        '.notes{font-size:1.1rem;line-height:1.8;color:#ccc;margin-bottom:24px;min-height:80px}' +
+        '.next-label{font-size:0.75rem;color:#777;margin-bottom:4px}' +
+        '.next-title{font-size:1rem;color:#999}' +
+        'button{padding:6px 16px;border:1px solid #444;background:transparent;color:#999;border-radius:4px;cursor:pointer;font-size:0.8rem;margin-right:8px}' +
+        'button:hover{border-color:#4a9eff;color:#4a9eff}' +
+        '.controls{margin-bottom:16px}' +
+        '<\\/style><\\/head><body>' +
+        '<div class="timer" id="p-timer">00:00<\\/div>' +
+        '<div class="controls"><button id="p-reset">Reset Timer<\\/button><button id="p-prev">\\u2190 Prev<\\/button><button id="p-next-btn">Next \\u2192<\\/button><\\/div>' +
+        '<div class="slide-num" id="p-slide-num"><\\/div>' +
+        '<div class="title" id="p-title"><\\/div>' +
+        '<div class="notes" id="p-notes"><\\/div>' +
+        '<div class="next-label">NEXT SLIDE<\\/div>' +
+        '<div class="next-title" id="p-next"><\\/div>' +
+        '<\\/body><\\/html>');
+      doc.close();
+      doc.getElementById('p-prev').addEventListener('click', function() { prev(); });
+      doc.getElementById('p-next-btn').addEventListener('click', function() { next(); });
+      doc.getElementById('p-reset').addEventListener('click', function() { presenterStartTime = Date.now(); });
+      doc.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+      });
+      presenterStartTime = presenterStartTime || Date.now();
+      clearInterval(presenterTimerInterval);
+      presenterTimerInterval = setInterval(function() {
+        if (presenterWin && !presenterWin.closed) {
+          var el = presenterWin.document.getElementById('p-timer');
+          if (el) el.textContent = formatTime(Date.now() - presenterStartTime);
+        } else { clearInterval(presenterTimerInterval); }
+      }, 1000);
+      updatePresenter();
+    }
+
+    var _origShow = show;
+    show = function(n) { _origShow(n); setTimeout(updatePresenter, 50); };
+    var _origNext = next;
+    next = function() { _origNext(); setTimeout(updatePresenter, 50); };
+    var _origPrev = prev;
+    prev = function() { _origPrev(); setTimeout(updatePresenter, 50); };
+    document.querySelector('#nav button:nth-child(1)').onclick = function() { prev(); };
+    document.querySelector('#nav button:nth-child(2)').onclick = function() { next(); };
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prev(); }
+      if (e.key === 'Home') { e.preventDefault(); show(0); }
+      if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+      if (e.key === 'p' || e.key === 'P') { openPresenter(); }
+      if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); }
+    });
+
+    var touchStartX = 0;
+    document.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', function(e) {
+      var diff = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(diff) > 50) { diff < 0 ? next() : prev(); }
+    });
+
+    show(0);
+  <\/script>
+
+</body>
+</html>`;
+
+      // Download
+      const blob = new Blob([html], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (t.title || 'workshop').replace(/[^a-zA-Z0-9]/g, '_') + '.html';
+      a.click();
+    }
+
+    // =========================================
+    // UTILITIES
+    // =========================================
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function escapeAttr(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+  </script>
+
+</body>
+</html>
