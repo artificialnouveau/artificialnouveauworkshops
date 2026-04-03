@@ -2,7 +2,6 @@
 ~$*
 .DS_Store
 .env
-cream/
 
 # dura_bulk — images stay local, scripts/results are tracked
 dura_bulk/images/
