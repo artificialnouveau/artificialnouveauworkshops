@@ -220,18 +220,20 @@
       container.innerHTML = '<p style="color:var(--text-dim); font-size:0.85rem;">No labels detected</p>';
       return;
     }
-    container.innerHTML = googleLabels.map(l => {
-      const pct = (l.score * 100).toFixed(1);
-      return `
-        <div class="prediction-bar">
-          <span class="prediction-label">${l.name}</span>
-          <div class="prediction-track">
-            <div class="prediction-fill" style="width:${pct}%; background:var(--yellow)"></div>
+    container.innerHTML = `<div style="background:var(--bg-card); padding:12px 16px; border-radius:var(--radius);">` +
+      googleLabels.map(l => {
+        const pct = (l.score * 100).toFixed(1);
+        return `
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; font-family:var(--mono); font-size:0.75rem;">
+            <span style="width:120px; text-align:right; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${l.name}</span>
+            <div style="flex:1; height:14px; background:#222; border-radius:3px; overflow:hidden;">
+              <div style="height:100%; width:${pct}%; background:var(--yellow); border-radius:3px;"></div>
+            </div>
+            <span style="width:45px; color:var(--text-dim); white-space:nowrap;">${pct}%</span>
           </div>
-          <span class="prediction-value">${pct}%</span>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('') +
+      `</div>`;
   }
 
   function renderFaces(faces) {
@@ -264,22 +266,22 @@
       const bars = emotions.map(e => {
         const pct = likelihoodMap[e.value] ?? 0;
         const colorClass = pct >= 75 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--text-dim)';
+        const label = e.value.replace(/_/g, ' ').toLowerCase();
         return `
-          <div class="prediction-bar">
-            <span class="prediction-label">${e.name}</span>
-            <div class="prediction-track">
-              <div class="prediction-fill" style="width:${pct}%; background:${colorClass}"></div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; font-family:var(--mono); font-size:0.75rem;">
+            <span style="width:70px; text-align:right; color:var(--text);">${e.name}</span>
+            <div style="flex:1; height:14px; background:#222; border-radius:3px; overflow:hidden;">
+              <div style="height:100%; width:${pct}%; background:${colorClass}; border-radius:3px;"></div>
             </div>
-            <span class="prediction-value">${e.value.replace('_', ' ').toLowerCase()}</span>
+            <span style="width:90px; color:var(--text-dim); white-space:nowrap;">${label}</span>
           </div>
         `;
       }).join('');
 
       return `
-        <div style="background:var(--bg-card); padding:16px; border-radius:var(--radius); margin-bottom:12px;">
-          <div class="mono" style="font-size:0.8rem; color:var(--green); margin-bottom:8px;">
-            Face ${i + 1} — Confidence: ${(f.confidence * 100).toFixed(0)}%
-            ${f.headwear !== 'VERY_UNLIKELY' ? ' — Headwear: ' + f.headwear.replace('_', ' ').toLowerCase() : ''}
+        <div style="background:var(--bg-card); padding:12px 16px; border-radius:var(--radius); margin-bottom:8px;">
+          <div class="mono" style="font-size:0.75rem; color:var(--green); margin-bottom:6px;">
+            Face ${i + 1} — ${(f.confidence * 100).toFixed(0)}% confidence
           </div>
           ${bars}
         </div>
@@ -310,18 +312,19 @@
       { key: 'racy', label: 'Racy' },
     ];
 
-    container.innerHTML = `<div style="background:var(--bg-card); padding:16px; border-radius:var(--radius); margin-bottom:24px;">` +
+    container.innerHTML = `<div style="background:var(--bg-card); padding:12px 16px; border-radius:var(--radius); margin-bottom:24px;">` +
       categories.map(c => {
         const val = ss[c.key] || 'UNKNOWN';
         const pct = likelihoodMap[val] ?? 0;
         const color = pct >= 75 ? 'var(--red)' : pct >= 50 ? 'var(--yellow)' : 'var(--text-dim)';
+        const label = val.replace(/_/g, ' ').toLowerCase();
         return `
-          <div class="prediction-bar">
-            <span class="prediction-label">${c.label}</span>
-            <div class="prediction-track">
-              <div class="prediction-fill" style="width:${pct}%; background:${color}"></div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; font-family:var(--mono); font-size:0.75rem;">
+            <span style="width:90px; text-align:right; color:var(--text);">${c.label}</span>
+            <div style="flex:1; height:14px; background:#222; border-radius:3px; overflow:hidden;">
+              <div style="height:100%; width:${pct}%; background:${color}; border-radius:3px;"></div>
             </div>
-            <span class="prediction-value">${val.replace(/_/g, ' ').toLowerCase()}</span>
+            <span style="width:90px; color:var(--text-dim); white-space:nowrap;">${label}</span>
           </div>
         `;
       }).join('') +
