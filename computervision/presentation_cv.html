@@ -364,6 +364,84 @@
     </div>
   </div>
 
+  <!-- The Caption is the Training Data -->
+  <div class="slide" data-notes="CLIP connects images and text in the same mathematical space. 400 million image-caption pairs from the internet. The captions are the training data — and nobody curated them.">
+    <h2>The Caption is the <span class="yellow">Training Data</span></h2>
+    <div class="two-col" style="align-items:stretch">
+      <div class="card yellow-border">
+        <h3 style="color:var(--yellow)">How CLIP works</h3>
+        <p>CLIP (OpenAI, 2021) pulls images and text into the <strong>same mathematical space</strong>. An image of a dog and the word "dog" become neighbouring points.</p>
+        <p style="margin-top:12px">This means every cultural bias in captions transfers directly into vision. The model doesn't learn from images alone. <strong>It learns from what people wrote about images.</strong></p>
+      </div>
+      <div class="card fragment">
+        <h3>400 million captions</h3>
+        <p>CLIP was trained on 400 million image-caption pairs scraped from the internet.</p>
+        <p style="margin-top:12px; color:var(--dim)">Nobody reviewed them. Nobody curated them. The internet's biases became the model's worldview.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Same Image, Different Captions -->
+  <div class="slide" data-notes="The same photograph, three completely different captions. The image is identical. The caption changes everything. This is what happened millions of times in training data.">
+    <h2>Same Image, <span class="yellow">Different Captions</span></h2>
+    <div style="max-width:650px; margin:0 auto;">
+      <p style="color:var(--dim); margin-bottom:20px; font-size:1.1rem;">One photograph. Three captions. Three different machines.</p>
+      <div class="card" style="margin-bottom:12px; border-left:3px solid var(--green);">
+        <p style="font-family:var(--mono); font-size:1.2rem; color:var(--green)">"A woman walking home at night"</p>
+      </div>
+      <div class="card fragment" style="margin-bottom:12px; border-left:3px solid var(--yellow);">
+        <p style="font-family:var(--mono); font-size:1.2rem; color:var(--yellow)">"A suspicious person in a dark alley"</p>
+      </div>
+      <div class="card fragment" style="margin-bottom:12px; border-left:3px solid var(--pink);">
+        <p style="font-family:var(--mono); font-size:1.2rem; color:var(--pink)">"A model in an urban photoshoot"</p>
+      </div>
+      <p class="fragment" style="color:var(--dim); margin-top:20px; font-size:1rem; line-height:1.7;">The image is identical. The caption changes everything. This is what happened <strong style="color:var(--text)">millions of times</strong> in training data, and nobody curated it.</p>
+    </div>
+  </div>
+
+  <!-- Alt-text as Invisible Infrastructure -->
+  <div class="slide" data-notes="Most training captions come from HTML alt-text, written for accessibility or SEO, not for teaching AI. Lazy, stereotyping, wrong, or just IMG_0392.jpg.">
+    <h2>Alt-text as <span class="yellow">Invisible Infrastructure</span></h2>
+    <div class="two-col" style="align-items:stretch">
+      <div class="card yellow-border">
+        <h3 style="color:var(--yellow)">Where do captions come from?</h3>
+        <p>Most training captions come from HTML <strong>alt-text</strong> — written for accessibility or SEO, not for teaching AI.</p>
+        <p style="margin-top:12px">The people who wrote these tags never imagined they'd become a machine's understanding of the world.</p>
+      </div>
+      <div class="card fragment">
+        <h3>Real examples</h3>
+        <p style="font-family:var(--mono); font-size:0.95rem; line-height:2; color:var(--dim)">
+          <span style="color:var(--red)">alt=""</span> — empty, invisible<br>
+          <span style="color:var(--red)">alt="IMG_0392.jpg"</span> — meaningless<br>
+          <span style="color:var(--yellow)">alt="exotic woman"</span> — stereotyping<br>
+          <span style="color:var(--yellow)">alt="normal family"</span> — whose normal?<br>
+          <span style="color:var(--green)">alt="scientist at work"</span> — rare and specific
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- The Feedback Loop -->
+  <div class="slide" data-notes="AI generates captions, those get posted online, future AI trains on those captions. The machine's language becomes self-reinforcing. Like stock photo aesthetics becoming the default image of a concept.">
+    <h2>The <span class="yellow">Feedback Loop</span></h2>
+    <div style="max-width:600px; margin:0 auto; text-align:center;">
+      <div class="card" style="margin-bottom:16px; padding:20px;">
+        <p style="font-size:1.3rem; line-height:2.2; color:var(--text)">
+          AI generates captions<br>
+          <span style="color:var(--yellow); font-size:1.5rem">&darr;</span><br>
+          Captions get posted online<br>
+          <span style="color:var(--yellow); font-size:1.5rem">&darr;</span><br>
+          Future AI trains on those captions<br>
+          <span style="color:var(--yellow); font-size:1.5rem">&darr;</span><br>
+          The machine's language becomes <span style="color:var(--yellow)">self-reinforcing</span>
+        </p>
+      </div>
+      <p class="fragment" style="color:var(--dim); font-size:1rem; line-height:1.7;">
+        Photography students will recognise this: it's like <strong style="color:var(--text)">stock photo aesthetics</strong> becoming the "default" image of a concept. The machine doesn't observe reality. It <strong style="color:var(--yellow)">recycles its own descriptions of it</strong>.
+      </p>
+    </div>
+  </div>
+
   <!-- 19: Politics of Datasets -->
   <div class="slide section-title">
     <h2>Politics of <span class="red">Datasets</span></h2>
