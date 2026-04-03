@@ -3,22 +3,1097 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Deepfakes — Presentation</title>
+  <title>Deepfakes</title>
   <style>
-    body { background:#0a0a0a; color:#e0e0e0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; text-align:center; }
-    .wrap { max-width:500px; padding:40px 20px; }
-    h1 { font-size:1.4rem; margin-bottom:12px; }
-    p { color:#777; font-size:0.9rem; line-height:1.6; }
-    a { color:#4a9eff; text-decoration:none; font-family:'SF Mono','Fira Code',monospace; font-size:0.85rem; }
-    .tag { display:inline-block; padding:3px 10px; background:#ffd94a; color:#000; font-family:'SF Mono','Fira Code',monospace; font-size:0.7rem; font-weight:600; border-radius:4px; margin-bottom:16px; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #141414;
+      --text: #e8e8e8;
+      --dim: #777;
+      --accent: #4a9eff;
+      --green: #00ff66;
+      --red: #ff4a4a;
+      --yellow: #ffd94a;
+      --pink: #ff6ec7;
+      --orange: #ff8c42;
+      --purple: #b48eff;
+      --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow: hidden;
+      height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .slide {
+      display: none;
+      position: absolute;
+      inset: 0;
+      padding: 40px 80px;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+    }
+
+    .slide::before, .slide::after { content: ''; flex: 1 0 0px; }
+    .slide > *:first-child { margin-top: 0; }
+    .slide.active { display: flex; animation: fadeIn 0.35s ease; }
+    .slide.fade-out { display: flex; animation: fadeOut 0.25s ease forwards; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+    .fragment { opacity: 0; transition: opacity 0.4s ease; }
+    .fragment.visible { opacity: 1; }
+
+    .slide h1 { font-size: 4.2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 16px; }
+    .slide h2 { font-size: 3.2rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 20px; }
+    .slide h3 { font-size: 1.8rem; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
+    .slide p, .slide li { font-size: 1.5rem; line-height: 1.7; color: var(--dim); }
+    .slide ul { list-style: none; padding: 0; text-align: left; }
+    .slide ul li { padding: 6px 0; padding-left: 24px; position: relative; }
+    .slide ul li::before { content: '\2192'; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); }
+    .slide strong { color: var(--text); font-weight: 600; }
+    .slide em { color: var(--accent); font-style: normal; }
+    .slide a { color: var(--accent); text-decoration: none; }
+    .slide a:hover { text-decoration: underline; }
+
+    .accent { color: var(--accent); }
+    .green { color: var(--green); }
+    .red { color: var(--red); }
+    .yellow { color: var(--yellow); }
+    .pink { color: var(--pink); }
+    .orange { color: var(--orange); }
+    .purple { color: var(--purple); }
+
+    .title-slide { align-items: center; text-align: center; justify-content: center; }
+    .title-slide h1 { font-size: 4.8rem; }
+    .title-slide .subtitle { font-size: 1.6rem; color: var(--dim); font-family: var(--mono); margin-top: 12px; }
+
+    .section-title { align-items: center; text-align: center; justify-content: center; }
+    .section-title h2 { font-size: 3.8rem; color: var(--accent); }
+    .section-title .divider { width: 80px; height: 3px; background: var(--accent); margin: 20px auto; border-radius: 2px; }
+
+    .sub-section { align-items: center; text-align: center; justify-content: center; }
+    .sub-section h3 { font-size: 2.4rem; color: var(--dim); letter-spacing: 0.05em; text-transform: uppercase; }
+    .sub-section .sub-divider { width: 40px; height: 2px; background: var(--dim); margin: 12px auto; border-radius: 2px; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; width: 100%; text-align: left; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; width: 100%; text-align: left; }
+
+    .img-row { display: flex; gap: 16px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+    .img-row img { max-height: 320px; border-radius: 8px; object-fit: contain; }
+
+    .card { background: var(--bg-card); border-radius: 12px; padding: 24px; border-left: 3px solid var(--accent); text-align: left; }
+    .card.green-border { border-left-color: var(--green); }
+    .card.red-border { border-left-color: var(--red); }
+    .card.yellow-border { border-left-color: var(--yellow); }
+    .card.pink-border { border-left-color: var(--pink); }
+    .card.orange-border { border-left-color: var(--orange); }
+    .card.purple-border { border-left-color: var(--purple); }
+
+    .slide img { max-width: 100%; max-height: 70vh; border-radius: 8px; object-fit: contain; width: auto; height: auto; }
+    .slide img.full { max-height: 85vh; margin: 0 auto; display: block; }
+    .slide img.small { max-height: 220px; }
+    .slide img.medium { max-height: 400px; }
+    .img-row img { max-height: 400px; object-fit: contain; }
+    .card img { max-width: 100%; height: auto; object-fit: contain; border-radius: 6px; }
+    .slide video, .slide iframe { border-radius: 8px; }
+
+    .caption { font-size: 0.95rem; color: var(--dim); font-family: var(--mono); text-align: center; margin-top: 8px; }
+
+    .quote { font-size: 1.8rem; font-style: italic; line-height: 1.6; color: var(--text); border-left: 4px solid var(--accent); padding: 20px 30px; background: var(--bg-card); border-radius: 0 12px 12px 0; max-width: 700px; text-align: left; }
+
+    .warning-badge { display: inline-block; padding: 10px 24px; border: 2px solid var(--red); border-radius: 8px; color: var(--red); font-family: var(--mono); font-size: 1.1rem; margin-top: 16px; }
+
+    .timeline { text-align: left; max-width: 700px; width: 100%; }
+    .timeline-item { padding: 16px 0 16px 32px; border-left: 2px solid #333; position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: -6px; top: 22px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+    .timeline-item .year { font-family: var(--mono); font-size: 1rem; color: var(--accent); margin-bottom: 4px; }
+    .timeline-item p { font-size: 1.2rem; }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 1.15rem;
+    }
+    table.data-table th, table.data-table td {
+      padding: 16px 20px;
+      text-align: left;
+      border-bottom: 1px solid #222;
+    }
+    table.data-table th {
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    table.data-table td { color: var(--dim); }
+    table.data-table td:first-child { color: var(--text); font-weight: 500; }
+    table.data-table tr:hover td { color: var(--text); }
+
+    .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+
+    #nav { position: fixed; bottom: 24px; right: 30px; display: flex; gap: 8px; z-index: 100; }
+    #nav button { width: 40px; height: 40px; border: 1px solid #333; background: var(--bg-card); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all 0.2s; }
+    #nav button:hover { border-color: var(--accent); color: var(--accent); }
+    #slide-counter { position: fixed; bottom: 30px; left: 30px; font-family: var(--mono); font-size: 0.8rem; color: var(--dim); z-index: 100; }
+    #progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); transition: width 0.3s ease; z-index: 100; }
+
+    #section-nav {
+      position: fixed; top: 3px; left: 0; right: 0; z-index: 99;
+      display: flex; justify-content: center; gap: 4px; padding: 8px 16px;
+      background: linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.8) 80%, transparent 100%);
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+      flex-wrap: wrap;
+    }
+    #section-nav.visible { opacity: 1; pointer-events: auto; }
+    #section-nav button {
+      border: 1px solid #333; background: var(--bg-card); color: var(--dim);
+      border-radius: 20px; padding: 4px 14px; cursor: pointer;
+      font-family: var(--mono); font-size: 0.7rem; white-space: nowrap;
+      transition: all 0.2s;
+    }
+    #section-nav button:hover { border-color: var(--accent); color: var(--accent); }
+    #section-nav button.active { border-color: var(--accent); color: var(--accent); background: rgba(74,158,255,0.12); }
+
+    @media (max-width: 900px) {
+      .slide { padding: 30px 24px; }
+      .slide h1 { font-size: 2.2rem; }
+      .title-slide h1 { font-size: 2.6rem; }
+      .slide h2 { font-size: 1.8rem; }
+      .two-col, .three-col, .tool-grid { grid-template-columns: 1fr; gap: 20px; }
+      .quote { font-size: 1.2rem; }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="tag">COMING SOON</div>
-    <h1>Deepfakes — Seeing is No Longer Believing</h1>
-    <p>This presentation is currently being developed. Check back soon.</p>
-    <p style="margin-top:24px;"><a href="../">&larr; Back to all workshops</a></p>
+
+  <div id="progress"></div>
+  <div id="section-nav"></div>
+
+  <!-- ============================================ -->
+  <!-- TITLE                                        -->
+  <!-- ============================================ -->
+
+  <div class="slide title-slide active" data-notes="Welcome to the Deepfakes workshop. This presentation explores deepfakes, their origins, applications, and the ethical questions they raise — from consent violations to memorial deepfakes to necromemetics. Press P to open presenter notes, N for section nav.">
+    <h1><span class="red">Deepfakes</span></h1>
+    <p class="subtitle">Workshop</p>
+    <p class="subtitle">Ahnjili ZhuParris</p>
   </div>
+
+  <!-- Outline -->
+  <div class="slide" data-notes="Here's the roadmap. We start with what deepfakes are, explore their types and origins, then examine real-world applications. We'll discuss degrees of simulation, consent and harm, and then move into necromemetics — how the dead are turned into memes and digital puppets.">
+    <h2>Outline</h2>
+    <div class="two-col" style="font-size:1.4rem; max-width:800px; gap:24px">
+      <ul>
+        <li>What Are Deepfakes</li>
+        <li>Types &amp; Origins</li>
+        <li style="color:var(--orange)">Deepfake Applications</li>
+        <li style="color:var(--yellow)">Degrees of Simulation</li>
+      </ul>
+      <ul>
+        <li style="color:var(--red)">Porn &amp; Consent</li>
+        <li style="color:var(--purple)">Necromemetics</li>
+        <li>Conclusion</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Bridge: Context -->
+  <div class="slide" data-notes="Deepfakes sit at the intersection of generative AI and human vulnerability. The tools that create them were built through massive data scraping — faces, voices, and likenesses harvested without consent. They are shipped fast with minimal safeguards, marketed as 'democratizing creativity', and they get cheaper faster than any regulation can keep up. This presentation explores who gets hurt.">
+    <h2>From Tools to <span class="red">Impact</span></h2>
+    <p style="color:var(--dim); margin-bottom:24px; font-size:1.3rem">Generative AI builds the tools. Deepfakes show who gets hurt.</p>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div class="card" style="border-left-color:var(--accent)">
+        <h3 style="color:var(--accent)">How We Got Here</h3>
+        <ul>
+          <li><strong class="red">Data Extraction</strong> — faces and voices scraped without consent</li>
+          <li><strong class="yellow">Speed Over Safety</strong> — tools shipped fast, safeguards slow</li>
+          <li><strong class="pink">"Democratizing Creativity"</strong> — the marketing pitch</li>
+          <li><strong class="green">Scale at All Costs</strong> — tools get cheaper faster than regulation</li>
+        </ul>
+      </div>
+      <div class="card red-border fragment">
+        <h3 style="color:var(--red)">The Human Cost</h3>
+        <ul>
+          <li><strong>96%</strong> of deepfakes are non-consensual pornography</li>
+          <li>Targets are overwhelmingly <strong>women</strong></li>
+          <li>Victims have almost <strong>no legal recourse</strong></li>
+          <li>The tools are free, the damage is <strong>permanent</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- WHAT ARE DEEPFAKES                           -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Let's start with the basics. What exactly are deepfakes, where did they come from, and why should we care?">
+    <h2>What Are <span class="red">Deepfakes</span></h2>
+    <div class="divider" style="background:var(--red)"></div>
+  </div>
+
+  <div class="slide" data-notes="Let's start with a deepfake video example. Watch carefully — can you tell this isn't real? The term 'deepfake' combines 'deep learning' with 'fake'. It was coined on Reddit in 2017.">
+    <h2>Deepfakes</h2>
+    <video src="../hku2025_genai_deepfakes/img/slide38_WhatsApp_Video_2025-03-29_at_13.50.56.mp4" controls style="max-height:65vh; max-width:80%; border-radius:8px"></video>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- DEEPFAKE TYPES & ORIGINS                      -->
+  <!-- ============================================ -->
+
+  <div class="slide" data-notes="Faceswaps are the most recognisable form of deepfake. A source face is mapped onto a target video. Modern faceswaps can handle different angles, lighting, and expressions in real time. Play the video to demonstrate.">
+    <h2>Faceswaps</h2>
+    <video src="../hku2025_genai_deepfakes/img/slide43_WhatsApp_Video_2025-03-29_at_13.50.56.mp4" controls style="max-height:65vh; max-width:80%; border-radius:8px"></video>
+  </div>
+
+  <div class="slide" data-notes="Voiceswaps clone someone's voice from audio samples and then generate new speech in that voice. This has been used in scams — for example, cloning a CEO's voice to authorize a fraudulent bank transfer. The technology only needs a few seconds of sample audio to produce a convincing clone.">
+    <h2>Voiceswaps</h2>
+    <iframe src="https://www.youtube-nocookie.com/embed/5cbCYwgQkTE?start=335" style="width:80%; max-width:700px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+
+  <div class="slide" data-notes="Textswaps are less discussed but equally important. AI can generate text that mimics a specific person's writing style, or alter existing text in images and documents. This enables forged messages, fake social media posts, and document manipulation.">
+    <h2>Textswaps</h2>
+    <img src="../hku2025_genai_deepfakes/img/slide45_Picture_8.png" class="medium">
+  </div>
+
+  <div class="slide" data-notes="The origins of deepfakes: the term was coined by a Reddit user called 'deepfakes' in 2017 who posted face-swapped celebrity pornography. From the very beginning, this technology was intertwined with non-consensual sexual content. The subreddit was eventually banned, but the technology had already spread.">
+    <h2>Origins</h2>
+    <div class="img-row">
+      <img src="../hku2025_genai_deepfakes/img/slide42_Picture_2.jpg" class="medium">
+      <img src="../hku2025_genai_deepfakes/img/slide42_Picture_4.jpg" class="medium">
+    </div>
+  </div>
+
+  <div class="slide" data-notes="These are photos from my DEEPFAKE exhibition at Peckham Digital — an art project exploring the cultural implications of deepfake technology. Art can be a powerful way to make these issues tangible and accessible.">
+    <h2>DEEPFAKE @ Peckham Digital</h2>
+    <iframe src="https://player.vimeo.com/video/1082448682?badge=0&autopause=0&player_id=0&app_id=58479" style="width:80%; max-width:750px; aspect-ratio:16/9; border:none; border-radius:8px" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" allowfullscreen></iframe>
+    <div style="display:flex; gap:16px; justify-content:center; margin-top:16px">
+      <img src="../hku2025_genai_deepfakes/img/slide39_Picture_6.jpg" style="max-height:200px; border-radius:8px; object-fit:contain">
+      <img src="../hku2025_genai_deepfakes/img/slide39_Picture_8.jpg" style="max-height:200px; border-radius:8px; object-fit:contain">
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- DEEPFAKE APPLICATIONS                        -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Now let's look at how deepfakes are actually being used in the real world — the good, the bad, and the deeply troubling. These applications show how synthetic media is used to manipulate, deceive, and erode trust at scale.">
+    <h2>Deepfake <span class="orange">Applications</span></h2>
+    <div class="divider" style="background:var(--orange)"></div>
+  </div>
+
+  <div class="slide" data-notes="Deepfakes in entertainment. Kendrick Lamar's 'The Heart Part 5' music video used deepfake technology to transform his face into OJ Simpson, Kanye West, Jussie Smollett, Will Smith, Kobe Bryant, and Nipsey Hussle. Here the artist chose to use deepfakes with a clear artistic intent — commentary on Black celebrity and public image. Is this a legitimate use?">
+    <h2>Entertainment</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <iframe src="https://www.youtube-nocookie.com/embed/9WfZuNceFDM?start=16" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+      <div>
+        <video src="../hku2025_genai_deepfakes/img/slide50_Online_Media_2.mp4" controls style="width:100%; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Can deepfakes be a form of activism? These examples blur the line between commentary, satire, and manipulation. When does a deepfake go from being a powerful political statement to being disinformation? Where would you draw the line?">
+    <h2>Activism?</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <iframe src="https://www.youtube-nocookie.com/embed/a95O4JsMBHQ" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+      <div>
+        <video src="../hku2025_genai_deepfakes/img/slide51_FuckKanye.mp4" controls style="width:100%; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Deepfakes are heavily used in scams. Romance scams: fake video calls with AI-generated faces to build emotional connections and extract money. Crypto scams: deepfaked celebrities endorsing fake investment schemes. Both exploit trust and are increasingly hard to detect.">
+    <h2>Scams</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">Romance Scams</h3>
+        <img src="../hku2025_genai_deepfakes/img/slide52_Picture_10.jpg" style="margin-top:12px; width:100%; max-height:280px; object-fit:contain; border-radius:6px">
+      </div>
+      <div class="card yellow-border">
+        <h3 style="color:var(--yellow)">Crypto Scams</h3>
+        <img src="../hku2025_genai_deepfakes/img/slide52_Picture_12.png" style="margin-top:12px; width:100%; max-height:280px; object-fit:contain; border-radius:6px">
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="AI companionship is a growing market — chatbots and avatars that provide emotional connection. Some use deepfake technology to create realistic virtual partners. This raises questions about dependency, manipulation, and what happens when the line between synthetic and real relationships blurs.">
+    <h2>Companionship</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <img src="../hku2025_genai_deepfakes/img/slide53_Picture_2.png" class="medium">
+      </div>
+      <div>
+        <video src="../hku2025_genai_deepfakes/img/slide53_ScreenRecording_10-14-2025_09-53-10_1.mp4" controls style="width:100%; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="AI-generated personas are also being used in sex work — virtual influencers and AI-generated models on platforms like OnlyFans. This displaces real workers while also creating content that can be indistinguishable from photos of real people.">
+    <h2>Prostitution</h2>
+    <img src="../hku2025_genai_deepfakes/img/slide54_Picture_4.png" class="medium">
+  </div>
+
+  <div class="slide" data-notes="The three main categories of deepfake misuse: political disinformation, where deepfakes are used to spread false information; non-consensual pornography, which is the most prevalent form; and fraud/scams. These often overlap.">
+    <h2>Politics, Disinformation &amp; Porn</h2>
+    <div class="two-col" style="max-width:900px; align-items:center">
+      <img src="../hku2025_genai_deepfakes/img/peckham_slide12_img1.png" style="width:100%; border-radius:8px">
+      <img src="../hku2025_genai_deepfakes/img/slide47_Picture_6.jpg" style="width:100%; border-radius:8px">
+    </div>
+  </div>
+
+  <!-- Memorial Deepfakes -->
+
+  <div class="slide" data-notes="A more complex case: memorial deepfakes. Companies now offer to 'resurrect' deceased loved ones as interactive AI avatars. The grandma example here shows a tablet-based avatar that family members can talk to. Is this comforting or disturbing? Who has the right to decide?">
+    <h2>Memorial Deepfakes</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <img src="../hku2025_genai_deepfakes/img/slide48_Picture_7.png" class="medium">
+      </div>
+      <div>
+        <video src="../hku2025_genai_deepfakes/img/slide48_Silicon-Intelligence-tablet-and-avatar-of-grandma-talking.mp4" controls style="width:100%; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="An even more provocative version — memorial deepfakes of saints and religious figures. This raises questions about cultural sensitivity, religious appropriation, and who has the authority to 'resurrect' historical or sacred figures.">
+    <h2>Memorial Deepfakes <span class="dim">(Saints Version)</span></h2>
+    <video src="../hku2025_genai_deepfakes/img/slide49_ScreenRecording_10-17-2025_12-32-52_1.mp4" controls style="max-height:65vh; max-width:80%; border-radius:8px"></video>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- DEGREES OF SIMULATION                         -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Now that we've seen how deepfakes are used in practice, let's introduce a conceptual framework. Not all deepfakes are the same — they exist on a spectrum of simulation. Understanding this spectrum helps us think more clearly about the different harms and uses.">
+    <h2>Degrees of <span class="yellow">Simulation</span></h2>
+    <div class="divider" style="background:var(--yellow)"></div>
+  </div>
+
+  <div class="slide" data-notes="First degree: the faithful copy. An AI reproduction that tries to be as accurate to reality as possible. Think of a deepfake that perfectly replicates how a person looks and speaks. The goal is indistinguishability. Play the video example.">
+    <h2>Faithful Copy</h2>
+    <iframe src="https://www.youtube-nocookie.com/embed/oQ7V74s6e04" style="width:80%; max-width:700px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+
+  <div class="slide" data-notes="Second degree: the distorted copy. The AI output is recognisably based on reality but deliberately or accidentally altered. This is where artistic deepfakes and glitchy outputs live. The distortion itself can be meaningful — or it can be a sign of the technology's limitations.">
+    <h2>Distorted Copy</h2>
+    <div class="img-row">
+      <img src="../hku2025_genai_deepfakes/img/slide66_Content_Placeholder_4.png" class="medium">
+      <img src="../hku2025_genai_deepfakes/img/slide66_Picture_4.png" class="medium">
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Third degree: masking the absence of reality. Creating a deepfake of something that never happened — like this fake video of Zelensky announcing Ukraine's surrender, which circulated on social media during the war. The deepfake doesn't copy reality; it fabricates a reality that doesn't exist. This is where disinformation lives.">
+    <h2>Masking the Absence of Reality</h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div>
+        <video src="../hku2025_genai_deepfakes/img/slide67_Deepfake_video_of_Volodymyr_Zelensky_surrendering_surfaces_on_social_media.mp4" controls style="width:100%; border-radius:8px"></video>
+        <p class="caption">Deepfake of Zelensky "surrendering"</p>
+      </div>
+      <div>
+        <img src="../hku2025_genai_deepfakes/img/slide67_Picture_4.jpg" class="medium">
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Fourth degree: a new reality entirely. When synthetic media becomes indistinguishable from reality at scale, the very concept of 'real' footage starts to lose meaning. We enter a world where anything can be faked, and therefore nothing can be fully trusted. This has profound implications for evidence, journalism, and trust.">
+    <h2>A New Reality</h2>
+    <video src="../hku2025_genai_deepfakes/img/peckham_new_reality.mp4" controls style="max-height:55vh; max-width:80%; border-radius:8px; margin-bottom:12px"></video>
+    <div class="card fragment" style="max-width:700px">
+      <p style="font-size:1.3rem; color:var(--text); line-height:1.8">When synthetic media becomes indistinguishable from reality, deepfakes don't just <em>copy</em> the world — they create a <strong>new one</strong>.</p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- CONSENT & HARM                               -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Now the hardest section. We need to talk about consent — specifically, how deepfake pornography violates consent at different levels. This is the most prevalent harm caused by deepfakes today.">
+    <h2><span class="red">Porn</span> &amp; Consent</h2>
+    <div class="divider" style="background:var(--red)"></div>
+  </div>
+
+  <div class="slide" data-notes="Two-party violation: a real person's face is swapped onto another real person's body in pornographic content. Neither party consented. This is the classic deepfake porn scenario — taking a celebrity's face and putting it on a porn performer's body. Click the image to unblur if needed for discussion.">
+    <h2>Porn <span class="red">(Two Party Violation)</span></h2>
+    <h3 style="color:var(--dim)">Faceswap / Bodyswap</h3>
+    <img src="../hku2025_genai_deepfakes/img/slide56_Picture_2.jpg" class="medium" style="filter:blur(8px); transition:filter 0.3s" onclick="this.style.filter=this.style.filter==='none'?'blur(8px)':'none'" title="Click to toggle blur">
+    <p class="caption">Click image to toggle blur</p>
+  </div>
+
+  <div class="slide" data-notes="One-party violation with Deepnude: an AI that generates nude images from clothed photos. Only one person is involved — the victim whose clothed photo is 'undressed' by AI. The original Deepnude app was taken down but the code was open-sourced and countless clones exist. This disproportionately targets women and girls.">
+    <h2>Porn <span class="red">(One Party Violation)</span></h2>
+    <h3 style="color:var(--dim)">Deepnude</h3>
+    <img src="../hku2025_genai_deepfakes/img/slide57_Picture_2.jpg" class="medium" style="filter:blur(8px); transition:filter 0.3s" onclick="this.style.filter=this.style.filter==='none'?'blur(8px)':'none'" title="Click to toggle blur">
+    <p class="caption">Click image to toggle blur</p>
+  </div>
+
+  <div class="slide" data-notes="Another form of one-party violation: generating explicit content purely from text prompts describing a real person. No source image needed — just a name and description. The 'waifu' variant generates anime-style explicit content based on real people. Both are violations even though no photograph was used as input.">
+    <h2>Porn <span class="red">(One Party Violation)</span></h2>
+    <div class="two-col" style="max-width:700px">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">Text Prompt</h3>
+        <p>Generating explicit content of real people via text descriptions</p>
+      </div>
+      <div class="card pink-border">
+        <h3 style="color:var(--pink)">Text Prompt (Waifu)</h3>
+        <p>Generating explicit anime-style content based on real people</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="DignifAI was a counter-movement that used AI to add clothing to images of women in revealing outfits. While framed as 'dignifying' women, it was still non-consensual image manipulation — and was widely seen as a tool of misogynistic control, deciding for women what they should look like.">
+    <h2>Porn <span class="red">(One Party Violation)</span></h2>
+    <h3 style="color:var(--dim)">DignifAI</h3>
+    <div class="img-row">
+      <img src="../hku2025_genai_deepfakes/img/slide59_Picture_2.jpg" class="medium">
+      <img src="../hku2025_genai_deepfakes/img/slide59_Picture_4.jpg" class="medium">
+    </div>
+  </div>
+
+  <div class="slide" data-notes="An interesting edge case: zero-party violation. If the AI generates explicit content of a person who doesn't exist — purely synthetic — is anyone harmed? There's no victim whose likeness was stolen. But critics argue it normalises the creation of non-consensual content and the synthetic person may still resemble real people.">
+    <h2>Porn <span class="yellow">(Zero Party Violation?)</span></h2>
+    <img src="../hku2025_genai_deepfakes/img/slide60_Picture_2.png" class="medium">
+  </div>
+
+  <div class="slide" data-notes="The age manipulation case: CoconutKitty was a real influencer who used AI to de-age herself, creating a version that looked like a teenager. This raises profound questions about virtual CSAM — if AI makes an adult look like a child in explicit content, is it child exploitation? Most legal systems say yes.">
+    <h2>"Cosplay" Porn <span class="red">(Age)</span></h2>
+    <div class="img-row">
+      <img src="../hku2025_genai_deepfakes/img/slide61_Picture_4.png" class="medium">
+      <img src="../hku2025_genai_deepfakes/img/slide61_Picture_7.png" class="medium">
+    </div>
+    <p class="caption">@CoconutKitty</p>
+  </div>
+
+  <div class="slide" data-notes="Perhaps the most disturbing case: AI-generated explicit content that simulates disabilities like Down syndrome. This fetishises and dehumanises people with disabilities, creating content that would be nearly impossible to produce otherwise. It reveals how generative AI can enable entirely new categories of exploitation.">
+    <h2>"Cosplay" Porn <span class="red">(Down's)</span></h2>
+    <img src="../hku2025_genai_deepfakes/img/slide62_Picture_15.png" class="medium">
+  </div>
+
+  <div class="slide" data-notes="The takeaway from this entire section: any deepfake created without the subject's consent is an infringement — regardless of how 'harmless' it seems. Even the celebrity hug examples that seem innocent are using someone's likeness without permission. Consent is the red line.">
+    <h2>No-Consent Deepfake = <span class="red">Infringement</span></h2>
+    <div class="card red-border" style="max-width:500px; margin-bottom:24px">
+      <p style="font-size:1.5rem; color:var(--text); text-align:center; line-height:1.6">no-consent deepfake<br><strong class="red">=</strong><br>infringement</p>
+    </div>
+    <video src="../hku2025_genai_deepfakes/img/slide63_CelebrityHugs.mp4" controls style="max-height:65vh; max-width:60%; border-radius:8px"></video>
+  </div>
+
+  <div class="slide" data-notes="A closing video to reflect on before we move into necromemetics.">
+    <video src="../hku2025_genai_deepfakes/img/closing_video.mp4" controls style="max-height:70vh; max-width:80%; border-radius:8px"></video>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- PART 2: NECROMEMETICS                        -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Now we shift into a deeper exploration: necromemetics. How the dead are turned into memes, myths, and digital puppets — and how deepfakes have supercharged this ancient process.">
+    <h2><span class="purple">Necromemetics</span></h2>
+    <div class="divider" style="background:var(--purple)"></div>
+    <p style="color:var(--dim); font-size:1.3rem; margin-top:16px">Can Memes Dilute History</p>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION: CHARLIE KIRK                        -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Let's start with the story that's been impossible to escape. Charlie Kirk — who he was, what happened to him, and how he became the biggest meme of 2025.">
+    <h2><span class="red">Charlie Kirk</span></h2>
+    <div class="divider" style="background:var(--red)"></div>
+  </div>
+
+  <div class="slide" data-notes="Charlie Kirk was the founder of Turning Point USA, a conservative youth organization. He had a massive Christian right Gen Z following and became famous for his viral campus debate clips where he'd challenge liberal students. He was the GenZ-facing bridge for MAGA — 'the younger kind of person who sold out to them' as one journalist put it. He was deeply controversial: hated by the left for his extremism, and hated by the far-right 'gropers' who saw him as embarrassing and a sellout.">
+    <h2>Who Was Charlie Kirk?</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <ul>
+        <li>Founder of <strong>Turning Point USA</strong> — conservative youth org</li>
+        <li>Famous for <strong>viral campus debate clips</strong> challenging liberal students</li>
+        <li class="fragment">The <strong>Gen Z face of MAGA</strong> — built to bridge boomers and young conservatives</li>
+        <li class="fragment">Hated by the far-right "gropers" as <strong>embarrassing</strong> and a <strong>sellout</strong></li>
+      </ul>
+      <div style="display:flex; justify-content:center">
+        <video src="../necromemetics/kirk_intro.mp4" controls style="max-height:60vh; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="On September 10, 2025, Charlie Kirk was shot and killed in front of a crowd of students in Utah. There is something painfully modern about his assassination — a man whose prominence came from viral clips on social media, and whose death would be instantly played to millions on social media. A bystander called Elder TikTok, who was five people away from Kirk in line, immediately started filming and promoting his Instagram while Kirk lay dying. This distills the spirit of our age: someone is dying and the instinct is to get out your phone for attention, likes, and digitized prestige.">
+    <h2>September 10, 2025</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div>
+        <ul>
+          <li>Charlie Kirk was <strong>shot and killed</strong> in front of students in Utah</li>
+          <li class="fragment">A man whose prominence came from <strong>viral clips</strong> — whose death would be <strong>instantly played to millions</strong></li>
+          <li class="fragment">Bystander <strong>"Elder TikTok"</strong> — five people away in line — immediately started filming and <strong>promoting his Instagram</strong></li>
+          <li class="fragment"><em>"Jesus is Lord. Make sure you subscribe to Elder TikTok on Instagram"</em> — while Kirk lay dying</li>
+        </ul>
+      </div>
+      <div style="display:flex; justify-content:center">
+        <video src="../necromemetics/kirk_shooting_reaction.mp4" controls style="max-height:60vh; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Kirk's death was immediately turned into both entertainment and propaganda. The memorial had pyrotechnics, AI voice cloning of Kirk speaking from beyond the grave, and 90K attendees — it was structured more like a political rally or concert than a funeral. Trump, Vance, Rubio used the event to frame Kirk's death as 'the start of a holy war' — grief was a recruitment tool. The line between mourning and marketing, between grief and spectacle, completely dissolved.">
+    <h2>Death as Entertainment &amp; Propaganda</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <ul>
+        <li>Trump: <em>"Millions of Charlie Kirks were created today"</em></li>
+        <li class="fragment">Flags at <strong>half-staff</strong> — his death weaponized as <strong>state propaganda</strong></li>
+        <li class="fragment">The line between <strong>mourning and marketing</strong>, grief and spectacle, completely dissolved</li>
+      </ul>
+      <div style="display:flex; flex-direction:column; gap:8px; align-items:center">
+        <video src="../necromemetics/kirk_memorial.mp4" controls style="max-height:38vh; border-radius:8px"></video>
+        <video src="../necromemetics/kirk_rally.mp4" controls style="max-height:38vh; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION: THE MEMES                           -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="But pretty soon, things went off the rails. Charlie Kirk became a meme — and not the kind the administration wanted.">
+    <h2>The <span class="orange">Memes</span></h2>
+    <div class="divider" style="background:var(--orange)"></div>
+  </div>
+
+  <div class="slide" data-notes="Within a week of Kirk's death, memes appeared. Crypto accounts made AI 'Kirk as Terminator' videos. Leftists discovered they could troll MAGA by mocking Kirk — 'Kirkin on it' became slang. Within a month, Trump stopped mentioning Kirk and the martyr narrative collapsed. Then total Kirkification — every face on the internet replaced with his.">
+    <h2>Charlie Kirk</h2>
+    <div class="two-col" style="max-width:1000px; align-items:start">
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <video src="../necromemetics/kirk_short.mp4" controls style="max-height:55vh; border-radius:8px;"></video>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <video src="../necromemetics/kirk_terminator.mp4" controls style="max-height:55vh; border-radius:8px;"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Agartha is a mythical lost city supposedly at the center of a hollow earth that only white people can access — it comes from Nazi occultism. After Kirk's death, far-right extremists gave him an 'Aarthan makeover' — blonde hair, blue eyes, Aryan features — and flooded TikTok and Instagram with these edits. The pipeline works like this: you engage with a funny-looking Kirk face-swap, the algorithm tags you as interested, then starts serving progressively harder neo-Nazi material. Leftists sharing the memes ironically unwittingly amplify the pipeline. As Ryan Brick put it, 'irony cannot defeat irony.'">
+    <h2>The Agartha Pipeline</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <ul>
+        <li>Far-right movement experimenting with <strong>Nazi occultism</strong> as new iconography</li>
+        <li class="fragment"><strong>Agartha:</strong> mythical city at center of hollow earth — only accessible to white people</li>
+        <li class="fragment">Kirk gets an <strong>"Aarthan makeover"</strong> — blonde, blue-eyed, Aryan</li>
+        <li class="fragment">Content designed as an <strong>algorithmic gateway</strong></li>
+        <li class="fragment">You laugh at the face-swap &rarr; algorithm feeds you <strong>harder content</strong></li>
+        <div class="warning-badge fragment">Irony cannot defeat irony</div>
+      </ul>
+      <div style="display:flex; justify-content:center">
+        <video src="../necromemetics/agartha_kirk.mp4" controls style="max-height:65vh; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="There are three different factions sharing these memes for completely different reasons. MAGA boomers who sincerely share AI slop of Kirk ascending to heaven. Young far-right gropers who hated Kirk as a sellout and use ironic memes to spread neo-Nazi imagery. And leftists who use the memes to mock MAGA and process the absurdity.">
+    <h2>Three Factions, One Meme</h2>
+    <div class="three-col" style="max-width:900px">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">MAGA Boomers</h3>
+        <ul>
+          <li><strong>Sincerely</strong> share AI slop</li>
+          <li>Kirk ascending to heaven</li>
+          <li>Kirk talking to Jesus</li>
+          <li>Megachurches play these videos</li>
+        </ul>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">The Gropers</h3>
+        <ul>
+          <li>Far-right Gen Z extremists</li>
+          <li><strong>Hated</strong> Kirk as a sellout</li>
+          <li>Use ironic memes to spread <strong>neo-Nazi imagery</strong></li>
+          <li>Agartha edits, black sun symbols</li>
+        </ul>
+      </div>
+      <div class="card accent fragment">
+        <h3 style="color:var(--accent)">Leftists</h3>
+        <ul>
+          <li><strong>Ironic</strong> sharing</li>
+          <li>Mock the martyr narrative</li>
+          <li>Dark absurdist humor</li>
+          <li>Process political trauma</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION: HARAMBE — PATIENT ZERO              -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="But Charlie Kirk isn't the first person the internet turned into a meme after death. This pattern goes back at least a decade — to a gorilla at the Cincinnati Zoo.">
+    <h2><span class="green">Harambe</span> — Patient Zero</h2>
+    <div class="divider" style="background:var(--green)"></div>
+  </div>
+
+  <div class="slide" data-notes="Harambe was a gorilla shot at Cincinnati Zoo in May 2016 after a child fell into his enclosure. Within days, 'dicks out for Harambe' was everywhere. The meme transcended the actual event — Harambe became a symbol of internet culture itself. Over time, as other celebrities died, they were added to 'Harambe's Heaven in the Sky' — an ongoing folklore tradition.">
+    <h2>The First Internet Saint</h2>
+    <div style="display:flex; gap:24px; align-items:center; justify-content:center;">
+      <img src="../necromemetics/harambe_zoo.jpg" style="max-height:65vh; border-radius:8px">
+      <img src="../necromemetics/harambe_candle.webp" style="max-height:65vh; border-radius:8px">
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Bernice King, Martin Luther King Jr.'s daughter, made a similar plea: just stop. People were using Sora and other AI tools to generate MLK doing absurd and offensive things. Rod Stewart sparked backlash after playing an AI-generated video of late musicians at a concert showing dead stars in Heaven, smiling and waving. The pattern is the same — the dead become digital puppets.">
+    <h2>Martin Luther King Jr.</h2>
+    <img src="../necromemetics/bernice_king_sexyyred.jpeg" style="max-height:80vh; border-radius:8px">
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION: THE HUMAN COST                      -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Photography has always been how we freeze death and turn it into meaning. Before memes, before AI, the camera was the original tool of necromemetics.">
+    <h2>Photography <span class="accent">Preserves</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <div class="slide" data-notes="These three moments define how photography turns death into symbol. Mamie Till insisted on an open casket for her 14-year-old son Emmett in 1955. Abraham Zapruder's 26-second home movie of JFK's assassination became the most analyzed film in history. And Darnella Frazier filmed George Floyd's murder on her phone in 2020. In each case, the image outlived the person. The photograph became the story.">
+    <h2>Death Frozen Into Symbol</h2>
+    <div class="three-col" style="max-width:900px">
+      <div>
+        <div class="card fragment" style="border-left-color:var(--yellow)">
+          <h3 style="color:var(--yellow)">1955</h3>
+          <p style="font-size:1.3rem; margin-top:8px"><strong>Emmett Till's Open Casket</strong></p>
+        </div>
+        <p class="fragment" style="color:var(--dim); font-size:1.1rem; text-align:center; margin-top:12px">"I wanted the world to see what they did to my baby" — <strong>Mamie Till</strong></p>
+      </div>
+      <div>
+        <div class="card fragment" style="border-left-color:var(--dim)">
+          <h3 style="color:var(--dim)">1963</h3>
+          <p style="font-size:1.3rem; margin-top:8px"><strong>Zapruder Film</strong></p>
+        </div>
+        <p class="fragment" style="color:var(--dim); font-size:1.1rem; text-align:center; margin-top:12px">26 seconds of 8mm film turned JFK's assassination into an <strong>infinite loop</strong></p>
+      </div>
+      <div>
+        <div class="card fragment red-border">
+          <h3 style="color:var(--red)">2020</h3>
+          <p style="font-size:1.3rem; margin-top:8px"><strong>George Floyd Video</strong></p>
+        </div>
+        <p class="fragment" style="color:var(--dim); font-size:1.1rem; text-align:center; margin-top:12px">9 minutes 29 seconds filmed on a phone sparked a <strong>global uprising</strong></p>
+      </div>
+    </div>
+    <p class="fragment" style="margin-top:20px; max-width:700px">The image <strong>outlives</strong> the person. The photograph <strong>becomes</strong> the story.</p>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION: WHAT IS NECROMEMETICS               -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="So Kirk, Harambe, Robin Williams, MLK — what do all these cases have in common? There's actually a name for this phenomenon.">
+    <h2>What Is <span class="purple">Necromemetics</span></h2>
+    <div class="divider" style="background:var(--purple)"></div>
+  </div>
+
+  <div class="slide" data-notes="Ruby Justice Lo coined the term necromimetics (which we're extending to necromemetics) to describe how we turn dead people's bodies into myths and narratives that then define social norms. This isn't new — governments have always used the executed criminal and the politician lying in state as symbols of legitimacy. Political and religious movements turn people into martyrs. Either way, we mythologize the person — appropriating their likeness into an idea that's less about the human being and more about the story we choose to tell.">
+    <h2>Bodies Into Myths</h2>
+    <div class="quote" style="border-left-color:var(--purple)">
+      "We turn people's bodies into myths and narratives that then define social norms."
+    </div>
+    <p class="caption">— Ruby Justice Lo, artist & researcher</p>
+    <ul class="fragment" style="max-width:700px; margin-top:20px">
+      <li>We think more about the dead <strong>as people who died</strong> than as people who lived</li>
+      <li>Governments use the dead as <strong>symbols of legitimacy</strong></li>
+      <li>Movements turn them into <strong>martyrs</strong> to rally behind</li>
+      <li>The person becomes an <strong>idea</strong> — less about the human, more about the story</li>
+    </ul>
+  </div>
+
+  <div class="slide" data-notes="This isn't a new phenomenon. We've been mythologizing the dead since the dawn of civilization — from Egyptian pharaohs to Catholic saints to revolutionary heroes. The internet just gave it a new medium and an unprecedented speed.">
+    <h2>Nothing New Under the Sun</h2>
+    <div class="three-col" style="max-width:900px">
+      <div class="card purple-border">
+        <h3 style="color:var(--purple)">Ancient</h3>
+        <ul>
+          <li>Pharaohs deified in death</li>
+          <li>Roman emperor cults</li>
+          <li>Catholic saint canonization</li>
+        </ul>
+      </div>
+      <div class="card orange-border">
+        <h3 style="color:var(--orange)">Modern</h3>
+        <ul>
+          <li>Che Guevara on a t-shirt</li>
+          <li>JFK's eternal flame</li>
+          <li>Princess Diana iconography</li>
+        </ul>
+      </div>
+      <div class="card accent">
+        <h3 style="color:var(--accent)">Internet</h3>
+        <ul>
+          <li>Harambe's Heaven memes</li>
+          <li>Robin Williams tributes</li>
+          <li>Charlie Kirk deepfakes</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION: DEEPFAKES ESCALATE EVERYTHING       -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Generative AI has completely upended the necromemetic process. It used to take effort to make a meme. Now anyone can generate photorealistic video of the dead doing anything.">
+    <h2><span class="red">Deepfakes</span> Escalate Everything</h2>
+    <div class="divider" style="background:var(--red)"></div>
+  </div>
+
+  <div class="slide" style="position:relative" data-notes="Before AI, necromemetics was limited by skill. You needed Photoshop knowledge or video editing skills. Memes of the dead were crude — obvious edits, joke formats. Generative AI removed all barriers. Now anyone can generate photorealistic video of dead people doing things they never did. George Floyd was both martyred by the left and defiled by the right in the same way that Charlie Kirk was martyred by the right and defiled by the left. In either case, they become ideas that tell us more about internet culture than the real person underneath.">
+    <h2>Before vs. After AI</h2>
+    <div class="two-col" style="max-width:800px">
+      <div class="card" style="border-left-color:var(--dim)">
+        <h3 style="color:var(--dim)">Before AI</h3>
+        <ul>
+          <li>Required <strong>skill</strong> (Photoshop, editing)</li>
+          <li>Memes were <strong>crude</strong> and obvious</li>
+          <li>Limited to <strong>static images</strong></li>
+          <li>Took <strong>time and effort</strong></li>
+        </ul>
+      </div>
+      <div class="card red-border">
+        <h3 style="color:var(--red)">After AI</h3>
+        <ul>
+          <li><strong>Zero skill</strong> required</li>
+          <li><strong>Photorealistic</strong> video output</li>
+          <li>Can generate <strong>anything</strong></li>
+          <li>Takes <strong>seconds</strong></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment" style="margin-top:20px; max-width:700px">George Floyd was <strong>martyred by the left</strong> and <strong>defiled by the right</strong>. Charlie Kirk was <strong>martyred by the right</strong> and <strong>defiled by the left</strong>. Either way, they become <em>ideas</em> — not people.</p>
+    <img src="../necromemetics/gfck.jpeg" class="fragment" style="position:absolute; top:5%; left:5%; width:55%; max-height:70%; object-fit:contain; z-index:10; border-radius:8px; box-shadow:4px 4px 20px rgba(0,0,0,0.8);" alt="Kirk/Floyd meme 4">
+    <img src="../necromemetics/gfck4.jpeg" class="fragment" style="position:absolute; top:15%; left:20%; width:55%; max-height:70%; object-fit:contain; z-index:11; border-radius:8px; box-shadow:4px 4px 20px rgba(0,0,0,0.8);" alt="Kirk/Floyd meme 1">
+    <img src="../necromemetics/gfck3.jpeg" class="fragment" style="position:absolute; top:10%; right:15%; width:55%; max-height:70%; object-fit:contain; z-index:12; border-radius:8px; box-shadow:4px 4px 20px rgba(0,0,0,0.8);" alt="Kirk/Floyd meme 2">
+    <img src="../necromemetics/gfck2.jpeg" class="fragment" style="position:absolute; top:20%; right:5%; width:55%; max-height:70%; object-fit:contain; z-index:13; border-radius:8px; box-shadow:4px 4px 20px rgba(0,0,0,0.8);" alt="Kirk/Floyd meme 3">
+  </div>
+
+  <div class="slide" data-notes="Sora, OpenAI's video generator, has made this exponentially worse. People used it to generate hyper-realistic clips of deceased celebrities and historical figures in bizarre and offensive scenarios. MLK was shown making racist noises during 'I Have a Dream.' MLK and Malcolm X were shown fighting each other. JFK, Queen Elizabeth II, Stephen Hawking — all turned into digital puppets. OpenAI eventually paused MLK images only after the King estate complained. Everyone else is still fair game.">
+    <h2>Sora &amp; Synthetic Resurrection</h2>
+    <ul style="max-width:700px">
+      <li>OpenAI's <strong>Sora</strong> generates hyper-realistic video from text prompts</li>
+      <li class="fragment">Users immediately created <strong>offensive deepfakes</strong> of the dead</li>
+      <li class="fragment">MLK, JFK, Queen Elizabeth II, Stephen Hawking — all turned into <strong>digital puppets</strong></li>
+      <li class="fragment">OpenAI paused MLK images only <strong>after the King estate complained</strong></li>
+      <li class="fragment">Everyone else? Still <strong>fair game</strong></li>
+    </ul>
+    <div class="warning-badge fragment">The dead have no rights to their own image</div>
+  </div>
+
+  <div class="slide" data-notes="Another Sora example demonstrating the range of styles and scenarios the model can produce. When this level of quality is applied to deceased people, the results are indistinguishable from real footage.">
+    <h2>Sora in Action</h2>
+    <video src="../hku2025_genai_deepfakes/img/peckham_sora2_38.mp4" controls style="max-height:65vh; max-width:80%; border-radius:8px"></video>
+  </div>
+
+  <div class="slide" data-notes="A collection of AI-generated video examples showing the breadth of what's now possible with consumer-accessible tools. Any of these techniques can be — and are being — applied to footage of the dead.">
+    <h2>AI Video Examples</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:90%">
+      <video src="../hku2025_genai_deepfakes/img/peckham_slide40_1.mp4" controls style="width:100%; max-height:35vh; border-radius:8px"></video>
+      <video src="../hku2025_genai_deepfakes/img/peckham_slide40_2.mp4" controls style="width:100%; max-height:35vh; border-radius:8px"></video>
+      <video src="../hku2025_genai_deepfakes/img/peckham_slide40_3.mp4" controls style="width:100%; max-height:35vh; border-radius:8px"></video>
+      <video src="../hku2025_genai_deepfakes/img/peckham_slide40_4.mp4" controls style="width:100%; max-height:35vh; border-radius:8px"></video>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION: WHO GETS PROTECTION                 -->
+  <!-- ============================================ -->
+
+  <div class="slide" data-notes="This is the core problem: who gets protection from synthetic resurrection, and who doesn't? Henry Ajder raised the key question: many deceased individuals don't have well-resourced estates to protect them. We want to avoid a situation where unless we're very famous, society accepts a free-for-all over how we continue to be represented after death.">
+    <h2>Who Gets Protection?</h2>
+    <div class="quote" style="border-left-color:var(--red); font-size:1.4rem">
+      "King's estate rightfully raised this with OpenAI, but many deceased individuals don't have well-known and well-resourced estates to represent them. We want to avoid a situation where unless we're very famous, society accepts that after we die there is a free-for-all over how we continue to be represented."
+    </div>
+    <p class="caption">— Henry Ajder, generative AI expert</p>
+    <div class="two-col fragment" style="max-width:800px; margin-top:20px">
+      <div class="card green-border">
+        <h3 style="color:var(--green)">Protected (if they ask)</h3>
+        <ul>
+          <li>MLK (after estate complained)</li>
+          <li>Famous people with <strong>resourced estates</strong></li>
+        </ul>
+      </div>
+      <div class="card red-border">
+        <h3 style="color:var(--red)">Unprotected</h3>
+        <ul>
+          <li>Everyone else</li>
+          <li>The dead can't <strong>opt out</strong></li>
+          <li>No estate = <strong>no recourse</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION: MEMES VS HISTORY                    -->
+  <!-- ============================================ -->
+
+  <div class="slide" data-notes="Meme culture doesn't just distort how we remember people — it actively competes with the historical record. When millions encounter a figure first through ironic memes, that becomes their baseline understanding. The meme replaces the biography. History becomes a content library, and the dead become interchangeable props in whatever narrative gets the most engagement.">
+    <h2>Memes vs. History</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div>
+        <div class="card" style="border-left-color:var(--yellow)">
+          <h3 style="color:var(--yellow)">How History Works</h3>
+          <ul>
+            <li class="fragment">Built on <strong>evidence, context, and debate</strong></li>
+            <li class="fragment">Acknowledges <strong>complexity and contradiction</strong></li>
+            <li class="fragment">Evolves through <strong>scholarship over time</strong></li>
+            <li class="fragment">The person exists in a <strong>specific moment</strong></li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="card red-border">
+          <h3 style="color:var(--red)">How Meme Culture Works</h3>
+          <ul>
+            <li class="fragment">Built on <strong>virality, emotion, and speed</strong></li>
+            <li class="fragment">Flattens everything into <strong>a single image or joke</strong></li>
+            <li class="fragment">Evolves through <strong>remixing in hours</strong></li>
+            <li class="fragment">The person becomes an <strong>interchangeable symbol</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <ul class="fragment" style="max-width:800px; margin-top:20px">
+      <li>The meme becomes the <strong>first encounter</strong> — and for many, the only one</li>
+      <li class="fragment">Sincerity and satire become <strong>indistinguishable</strong> — ironic sharing still spreads the image</li>
+      <li class="fragment">History becomes a <strong>content library</strong>; the dead become interchangeable props for engagement</li>
+    </ul>
+    <img src="../necromemetics/kirk_minecraft_death.png" class="fragment" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:var(--bg); padding:40px 80px; z-index:10" alt="Kirk Minecraft death screen meme">
+  </div>
+
+  <!-- ============================================ -->
+  <!-- CONCLUSION                                   -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="So what do we take away from all this?">
+    <h2><span class="purple">Conclusion</span></h2>
+    <div class="divider" style="background:var(--purple)"></div>
+  </div>
+
+  <div class="slide" data-notes="The dead have always been mythologized. But now anyone with a laptop can generate photorealistic video of the dead doing things they never did, saying things they never said. The families of the dead have almost no recourse. The platforms profit from the engagement. And the algorithms turn memes into radicalization pipelines. The question we need to ask isn't 'is this funny?' — it's 'who benefits?'">
+    <h2>Key Takeaways</h2>
+    <ul style="max-width:700px">
+      <li>Photography gave us the power to <strong>preserve</strong> the dead</li>
+      <li class="fragment">Photoshop gave us the power to <strong>manipulate</strong> them</li>
+      <li class="fragment">AI gives us the power to <strong>resurrect</strong> them</li>
+      <li class="fragment">The dead can't <strong>consent</strong>, can't <strong>opt out</strong>, can't <strong>sue</strong></li>
+    </ul>
+    <p class="fragment" style="margin-top:24px; font-size:1.8rem; color:var(--text)">The question is no longer <em>whether</em> we mythologize the dead —<br>it's <strong class="red">who gets to control the myth</strong>.</p>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- CLOSING                                      -->
+  <!-- ============================================ -->
+
+  <div class="slide title-slide" data-notes="Open the floor for questions. Encourage the audience to share their reactions — what surprised them? What concerned them? Remind them that understanding these tools is the first step to using them responsibly.">
+    <h1>Questions<span class="accent">?</span></h1>
+    <p class="subtitle">Thank you!</p>
+    <p class="subtitle" style="margin-top:8px">Ahnjili ZhuParris</p>
+  </div>
+
+  <!-- Navigation -->
+  <div id="slide-counter"></div>
+  <div id="nav">
+    <button onclick="prev()" title="Previous">&#8592;</button>
+    <button onclick="next()" title="Next">&#8594;</button>
+    <button onclick="toggleFullscreen()" title="Fullscreen (F)" style="font-size:0.8rem">&#x26F6;</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+    let transitioning = false;
+
+    function show(n) {
+      n = Math.max(0, Math.min(n, total - 1));
+      if (n === current || transitioning) return;
+
+      transitioning = true;
+      const prevSlide = slides[current];
+      const nextSlide = slides[n];
+      const prevIndex = current;
+
+      prevSlide.classList.add('fade-out');
+      prevSlide.addEventListener('animationend', function handler() {
+        prevSlide.removeEventListener('animationend', handler);
+        prevSlide.classList.remove('active', 'fade-out');
+        current = n;
+        var frags = nextSlide.querySelectorAll('.fragment');
+        frags.forEach(function(f) {
+          if (n < prevIndex) f.classList.add('visible');
+          else f.classList.remove('visible');
+        });
+        nextSlide.classList.add('active');
+        document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+        document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+        transitioning = false;
+      }, { once: true });
+
+      setTimeout(function() {
+        if (transitioning) {
+          prevSlide.classList.remove('active', 'fade-out');
+          current = n;
+          var frags = nextSlide.querySelectorAll('.fragment');
+          frags.forEach(function(f) {
+            if (n < prevIndex) f.classList.add('visible');
+            else f.classList.remove('visible');
+          });
+          nextSlide.classList.add('active');
+          document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+          document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+          transitioning = false;
+        }
+      }, 400);
+    }
+
+    function next() {
+      var frags = slides[current].querySelectorAll('.fragment:not(.visible)');
+      if (frags.length > 0) { frags[0].classList.add('visible'); return; }
+      show(current + 1);
+    }
+
+    function prev() {
+      var frags = slides[current].querySelectorAll('.fragment.visible');
+      if (frags.length > 0) { frags[frags.length - 1].classList.remove('visible'); return; }
+      show(current - 1);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+      else document.exitFullscreen();
+    }
+
+    // Presenter notes
+    var presenterWin = null;
+    var presenterStartTime = null;
+    var presenterTimerInterval = null;
+
+    function formatTime(ms) {
+      var s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60);
+      s = s % 60; m = m % 60;
+      return (h > 0 ? h + ':' : '') + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function updatePresenter() {
+      if (!presenterWin || presenterWin.closed) return;
+      var doc = presenterWin.document;
+      var notes = slides[current].getAttribute('data-notes') || '(no notes for this slide)';
+      var title = slides[current].querySelector('h1, h2');
+      var titleText = title ? title.textContent : 'Slide ' + (current + 1);
+      var nextTitle = '(end)';
+      if (current + 1 < total) {
+        var nt = slides[current + 1].querySelector('h1, h2');
+        nextTitle = nt ? nt.textContent : 'Slide ' + (current + 2);
+      }
+      var el = doc.getElementById('p-slide-num'); if (el) el.textContent = 'Slide ' + (current + 1) + ' / ' + total;
+      el = doc.getElementById('p-title'); if (el) el.textContent = titleText;
+      el = doc.getElementById('p-notes'); if (el) el.textContent = notes;
+      el = doc.getElementById('p-next'); if (el) el.textContent = nextTitle;
+    }
+
+    function openPresenter() {
+      if (presenterWin && !presenterWin.closed) { presenterWin.focus(); return; }
+      presenterWin = window.open('', 'presenter', 'width=500,height=400,toolbar=no,menubar=no');
+      var doc = presenterWin.document;
+      doc.open();
+      doc.write('<!DOCTYPE html><html><head><title>Presenter Notes</title><style>body{background:#111;color:#e8e8e8;font-family:-apple-system,sans-serif;padding:20px;margin:0}.timer{font-size:3rem;font-family:monospace;color:#4a9eff;margin-bottom:8px}.slide-num{font-size:0.85rem;color:#777;margin-bottom:16px}.title{font-size:1.3rem;color:#fff;margin-bottom:16px;border-bottom:1px solid #333;padding-bottom:12px}.notes{font-size:1.1rem;line-height:1.8;color:#ccc;margin-bottom:24px;min-height:80px}.next-label{font-size:0.75rem;color:#777;margin-bottom:4px}.next-title{font-size:1rem;color:#999}button{padding:6px 16px;border:1px solid #444;background:transparent;color:#999;border-radius:4px;cursor:pointer;font-size:0.8rem;margin-right:8px}button:hover{border-color:#4a9eff;color:#4a9eff}.controls{margin-bottom:16px}</style></head><body><div class="timer" id="p-timer">00:00</div><div class="controls"><button id="p-reset">Reset Timer</button><button id="p-prev">&larr; Prev</button><button id="p-next-btn">Next &rarr;</button></div><div class="slide-num" id="p-slide-num"></div><div class="title" id="p-title"></div><div class="notes" id="p-notes"></div><div class="next-label">NEXT SLIDE</div><div class="next-title" id="p-next"></div></body></html>');
+      doc.close();
+      doc.getElementById('p-prev').addEventListener('click', function() { prev(); });
+      doc.getElementById('p-next-btn').addEventListener('click', function() { next(); });
+      doc.getElementById('p-reset').addEventListener('click', function() { presenterStartTime = Date.now(); });
+      doc.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+      });
+      presenterStartTime = presenterStartTime || Date.now();
+      clearInterval(presenterTimerInterval);
+      presenterTimerInterval = setInterval(function() {
+        if (presenterWin && !presenterWin.closed) {
+          var el = presenterWin.document.getElementById('p-timer');
+          if (el) el.textContent = formatTime(Date.now() - presenterStartTime);
+        } else clearInterval(presenterTimerInterval);
+      }, 1000);
+      updatePresenter();
+    }
+
+    // Section navigation bar
+    var sectionNav = document.getElementById('section-nav');
+    var sectionSlides = [];
+    slides.forEach(function(s, i) {
+      if (s.classList.contains('section-title') || s.classList.contains('title-slide')) {
+        var h = s.querySelector('h2') || s.querySelector('h1');
+        if (h) {
+          var label = h.textContent.trim();
+          sectionSlides.push({ index: i, label: label });
+          var btn = document.createElement('button');
+          btn.textContent = label;
+          btn.setAttribute('data-slide', i);
+          btn.addEventListener('click', function() { show(i); });
+          sectionNav.appendChild(btn);
+        }
+      }
+    });
+
+    function updateSectionNav() {
+      var btns = sectionNav.querySelectorAll('button');
+      var activeSection = 0;
+      for (var i = sectionSlides.length - 1; i >= 0; i--) {
+        if (current >= sectionSlides[i].index) { activeSection = i; break; }
+      }
+      btns.forEach(function(b, idx) {
+        b.classList.toggle('active', idx === activeSection);
+      });
+    }
+
+    // Patch show/next/prev to update section nav
+    var __origShow = show;
+    show = function(n) { __origShow(n); setTimeout(function() { updateSectionNav(); updatePresenter(); }, 50); };
+    var __origNext = next;
+    next = function() { __origNext(); setTimeout(function() { updateSectionNav(); updatePresenter(); }, 50); };
+    var __origPrev = prev;
+    prev = function() { __origPrev(); setTimeout(function() { updateSectionNav(); updatePresenter(); }, 50); };
+
+    document.querySelector('#nav button:nth-child(1)').onclick = function() { prev(); };
+    document.querySelector('#nav button:nth-child(2)').onclick = function() { next(); };
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prev(); }
+      if (e.key === 'Home') { e.preventDefault(); show(0); }
+      if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+      if (e.key === 'p' || e.key === 'P') openPresenter();
+      if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+      if (e.key === 'n' || e.key === 'N') sectionNav.classList.toggle('visible');
+    });
+
+    var touchStartX = 0;
+    document.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', function(e) {
+      var diff = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(diff) > 50) { diff < 0 ? next() : prev(); }
+    });
+
+    updateSectionNav();
+    show(0);
+  </script>
+
 </body>
 </html>
