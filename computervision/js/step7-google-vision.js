@@ -75,6 +75,8 @@
       renderFaces(visionResult.faces);
       renderSafeSearch(visionResult.safeSearch);
       renderColors(visionResult.dominantColors);
+      renderText(visionResult.fullText);
+      renderWeb(visionResult);
     } catch (err) {
       loadingDiv.classList.add('hidden');
       errorDiv.classList.remove('hidden');
@@ -184,7 +186,21 @@
       });
     }
 
-    return { labels, faces, objects, safeSearch, dominantColors: colors };
+    // Parse text detection (OCR)
+    const textAnnotations = r.textAnnotations || [];
+    const fullText = textAnnotations.length > 0 ? textAnnotations[0].description : '';
+
+    // Parse web detection
+    const webDetection = r.webDetection || {};
+    const webEntities = (webDetection.webEntities || []).filter(e => e.description).slice(0, 8);
+    const bestGuessLabels = (webDetection.bestGuessLabels || []).map(l => l.label);
+    const pagesWithMatchingImages = (webDetection.pagesWithMatchingImages || []).slice(0, 5);
+    const visuallySimilarImages = (webDetection.visuallySimilarImages || []).slice(0, 6);
+
+    return {
+      labels, faces, objects, safeSearch, dominantColors: colors,
+      fullText, webEntities, bestGuessLabels, pagesWithMatchingImages, visuallySimilarImages,
+    };
   }
 
   // ------------------------------------------------------------------
@@ -263,27 +279,16 @@
         { name: 'Surprise', value: f.surprise },
       ];
 
-      const bars = emotions.map(e => {
-        const pct = likelihoodMap[e.value] ?? 0;
-        const colorClass = pct >= 75 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--text-dim)';
+      const rows = emotions.map(e => {
         const label = e.value.replace(/_/g, ' ').toLowerCase();
-        return `
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; font-family:var(--mono); font-size:0.75rem;">
-            <span style="width:70px; text-align:right; color:var(--text);">${e.name}</span>
-            <div style="flex:1; height:14px; background:#222; border-radius:3px; overflow:hidden;">
-              <div style="height:100%; width:${pct}%; background:${colorClass}; border-radius:3px;"></div>
-            </div>
-            <span style="width:90px; color:var(--text-dim); white-space:nowrap;">${label}</span>
-          </div>
-        `;
-      }).join('');
+        const color = e.value === 'VERY_LIKELY' ? 'var(--green)' : e.value === 'LIKELY' ? 'var(--green)' : e.value === 'POSSIBLE' ? 'var(--yellow)' : 'var(--text-dim)';
+        return `<span style="color:var(--text);">${e.name}:</span> <span style="color:${color};">${label}</span>`;
+      }).join(' &nbsp;&middot;&nbsp; ');
 
       return `
-        <div style="background:var(--bg-card); padding:12px 16px; border-radius:var(--radius); margin-bottom:8px;">
-          <div class="mono" style="font-size:0.75rem; color:var(--green); margin-bottom:6px;">
-            Face ${i + 1} — ${(f.confidence * 100).toFixed(0)}% confidence
-          </div>
-          ${bars}
+        <div style="background:var(--bg-card); padding:10px 16px; border-radius:var(--radius); margin-bottom:6px; font-family:var(--mono); font-size:0.75rem; line-height:1.8;">
+          <span style="color:var(--green);">Face ${i + 1}</span> <span style="color:var(--text-dim);">(${(f.confidence * 100).toFixed(0)}%)</span><br>
+          ${rows}
         </div>
       `;
     }).join('');
@@ -312,23 +317,18 @@
       { key: 'racy', label: 'Racy' },
     ];
 
-    container.innerHTML = `<div style="background:var(--bg-card); padding:12px 16px; border-radius:var(--radius); margin-bottom:24px;">` +
-      categories.map(c => {
-        const val = ss[c.key] || 'UNKNOWN';
-        const pct = likelihoodMap[val] ?? 0;
-        const color = pct >= 75 ? 'var(--red)' : pct >= 50 ? 'var(--yellow)' : 'var(--text-dim)';
-        const label = val.replace(/_/g, ' ').toLowerCase();
-        return `
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; font-family:var(--mono); font-size:0.75rem;">
-            <span style="width:90px; text-align:right; color:var(--text);">${c.label}</span>
-            <div style="flex:1; height:14px; background:#222; border-radius:3px; overflow:hidden;">
-              <div style="height:100%; width:${pct}%; background:${color}; border-radius:3px;"></div>
-            </div>
-            <span style="width:90px; color:var(--text-dim); white-space:nowrap;">${label}</span>
-          </div>
-        `;
-      }).join('') +
-      `</div>`;
+    const rows = categories.map(c => {
+      const val = ss[c.key] || 'UNKNOWN';
+      const label = val.replace(/_/g, ' ').toLowerCase();
+      const color = val === 'VERY_LIKELY' || val === 'LIKELY' ? 'var(--red)' : val === 'POSSIBLE' ? 'var(--yellow)' : 'var(--text-dim)';
+      return `<span style="color:var(--text);">${c.label}:</span> <span style="color:${color};">${label}</span>`;
+    }).join(' &nbsp;&middot;&nbsp; ');
+
+    container.innerHTML = `
+      <div style="background:var(--bg-card); padding:10px 16px; border-radius:var(--radius); margin-bottom:24px; font-family:var(--mono); font-size:0.75rem; line-height:1.8;">
+        ${rows}
+      </div>
+    `;
   }
 
   function renderColors(colors) {
@@ -353,5 +353,64 @@
         </div>
       `;
     }).join('');
+  }
+
+  function renderText(text) {
+    const section = document.getElementById('vision-text-section');
+    const container = document.getElementById('vision-text');
+    if (!text) {
+      section.classList.add('hidden');
+      return;
+    }
+    section.classList.remove('hidden');
+    container.innerHTML = `
+      <div style="background:var(--bg-card); padding:10px 16px; border-radius:var(--radius); margin-bottom:24px; font-family:var(--mono); font-size:0.75rem; color:var(--text); white-space:pre-wrap; line-height:1.6;">${text}</div>
+    `;
+  }
+
+  function renderWeb(data) {
+    const section = document.getElementById('vision-web-section');
+    const container = document.getElementById('vision-web');
+    const hasContent = (data.webEntities && data.webEntities.length > 0) ||
+                       (data.bestGuessLabels && data.bestGuessLabels.length > 0) ||
+                       (data.visuallySimilarImages && data.visuallySimilarImages.length > 0);
+    if (!hasContent) {
+      section.classList.add('hidden');
+      return;
+    }
+    section.classList.remove('hidden');
+
+    let html = '<div style="background:var(--bg-card); padding:12px 16px; border-radius:var(--radius); margin-bottom:24px; font-family:var(--mono); font-size:0.75rem;">';
+
+    // Best guess
+    if (data.bestGuessLabels && data.bestGuessLabels.length > 0) {
+      html += `<div style="margin-bottom:10px;"><span style="color:var(--text-dim);">Best guess:</span> <span style="color:var(--accent);">${data.bestGuessLabels.join(', ')}</span></div>`;
+    }
+
+    // Web entities
+    if (data.webEntities && data.webEntities.length > 0) {
+      html += `<div style="margin-bottom:10px;"><span style="color:var(--text-dim);">Related concepts:</span> `;
+      html += data.webEntities.map(e => {
+        const score = e.score ? ` (${(e.score * 100).toFixed(0)}%)` : '';
+        return `<span style="color:var(--text);">${e.description}${score}</span>`;
+      }).join(' &middot; ');
+      html += `</div>`;
+    }
+
+    // Visually similar images
+    if (data.visuallySimilarImages && data.visuallySimilarImages.length > 0) {
+      html += `<div><span style="color:var(--text-dim);">Visually similar images found online:</span>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">`;
+      html += data.visuallySimilarImages.map(img => {
+        const imgUrl = img.url || '';
+        return `<a href="${imgUrl}" target="_blank" rel="noopener" style="display:block; width:80px; height:80px; border-radius:4px; overflow:hidden; border:1px solid #333;">
+          <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.style.display='none'">
+        </a>`;
+      }).join('');
+      html += `</div></div>`;
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
   }
 })();

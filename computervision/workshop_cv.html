@@ -587,28 +587,40 @@
       ">PART 1: GOOGLE CLOUD VISION API</div>
 
       <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:20px;">
-        The <strong style="color:var(--yellow)">Vision API</strong> is Google's image classification service. It returns <strong style="color:var(--text)">structured data</strong> — labels, confidence scores, emotion estimates, safety ratings. No narration, no understanding. Just a spreadsheet of what the machine detected. This is the raw output that powers surveillance systems, content moderation, and ad targeting.
+        The <strong style="color:var(--yellow)">Vision API</strong> is Google's image classification service. It returns <strong style="color:var(--text)">structured data</strong>: labels, confidence scores, emotion estimates, safety ratings. No narration, no understanding. Just a spreadsheet of what the machine detected.
       </p>
 
       <!-- Labels -->
-      <h3 class="mono" style="font-size:0.85rem; color:var(--yellow); margin-bottom:12px;">Labels — what the machine detected</h3>
-      <div id="vision-labels" style="margin-bottom:24px;"></div>
+      <h3 class="mono" style="font-size:0.85rem; color:var(--yellow); margin-bottom:12px;">Labels</h3>
+      <div id="vision-labels" style="margin-bottom:20px;"></div>
 
       <!-- Face Analysis -->
       <div id="vision-faces-section" class="hidden">
-        <h3 class="mono" style="font-size:0.85rem; color:var(--green); margin-bottom:12px;">Face Analysis — emotion estimates</h3>
-        <div id="vision-faces" style="margin-bottom:24px;"></div>
+        <h3 class="mono" style="font-size:0.85rem; color:var(--green); margin-bottom:12px;">Face Analysis</h3>
+        <div id="vision-faces" style="margin-bottom:20px;"></div>
       </div>
 
       <!-- Safe Search -->
-      <h3 class="mono" style="font-size:0.85rem; color:var(--red); margin-bottom:12px;">Safe Search — content moderation scores</h3>
-      <div id="vision-safesearch" style="margin-bottom:24px;"></div>
+      <h3 class="mono" style="font-size:0.85rem; color:var(--red); margin-bottom:12px;">Safe Search</h3>
+      <div id="vision-safesearch" style="margin-bottom:20px;"></div>
+
+      <!-- Text Detection (OCR) -->
+      <div id="vision-text-section" class="hidden">
+        <h3 class="mono" style="font-size:0.85rem; color:var(--accent); margin-bottom:12px;">Text Detected (OCR)</h3>
+        <div id="vision-text" style="margin-bottom:20px;"></div>
+      </div>
+
+      <!-- Web Detection -->
+      <div id="vision-web-section" class="hidden">
+        <h3 class="mono" style="font-size:0.85rem; color:var(--accent); margin-bottom:12px;">Web Detection</h3>
+        <div id="vision-web" style="margin-bottom:20px;"></div>
+      </div>
 
       <!-- Dominant Colors -->
       <h3 class="mono" style="font-size:0.85rem; color:var(--text-dim); margin-bottom:12px;">Dominant Colors</h3>
       <div id="vision-colors" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:32px;"></div>
 
-      <!-- Hidden elements needed by JS but not displayed -->
+      <!-- Hidden elements needed by JS -->
       <div id="vision-mobilenet-labels" class="hidden"></div>
       <canvas id="canvas-vision-objects" class="hidden"></canvas>
       <div id="vision-budget" class="hidden"></div>
@@ -625,7 +637,7 @@
       ">PART 2: GEMINI — THE MACHINE NARRATES</div>
 
       <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:20px;">
-        <strong style="color:#a259ff">Gemini</strong> is Google's multimodal AI. Unlike the Vision API, it doesn't return labels — it <strong style="color:var(--text)">writes about your image in natural language</strong>. It sounds like understanding. It isn't. It's pattern-matching wrapped in fluent prose — and that's what makes it more powerful and more dangerous. Ask it anything about your photo.
+        <strong style="color:#a259ff">Gemini</strong> is Google's multimodal AI. Unlike the Vision API, it doesn't return labels. It <strong style="color:var(--text)">writes about your image in natural language</strong>. It sounds like understanding, but it's pattern-matching wrapped in fluent prose. Ask it anything about your photo.
       </p>
 
       <div id="gemini-prompt-section" style="background:var(--bg-card); padding:20px; border-radius:var(--radius); margin-bottom:20px;">
@@ -675,12 +687,6 @@
       <!-- Gemini error -->
       <div id="gemini-error" class="hidden" style="padding:16px; background:var(--bg-card); border-left:3px solid var(--red); border-radius:0 var(--radius) var(--radius) 0; margin-bottom:24px; color:var(--red); font-family:var(--mono); font-size:0.85rem;"></div>
 
-      <!-- ============================================================ -->
-      <!-- Reflection -->
-      <!-- ============================================================ -->
-      <div class="critical-text" style="margin-top:16px; border-left-color:#a259ff;">
-        <p>"The Vision API gave you a spreadsheet. Gemini gave you a story. The story feels more human — but neither understood your photograph."</p>
-      </div>
     </div>
   </section>
 
