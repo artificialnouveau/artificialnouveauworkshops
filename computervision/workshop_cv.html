@@ -532,19 +532,16 @@
   <section id="step-7" class="step">
     <div class="step-intro">
       <h2>The Commercial Eye</h2>
-      <p>Everything so far ran locally in your browser using open-source models. Now let's send your photo to <strong>Google Cloud Vision</strong> — the same commercial API used by corporations and governments — and compare what a billion-dollar system "sees" versus the free models on your phone.</p>
-      <div class="model-info" style="border-left-color:var(--yellow)">
-        <p><strong style="color:var(--yellow)">How this works:</strong> Your image is sent to a proxy server, which forwards it to Google's Vision API and Gemini. The API keys are never exposed to your browser. A hard request cap is in place to limit costs.</p>
-      </div>
+      <p>Everything so far ran locally in your browser. Now let's send your photo to Google's commercial APIs — the same infrastructure used by corporations and governments.</p>
       <div class="google-disclaimer" style="
-        margin-top:14px; padding:14px 16px;
+        margin-top:14px; padding:12px 16px;
         background:rgba(255, 74, 74, 0.06);
         border:1px solid rgba(255, 74, 74, 0.25);
         border-radius:var(--radius);
         font-size:0.82rem; line-height:1.6; color:var(--text-dim);
       ">
         <strong style="color:var(--red);">Data leaves your device from this point forward.</strong>
-        Unlike the previous steps, which ran entirely in your browser, everything you upload in this section will be transmitted to <strong style="color:var(--text);">Google's servers</strong> and processed in <strong style="color:var(--text);">Google's data centres</strong>. Your image will be handled by Google's Cloud Vision API and Gemini API under <strong style="color:var(--text);">Google's terms of service and privacy policy</strong>. Google may log requests, retain data for abuse monitoring, and process your image on infrastructure spanning multiple countries. You are no longer in control of where your image goes. This is how most commercial computer vision works — and it is itself a lesson in the power asymmetry between users and platforms.
+        Your image will be sent to Google's servers and processed in Google's data centres under Google's terms of service. You are no longer in control of where your image goes.
       </div>
     </div>
 
@@ -576,21 +573,62 @@
     <div id="vision-error" class="hidden" style="padding:16px; background:var(--bg-card); border-left:3px solid var(--red); border-radius:0 var(--radius) var(--radius) 0; margin-bottom:20px; color:var(--red); font-family:var(--mono); font-size:0.85rem;"></div>
 
     <div id="step7-results" class="results hidden">
-      <!-- Budget indicator -->
-      <div id="vision-budget" class="mono" style="font-size:0.75rem; color:var(--text-dim); margin-bottom:16px; text-align:right;"></div>
 
       <!-- Original image -->
       <canvas id="canvas-vision" style="width:100%; max-width:500px; margin-bottom:24px;"></canvas>
 
       <!-- ============================================================ -->
-      <!-- PART A: Ask Gemini (prominent, first interaction after upload) -->
+      <!-- PART A: Google Cloud Vision API — structured classification  -->
       <!-- ============================================================ -->
-      <div class="explainer-block" style="border-left-color:#a259ff;">
-        <h3 style="color:#a259ff">Ask the Machine</h3>
-        <p>Your photo has been uploaded. Now ask <strong>Gemini</strong> — Google's multimodal AI — anything about it. Type your own question or pick a preset below. Gemini will narrate what it "sees" in natural language.</p>
+      <div style="
+        padding:3px 10px; background:var(--yellow); color:#000;
+        font-family:var(--mono); font-size:0.75rem; font-weight:600;
+        border-radius:4px; display:inline-block; margin-bottom:14px;
+      ">PART 1: GOOGLE CLOUD VISION API</div>
+
+      <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:20px;">
+        The <strong style="color:var(--yellow)">Vision API</strong> is Google's image classification service. It returns <strong style="color:var(--text)">structured data</strong> — labels, confidence scores, emotion estimates, safety ratings. No narration, no understanding. Just a spreadsheet of what the machine detected. This is the raw output that powers surveillance systems, content moderation, and ad targeting.
+      </p>
+
+      <!-- Labels -->
+      <h3 class="mono" style="font-size:0.85rem; color:var(--yellow); margin-bottom:12px;">Labels — what the machine detected</h3>
+      <div id="vision-labels" style="margin-bottom:24px;"></div>
+
+      <!-- Face Analysis -->
+      <div id="vision-faces-section" class="hidden">
+        <h3 class="mono" style="font-size:0.85rem; color:var(--green); margin-bottom:12px;">Face Analysis — emotion estimates</h3>
+        <div id="vision-faces" style="margin-bottom:24px;"></div>
       </div>
 
-      <div id="gemini-prompt-section" style="background:var(--bg-card); padding:20px; border-radius:var(--radius); margin-bottom:24px;">
+      <!-- Safe Search -->
+      <h3 class="mono" style="font-size:0.85rem; color:var(--red); margin-bottom:12px;">Safe Search — content moderation scores</h3>
+      <div id="vision-safesearch" style="margin-bottom:24px;"></div>
+
+      <!-- Dominant Colors -->
+      <h3 class="mono" style="font-size:0.85rem; color:var(--text-dim); margin-bottom:12px;">Dominant Colors</h3>
+      <div id="vision-colors" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:32px;"></div>
+
+      <!-- Hidden elements needed by JS but not displayed -->
+      <div id="vision-mobilenet-labels" class="hidden"></div>
+      <canvas id="canvas-vision-objects" class="hidden"></canvas>
+      <div id="vision-budget" class="hidden"></div>
+
+      <!-- ============================================================ -->
+      <!-- PART B: Gemini — multimodal narration                        -->
+      <!-- ============================================================ -->
+      <div style="border-top:1px solid #222; padding-top:28px; margin-top:8px;"></div>
+
+      <div style="
+        padding:3px 10px; background:#a259ff; color:#fff;
+        font-family:var(--mono); font-size:0.75rem; font-weight:600;
+        border-radius:4px; display:inline-block; margin-bottom:14px;
+      ">PART 2: GEMINI — THE MACHINE NARRATES</div>
+
+      <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:20px;">
+        <strong style="color:#a259ff">Gemini</strong> is Google's multimodal AI. Unlike the Vision API, it doesn't return labels — it <strong style="color:var(--text)">writes about your image in natural language</strong>. It sounds like understanding. It isn't. It's pattern-matching wrapped in fluent prose — and that's what makes it more powerful and more dangerous. Ask it anything about your photo.
+      </p>
+
+      <div id="gemini-prompt-section" style="background:var(--bg-card); padding:20px; border-radius:var(--radius); margin-bottom:20px;">
         <div style="margin-bottom:12px;">
           <input type="text" id="gemini-prompt-input" placeholder="Ask Gemini anything about this image..." style="
             display:block; width:100%; padding:12px 14px;
@@ -628,7 +666,7 @@
         padding:20px; background:var(--bg-card);
         border-left:3px solid #a259ff; border-radius:0 var(--radius) var(--radius) 0;
         font-size:0.95rem; line-height:1.7; color:var(--text); white-space:pre-wrap;
-        margin-bottom:24px;
+        margin-bottom:16px;
       "></div>
 
       <!-- Gemini budget -->
@@ -638,69 +676,10 @@
       <div id="gemini-error" class="hidden" style="padding:16px; background:var(--bg-card); border-left:3px solid var(--red); border-radius:0 var(--radius) var(--radius) 0; margin-bottom:24px; color:var(--red); font-family:var(--mono); font-size:0.85rem;"></div>
 
       <!-- ============================================================ -->
-      <!-- PART B: Vision API structured results (scroll down to explore) -->
+      <!-- Reflection -->
       <!-- ============================================================ -->
-      <div class="explainer-block" style="border-left-color:var(--yellow); margin-top:8px;">
-        <h3 style="color:var(--yellow)">What the Machine Sees — Structured Data</h3>
-        <p>While Gemini narrates in prose, the <strong>Vision API</strong> returns structured data — labels with confidence scores, bounding boxes, emotion estimates, safety ratings. This is the raw output that powers surveillance systems, content moderation, and ad targeting. Scroll down to explore each layer.</p>
-      </div>
-
-      <!-- Labels: Google vs MobileNet side-by-side -->
-      <div class="explainer-block" style="border-left-color:var(--yellow)">
-        <h3 style="color:var(--yellow)">Label Detection: Google Vision vs MobileNet</h3>
-        <p>Google's commercial API was trained on a vastly larger, proprietary dataset. MobileNet is a lightweight open-source model designed to run on phones. Compare what each one "sees" — and notice what each one misses.</p>
-      </div>
-
-      <div class="vision-comparison-row">
-        <div class="vision-comparison-card">
-          <h3 class="mono" style="color:var(--yellow)">Google Cloud Vision</h3>
-          <div id="vision-labels"></div>
-        </div>
-        <div class="vision-comparison-card">
-          <h3 class="mono" style="color:var(--accent)">MobileNet (local)</h3>
-          <div id="vision-mobilenet-labels"></div>
-        </div>
-      </div>
-
-      <!-- Object Localization -->
-      <div class="explainer-block">
-        <h3>Object Localization</h3>
-        <p>Google Vision draws bounding boxes around individual objects it recognizes. Each box comes with a label and confidence score.</p>
-      </div>
-      <canvas id="canvas-vision-objects" style="width:100%; max-width:500px; margin-bottom:24px;"></canvas>
-
-      <!-- Face Analysis -->
-      <div id="vision-faces-section" class="hidden">
-        <div class="explainer-block" style="border-left-color:var(--green)">
-          <h3 style="color:var(--green)">Face Analysis</h3>
-          <p>Google's API estimates emotional states from facial geometry — reducing complex human expression to five categories. These same classifications power ad targeting, insurance risk assessment, and hiring tools.</p>
-        </div>
-        <div id="vision-faces"></div>
-      </div>
-
-      <!-- Safe Search -->
-      <div class="explainer-block" style="border-left-color:var(--red)">
-        <h3 style="color:var(--red)">Safe Search</h3>
-        <p>Google rates your image for adult content, violence, and other "unsafe" categories. Who decides what is "safe"? These scores determine what gets shown, hidden, or removed across platforms used by billions.</p>
-      </div>
-      <div id="vision-safesearch"></div>
-
-      <!-- Dominant Colors -->
-      <div class="explainer-block">
-        <h3>Dominant Colors</h3>
-        <p>The API extracts the most prominent colors. This is used commercially for ad matching, product categorization, and visual search.</p>
-      </div>
-      <div id="vision-colors" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px;"></div>
-
-      <!-- ============================================================ -->
-      <!-- Reflections -->
-      <!-- ============================================================ -->
-      <div class="critical-text" style="margin-top:32px; border-left-color:#a259ff;">
-        <p>"Three machines looked at the same photo. MobileNet gave you a label. Google Vision gave you a spreadsheet. Gemini gave you a story. The story feels most human — but none of them understood your photograph. They never will."</p>
-      </div>
-
-      <div class="critical-text">
-        <p>"The local model runs for free, on your device, with no data leaving your phone. The commercial API is more powerful — but your image is now on Google's servers, processed by Google's models, subject to Google's terms. Power and privacy rarely come together."</p>
+      <div class="critical-text" style="margin-top:16px; border-left-color:#a259ff;">
+        <p>"The Vision API gave you a spreadsheet. Gemini gave you a story. The story feels more human — but neither understood your photograph."</p>
       </div>
     </div>
   </section>
