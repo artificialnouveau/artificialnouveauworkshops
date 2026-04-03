@@ -1068,6 +1068,29 @@ footer .mono {
   margin-bottom: 4px;
 }
 
+/* ===== Step 7: Google Vision ===== */
+.vision-comparison-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.vision-comparison-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.vision-comparison-card h3 {
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.vision-comparison-card .prediction-label {
+  width: 140px;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
   #app-header h1 {
@@ -1076,7 +1099,8 @@ footer .mono {
 
   #source-select,
   .canvas-row,
-  .mirror-row {
+  .mirror-row,
+  .vision-comparison-row {
     grid-template-columns: 1fr;
   }
 

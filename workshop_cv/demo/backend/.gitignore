@@ -1,0 +1,6 @@
+.vision_count
+.gemini_count
+.request_count
+__pycache__/
+*.pyc
+.env

@@ -44,6 +44,7 @@
     <button class="step-tab" data-step="4">4. Break It</button>
     <button class="step-tab" data-step="5">5. Mirror</button>
     <button class="step-tab" data-step="6">6. Clone</button>
+    <button class="step-tab" data-step="7">7. Google Vision</button>
   </nav>
 
   <!-- Step 1: What the Machine Sees -->
@@ -527,6 +528,171 @@
     </div>
   </section>
 
+  <!-- Step 7: Google Vision API -->
+  <section id="step-7" class="step">
+    <div class="step-intro">
+      <h2>The Commercial Eye</h2>
+      <p>Everything so far ran locally in your browser using open-source models. Now let's send your photo to <strong>Google Cloud Vision</strong> — the same commercial API used by corporations and governments — and compare what a billion-dollar system "sees" versus the free models on your phone.</p>
+      <div class="model-info" style="border-left-color:var(--yellow)">
+        <p><strong style="color:var(--yellow)">How this works:</strong> Your image is sent to a proxy server (run by the workshop host), which forwards it to Google's Vision API and Gemini. The API keys are never exposed to your browser. A hard request cap is in place to limit costs.</p>
+      </div>
+      <div class="google-disclaimer" style="
+        margin-top:14px; padding:14px 16px;
+        background:rgba(255, 74, 74, 0.06);
+        border:1px solid rgba(255, 74, 74, 0.25);
+        border-radius:var(--radius);
+        font-size:0.82rem; line-height:1.6; color:var(--text-dim);
+      ">
+        <strong style="color:var(--red);">Data leaves your device from this point forward.</strong>
+        Unlike the previous steps, which ran entirely in your browser, everything you upload in this section will be transmitted to <strong style="color:var(--text);">Google's servers</strong> and processed in <strong style="color:var(--text);">Google's data centres</strong>. Your image will be handled by Google's Cloud Vision API and Gemini API under <strong style="color:var(--text);">Google's terms of service and privacy policy</strong>. Google may log requests, retain data for abuse monitoring, and process your image on infrastructure spanning multiple countries. You are no longer in control of where your image goes. This is how most commercial computer vision works — and it is itself a lesson in the power asymmetry between users and platforms.
+      </div>
+    </div>
+
+    <!-- Server URL config (hidden by default, for presenter) -->
+    <div id="vision-server-config" class="mono" style="margin-bottom:16px; font-size:0.75rem; color:var(--text-dim)">
+      Server: <input type="text" id="vision-server-url" value="http://localhost:8000" style="
+        background:var(--bg-card); border:1px solid #333; border-radius:4px;
+        color:var(--text); font-family:var(--mono); font-size:0.75rem;
+        padding:4px 8px; width:260px;
+      ">
+    </div>
+
+    <div class="upload-area" id="upload-area-7">
+      <label for="file-input-7" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a photo</span>
+        <span style="font-size:0.7rem; color:var(--red); margin-top:4px;">This image will be sent to Google's servers</span>
+      </label>
+      <input type="file" id="file-input-7" accept="image/*" capture="environment">
+    </div>
+
+    <!-- Loading state -->
+    <div id="vision-loading" class="hidden" style="text-align:center; padding:20px; color:var(--yellow); font-family:var(--mono); font-size:0.85rem;">
+      <div class="spinner" style="margin:0 auto 12px"></div>
+      Sending to Google Cloud Vision<span class="dots"></span>
+    </div>
+
+    <!-- Error state -->
+    <div id="vision-error" class="hidden" style="padding:16px; background:var(--bg-card); border-left:3px solid var(--red); border-radius:0 var(--radius) var(--radius) 0; margin-bottom:20px; color:var(--red); font-family:var(--mono); font-size:0.85rem;"></div>
+
+    <div id="step7-results" class="results hidden">
+      <!-- Budget indicator -->
+      <div id="vision-budget" class="mono" style="font-size:0.75rem; color:var(--text-dim); margin-bottom:16px; text-align:right;"></div>
+
+      <!-- Original image -->
+      <canvas id="canvas-vision" style="width:100%; max-width:500px; margin-bottom:24px;"></canvas>
+
+      <!-- Labels: Google vs MobileNet side-by-side -->
+      <div class="explainer-block" style="border-left-color:var(--yellow)">
+        <h3 style="color:var(--yellow)">Label Detection: Google Vision vs MobileNet</h3>
+        <p>Google's commercial API was trained on a vastly larger, proprietary dataset. MobileNet is a lightweight open-source model designed to run on phones. Compare what each one "sees" in the same image — and notice what each one misses.</p>
+      </div>
+
+      <div class="vision-comparison-row">
+        <div class="vision-comparison-card">
+          <h3 class="mono" style="color:var(--yellow)">Google Cloud Vision</h3>
+          <div id="vision-labels"></div>
+        </div>
+        <div class="vision-comparison-card">
+          <h3 class="mono" style="color:var(--accent)">MobileNet (local)</h3>
+          <div id="vision-mobilenet-labels"></div>
+        </div>
+      </div>
+
+      <!-- Object Localization -->
+      <div class="explainer-block">
+        <h3>Object Localization</h3>
+        <p>Google Vision doesn't just classify — it draws bounding boxes around individual objects it recognizes. Each box comes with a label and confidence score.</p>
+      </div>
+      <canvas id="canvas-vision-objects" style="width:100%; max-width:500px; margin-bottom:24px;"></canvas>
+
+      <!-- Face Analysis -->
+      <div id="vision-faces-section" class="hidden">
+        <div class="explainer-block" style="border-left-color:var(--green)">
+          <h3 style="color:var(--green)">Face Analysis</h3>
+          <p>Google's API estimates emotional states from facial geometry. It outputs likelihoods for joy, sorrow, anger, and surprise — reducing complex human expression to five categories. These same classifications power ad targeting, insurance risk assessment, and hiring tools.</p>
+        </div>
+        <div id="vision-faces"></div>
+      </div>
+
+      <!-- Safe Search -->
+      <div class="explainer-block" style="border-left-color:var(--red)">
+        <h3 style="color:var(--red)">Safe Search</h3>
+        <p>Google rates your image for adult content, violence, and other "unsafe" categories. Who decides what is "safe"? These same scores determine what gets shown, hidden, or removed across platforms used by billions of people.</p>
+      </div>
+      <div id="vision-safesearch"></div>
+
+      <!-- Dominant Colors -->
+      <div class="explainer-block">
+        <h3>Dominant Colors</h3>
+        <p>The API extracts the most prominent colors in your image. This is used commercially for ad matching, product categorization, and visual search.</p>
+      </div>
+      <div id="vision-colors" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px;"></div>
+
+      <!-- Gemini: The Machine Narrates -->
+      <div class="explainer-block" style="border-left-color:#a259ff; margin-top:32px;">
+        <h3 style="color:#a259ff">The Machine Narrates — Gemini</h3>
+        <p>The Vision API classifies. <strong>Gemini</strong> narrates. It's a large multimodal model — it sees your image and writes about it in natural language. The labels above are mechanical and auditable. The text below sounds like understanding — but it's still pattern-matching, wrapped in fluent prose. That's what makes it more dangerous: you can't see the seams.</p>
+      </div>
+
+      <div style="font-size:0.75rem; color:var(--red); font-family:var(--mono); margin-bottom:10px;">
+        Your image and prompt will be sent to Google's Gemini servers for processing.
+      </div>
+      <div id="gemini-prompt-section">
+        <div style="margin-bottom:12px;">
+          <input type="text" id="gemini-prompt-input" placeholder="Ask Gemini anything about this image..." style="
+            display:block; width:100%; padding:10px 14px;
+            background:var(--bg-card); border:1px solid #333; border-radius:var(--radius);
+            color:var(--text); font-family:var(--mono); font-size:0.85rem;
+          ">
+        </div>
+        <div id="gemini-presets" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+          <button class="preset-chip gemini-chip" data-prompt="Describe this image in detail. What do you see?">Describe</button>
+          <button class="preset-chip gemini-chip" data-prompt="What emotion does this photograph convey? What mood does it create?">Emotion</button>
+          <button class="preset-chip gemini-chip" data-prompt="Estimate the age, gender, and ethnicity of any people in this image. How confident are you?">Demographics</button>
+          <button class="preset-chip gemini-chip" data-prompt="Is this image safe for work? Could it be considered offensive in any culture? Explain.">Safety judgment</button>
+          <button class="preset-chip gemini-chip" data-prompt="What assumptions are you making about the people or context in this photo? What might you be wrong about?">Assumptions</button>
+          <button class="preset-chip gemini-chip" data-prompt="Describe this photo as if you were writing a police report. Then describe it as if you were writing a caption for an art gallery.">Two framings</button>
+          <button class="preset-chip gemini-chip" data-prompt="What is missing from this image? What can you NOT tell from looking at it?">What's missing</button>
+        </div>
+        <button id="gemini-run" style="
+          padding:8px 20px; background:#a259ff; border:none; border-radius:var(--radius);
+          color:#fff; font-family:var(--mono); font-size:0.85rem; font-weight:600;
+          cursor:pointer; transition:opacity 0.2s;
+        ">Ask Gemini</button>
+      </div>
+
+      <!-- Gemini loading -->
+      <div id="gemini-loading" class="hidden" style="text-align:center; padding:20px; color:#a259ff; font-family:var(--mono); font-size:0.85rem;">
+        <div class="spinner" style="margin:0 auto 12px; border-top-color:#a259ff;"></div>
+        Gemini is thinking<span class="dots"></span>
+      </div>
+
+      <!-- Gemini response -->
+      <div id="gemini-response" class="hidden" style="
+        margin-top:16px; padding:20px; background:var(--bg-card);
+        border-left:3px solid #a259ff; border-radius:0 var(--radius) var(--radius) 0;
+        font-size:0.95rem; line-height:1.7; color:var(--text); white-space:pre-wrap;
+      "></div>
+
+      <!-- Gemini budget -->
+      <div id="gemini-budget" class="mono" style="font-size:0.75rem; color:var(--text-dim); margin-top:8px; text-align:right;"></div>
+
+      <!-- Gemini error -->
+      <div id="gemini-error" class="hidden" style="padding:16px; background:var(--bg-card); border-left:3px solid var(--red); border-radius:0 var(--radius) var(--radius) 0; margin-top:12px; color:var(--red); font-family:var(--mono); font-size:0.85rem;"></div>
+
+      <!-- Three-way comparison reflection -->
+      <div class="critical-text" style="margin-top:32px; border-left-color:#a259ff;">
+        <p>"Three machines looked at the same photo. MobileNet gave you a label. Google Vision gave you a spreadsheet. Gemini gave you a story. The story feels most human — but none of them understood your photograph. They never will."</p>
+      </div>
+
+      <!-- Original critical reflection -->
+      <div class="critical-text">
+        <p>"The local model runs for free, on your device, with no data leaving your phone. The commercial API is more powerful — but your image is now on Google's servers, processed by Google's models, subject to Google's terms. Power and privacy rarely come together."</p>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer>
     <p class="mono">All processing happens on your device. No data leaves your browser.</p>
@@ -541,5 +707,6 @@
   <script src="js/step4-break.js"></script>
   <script src="js/step5-beauty.js"></script>
   <script src="js/step6-clone.js"></script>
+  <script src="js/step7-google-vision.js"></script>
 </body>
 </html>
