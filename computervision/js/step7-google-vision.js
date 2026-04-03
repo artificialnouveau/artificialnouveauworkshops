@@ -7,8 +7,8 @@
  */
 
 (function () {
-  // Default to Render deployment; override via ?server=1 to show config field
-  const DEFAULT_SERVER = 'https://cv-workshop-proxy.onrender.com';
+  // Default to Cloudflare Worker proxy; override via ?server=1 to show config field
+  const DEFAULT_SERVER = 'https://artificialnouveauworkshops.artificialnouveau.workers.dev';
 
   const fileInput = document.getElementById('file-input-7');
   const uploadArea = document.getElementById('upload-area-7');
@@ -118,9 +118,13 @@
     try {
       const result = await callGeminiProxy(currentFile, geminiPromptInput.value.trim());
       geminiLoading.classList.add('hidden');
-      geminiResponse.textContent = result.text;
+      // Handle both raw Gemini response and pre-parsed proxy response
+      const text = result.text || (result.candidates && result.candidates[0]?.content?.parts?.[0]?.text) || '(No response from Gemini)';
+      geminiResponse.textContent = text;
       geminiResponse.classList.remove('hidden');
-      geminiBudget.textContent = `Gemini requests: ${result.requestsUsed} / ${result.requestsUsed + result.requestsRemaining} used`;
+      if (result.requestsUsed != null) {
+        geminiBudget.textContent = `Gemini requests: ${result.requestsUsed} / ${result.requestsUsed + result.requestsRemaining} used`;
+      }
     } catch (err) {
       geminiLoading.classList.add('hidden');
       geminiError.classList.remove('hidden');
@@ -142,10 +146,50 @@
 
     if (!resp.ok) {
       const body = await resp.json().catch(() => ({}));
-      throw new Error(body.detail || `Server error (${resp.status})`);
+      throw new Error(body.detail || body.error?.message || `Server error (${resp.status})`);
     }
 
-    return resp.json();
+    const data = await resp.json();
+
+    // Handle raw Google Vision response (Cloudflare Worker passes it through)
+    const r = (data.responses && data.responses[0]) || data;
+
+    // If already parsed by FastAPI proxy, return as-is
+    if (data.labels) return data;
+
+    // Parse raw Google response
+    const labels = (r.labelAnnotations || []).map(l => ({
+      name: l.description, score: l.score,
+    }));
+
+    const faces = (r.faceAnnotations || []).map(f => ({
+      joy: f.joyLikelihood || 'UNKNOWN',
+      sorrow: f.sorrowLikelihood || 'UNKNOWN',
+      anger: f.angerLikelihood || 'UNKNOWN',
+      surprise: f.surpriseLikelihood || 'UNKNOWN',
+      headwear: f.headwearLikelihood || 'UNKNOWN',
+      confidence: f.detectionConfidence || 0,
+      boundingPoly: f.boundingPoly || {},
+    }));
+
+    const objects = (r.localizedObjectAnnotations || []).map(o => ({
+      name: o.name, score: o.score,
+      boundingPoly: o.boundingPoly || {},
+    }));
+
+    const safeSearch = r.safeSearchAnnotation || {};
+
+    const colors = [];
+    const props = r.imagePropertiesAnnotation || {};
+    for (const c of (props.dominantColors?.colors || []).slice(0, 5)) {
+      const rgb = c.color || {};
+      colors.push({
+        r: Math.round(rgb.red || 0), g: Math.round(rgb.green || 0), b: Math.round(rgb.blue || 0),
+        score: c.score || 0, pixelFraction: c.pixelFraction || 0,
+      });
+    }
+
+    return { labels, faces, objects, safeSearch, dominantColors: colors };
   }
 
   // ------------------------------------------------------------------
@@ -165,7 +209,7 @@
 
     if (!resp.ok) {
       const body = await resp.json().catch(() => ({}));
-      throw new Error(body.detail || `Gemini server error (${resp.status})`);
+      throw new Error(body.detail || body.error?.message || `Gemini server error (${resp.status})`);
     }
 
     return resp.json();
