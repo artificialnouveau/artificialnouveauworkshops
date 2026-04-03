@@ -374,11 +374,11 @@
   function renderLandmarks(landmarks) {
     const section = document.getElementById('vision-landmarks-section');
     const container = document.getElementById('vision-landmarks');
+    section.classList.remove('hidden');
     if (!landmarks || landmarks.length === 0) {
-      section.classList.add('hidden');
+      container.innerHTML = `<div style="background:var(--bg-card); padding:10px 16px; border-radius:var(--radius); margin-bottom:20px; font-family:var(--mono); font-size:0.75rem; color:var(--text-dim);">No landmarks detected</div>`;
       return;
     }
-    section.classList.remove('hidden');
     container.innerHTML = `
       <div style="background:var(--bg-card); padding:10px 16px; border-radius:var(--radius); margin-bottom:20px; font-family:var(--mono); font-size:0.75rem; line-height:1.8;">
         ${landmarks.map(l => {
@@ -395,11 +395,11 @@
   function renderLogos(logos) {
     const section = document.getElementById('vision-logos-section');
     const container = document.getElementById('vision-logos');
+    section.classList.remove('hidden');
     if (!logos || logos.length === 0) {
-      section.classList.add('hidden');
+      container.innerHTML = `<div style="background:var(--bg-card); padding:10px 16px; border-radius:var(--radius); margin-bottom:20px; font-family:var(--mono); font-size:0.75rem; color:var(--text-dim);">No logos detected</div>`;
       return;
     }
-    section.classList.remove('hidden');
     container.innerHTML = `
       <div style="background:var(--bg-card); padding:10px 16px; border-radius:var(--radius); margin-bottom:20px; font-family:var(--mono); font-size:0.75rem; line-height:1.8;">
         ${logos.map(l => {
