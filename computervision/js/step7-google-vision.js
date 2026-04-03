@@ -73,9 +73,11 @@
       // Render all sections
       renderLabels(visionResult.labels);
       renderFaces(visionResult.faces);
+      renderLandmarks(visionResult.landmarks);
+      renderLogos(visionResult.logos);
       renderSafeSearch(visionResult.safeSearch);
-      renderColors(visionResult.dominantColors);
       renderText(visionResult.fullText);
+      renderColors(visionResult.dominantColors);
       renderWeb(visionResult);
     } catch (err) {
       loadingDiv.classList.add('hidden');
@@ -190,6 +192,19 @@
     const textAnnotations = r.textAnnotations || [];
     const fullText = textAnnotations.length > 0 ? textAnnotations[0].description : '';
 
+    // Parse landmark detection
+    const landmarks = (r.landmarkAnnotations || []).map(l => ({
+      name: l.description,
+      score: l.score || 0,
+      locations: (l.locations || []).map(loc => loc.latLng || {}),
+    }));
+
+    // Parse logo detection
+    const logos = (r.logoAnnotations || []).map(l => ({
+      name: l.description,
+      score: l.score || 0,
+    }));
+
     // Parse web detection
     const webDetection = r.webDetection || {};
     const webEntities = (webDetection.webEntities || []).filter(e => e.description).slice(0, 8);
@@ -199,7 +214,8 @@
 
     return {
       labels, faces, objects, safeSearch, dominantColors: colors,
-      fullText, webEntities, bestGuessLabels, pagesWithMatchingImages, visuallySimilarImages,
+      fullText, landmarks, logos,
+      webEntities, bestGuessLabels, pagesWithMatchingImages, visuallySimilarImages,
     };
   }
 
@@ -353,6 +369,45 @@
         </div>
       `;
     }).join('');
+  }
+
+  function renderLandmarks(landmarks) {
+    const section = document.getElementById('vision-landmarks-section');
+    const container = document.getElementById('vision-landmarks');
+    if (!landmarks || landmarks.length === 0) {
+      section.classList.add('hidden');
+      return;
+    }
+    section.classList.remove('hidden');
+    container.innerHTML = `
+      <div style="background:var(--bg-card); padding:10px 16px; border-radius:var(--radius); margin-bottom:20px; font-family:var(--mono); font-size:0.75rem; line-height:1.8;">
+        ${landmarks.map(l => {
+          const score = (l.score * 100).toFixed(0);
+          const coords = l.locations && l.locations[0] && l.locations[0].latitude
+            ? ` <span style="color:var(--text-dim);">(${l.locations[0].latitude.toFixed(4)}, ${l.locations[0].longitude.toFixed(4)})</span>`
+            : '';
+          return `<span style="color:var(--text);">${l.name}</span> <span style="color:var(--yellow);">${score}%</span>${coords}`;
+        }).join('<br>')}
+      </div>
+    `;
+  }
+
+  function renderLogos(logos) {
+    const section = document.getElementById('vision-logos-section');
+    const container = document.getElementById('vision-logos');
+    if (!logos || logos.length === 0) {
+      section.classList.add('hidden');
+      return;
+    }
+    section.classList.remove('hidden');
+    container.innerHTML = `
+      <div style="background:var(--bg-card); padding:10px 16px; border-radius:var(--radius); margin-bottom:20px; font-family:var(--mono); font-size:0.75rem; line-height:1.8;">
+        ${logos.map(l => {
+          const score = (l.score * 100).toFixed(0);
+          return `<span style="color:var(--text);">${l.name}</span> <span style="color:var(--yellow);">${score}%</span>`;
+        }).join(' &middot; ')}
+      </div>
+    `;
   }
 
   function renderText(text) {
