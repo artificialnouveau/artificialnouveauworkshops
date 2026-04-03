@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artificial Nouveau — Workshops</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #141414;
+      --text: #e0e0e0;
+      --dim: #777;
+      --accent: #4a9eff;
+      --green: #00ff66;
+      --yellow: #ffd94a;
+      --red: #ff4a4a;
+      --pink: #ff6ec7;
+      --radius: 8px;
+      --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header {
+      text-align: center;
+      padding: 48px 20px 32px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .workshops {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .workshop-card {
+      background: var(--bg-card);
+      border: 1px solid #222;
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+
+    .workshop-card:hover {
+      border-color: #444;
+    }
+
+    .workshop-card h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .workshop-card .description {
+      color: var(--dim);
+      font-size: 0.9rem;
+      margin-bottom: 14px;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .links a {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      text-decoration: none;
+      transition: opacity 0.2s;
+      border: 1px solid;
+    }
+
+    .links a:hover {
+      opacity: 0.8;
+    }
+
+    .link-presentation {
+      color: var(--yellow);
+      border-color: var(--yellow);
+      background: rgba(255, 217, 74, 0.06);
+    }
+
+    .link-demo {
+      color: var(--green);
+      border-color: var(--green);
+      background: rgba(0, 255, 102, 0.06);
+    }
+
+    .link-exercise {
+      color: var(--pink);
+      border-color: var(--pink);
+      background: rgba(255, 110, 199, 0.06);
+    }
+
+    .link-tool {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(74, 158, 255, 0.06);
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--dim);
+      font-size: 0.8rem;
+      border-top: 1px solid #1a1a1a;
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.3rem; }
+      .workshop-card { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Artificial Nouveau Workshops</h1>
+    <p>Presentations, demos & interactive tools</p>
+  </header>
+
+  <div class="workshops">
+
+    <div class="section-label">Computer Vision</div>
+
+    <div class="workshop-card">
+      <h2>Introduction to Computer Vision & AI</h2>
+      <p class="description">How machines learn to see — pixels, classification, surveillance, bias, beauty filters, and the commercial eye (Google Vision & Gemini).</p>
+      <div class="links">
+        <a href="computervision/presentation_cv.html" class="link-presentation">Presentation</a>
+        <a href="computervision/workshop_cv.html" class="link-demo">Interactive Demo</a>
+      </div>
+    </div>
+
+    <div class="workshop-card">
+      <h2>Computer Vision Day 2 — Detection & Recognition</h2>
+      <p class="description">Applied detection exercises — symbol detection, cream detection, and Dutch politician facial recognition.</p>
+      <div class="links">
+        <a href="workshop_cv_day2/demo/" class="link-demo">Interactive Demo</a>
+      </div>
+    </div>
+
+    <div class="section-label">Generative AI & Deepfakes</div>
+
+    <div class="workshop-card">
+      <h2>Generative AI & Deepfakes</h2>
+      <p class="description">Understanding generative AI, deepfakes, and their societal implications.</p>
+      <div class="links">
+        <a href="hku2025_genai_deepfakes/" class="link-presentation">Presentation</a>
+        <a href="workshop_genai/demo/" class="link-demo">Interactive Demo</a>
+      </div>
+    </div>
+
+    <div class="workshop-card">
+      <h2>Voice Cloning</h2>
+      <p class="description">RVC voice cloning browser prototype.</p>
+      <div class="links">
+        <a href="voicecloning/" class="link-demo">Demo</a>
+      </div>
+    </div>
+
+    <div class="workshop-card">
+      <h2>Face Swap</h2>
+      <p class="description">Face swap workshop tool.</p>
+      <div class="links">
+        <a href="faceswap/" class="link-demo">Demo</a>
+      </div>
+    </div>
+
+    <div class="section-label">Art & Culture Projects</div>
+
+    <div class="workshop-card">
+      <h2>Necromemetics — The Memeification of the Dead</h2>
+      <p class="description">Exploring how the dead are memeified and circulated online.</p>
+      <div class="links">
+        <a href="necromemetics/" class="link-presentation">Presentation</a>
+        <a href="necromemetics/exercises.html" class="link-exercise">Exercises</a>
+      </div>
+    </div>
+
+    <div class="workshop-card">
+      <h2>Martin Parr — Average Face</h2>
+      <p class="description">Detecting faces in @martinparrstudio photos and computing the average face.</p>
+      <div class="links">
+        <a href="martinparr/" class="link-demo">Demo</a>
+      </div>
+    </div>
+
+    <div class="section-label">Detection & Analysis Tools</div>
+
+    <div class="workshop-card">
+      <h2>Pro AI or Anti AI?</h2>
+      <p class="description">Classifier for AI sentiment analysis.</p>
+      <div class="links">
+        <a href="aiperson/" class="link-demo">Demo</a>
+      </div>
+    </div>
+
+    <div class="workshop-card">
+      <h2>Salute Gesture Analyzer</h2>
+      <p class="description">Analyze and detect salute gestures.</p>
+      <div class="links">
+        <a href="salute/" class="link-demo">Analyzer</a>
+        <a href="salute_detection/" class="link-exercise">Detection Exercise</a>
+      </div>
+    </div>
+
+    <div class="workshop-card">
+      <h2>Cream — Facial Recognition</h2>
+      <p class="description">Facial recognition demo tool.</p>
+      <div class="links">
+        <a href="cream/" class="link-demo">Demo</a>
+      </div>
+    </div>
+
+    <div class="workshop-card">
+      <h2>Dura Bulk Detector</h2>
+      <p class="description">Bulk image detection and analysis tool.</p>
+      <div class="links">
+        <a href="dura_bulk/" class="link-tool">Tool</a>
+      </div>
+    </div>
+
+    <div class="section-label">Utilities</div>
+
+    <div class="workshop-card">
+      <h2>Workshop Slide Editor</h2>
+      <p class="description">Visual editor for creating and exporting workshop slides.</p>
+      <div class="links">
+        <a href="editor/" class="link-tool">Editor</a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>Artificial Nouveau — Ahnjili ZhuParris</p>
+  </footer>
+
+</body>
+</html>
