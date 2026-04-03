@@ -64,19 +64,14 @@
       const canvas = document.getElementById('canvas-vision');
       App.drawToCanvas(canvas, img, 500);
 
-      // Run local MobileNet in parallel with the API call
-      const [visionResult, mobilenetResult] = await Promise.all([
-        callVisionProxy(file),
-        runLocalMobileNet(img),
-      ]);
+      // Call Google Vision API
+      const visionResult = await callVisionProxy(file);
 
       loadingDiv.classList.add('hidden');
       resultsDiv.classList.remove('hidden');
 
       // Render all sections
-      renderBudget(visionResult);
-      renderLabelsComparison(visionResult.labels, mobilenetResult);
-      renderObjects(canvas, img, visionResult.objects);
+      renderLabels(visionResult.labels);
       renderFaces(visionResult.faces);
       renderSafeSearch(visionResult.safeSearch);
       renderColors(visionResult.dominantColors);
@@ -216,33 +211,16 @@
   }
 
   // ------------------------------------------------------------------
-  // Local MobileNet for comparison
-  // ------------------------------------------------------------------
-  async function runLocalMobileNet(img) {
-    if (!App.models.mobilenet) return [];
-    try {
-      return await App.models.mobilenet.classify(img, 10);
-    } catch {
-      return [];
-    }
-  }
-
-  // ------------------------------------------------------------------
   // Renderers
   // ------------------------------------------------------------------
 
-  function renderBudget(data) {
-    const el = document.getElementById('vision-budget');
-    const used = data.requestsUsed || 0;
-    const remaining = data.requestsRemaining || 0;
-    const total = used + remaining;
-    el.textContent = `API requests: ${used} / ${total} used`;
-  }
-
-  function renderLabelsComparison(googleLabels, mobilenetPreds) {
-    // Google labels
-    const googleContainer = document.getElementById('vision-labels');
-    googleContainer.innerHTML = googleLabels.map(l => {
+  function renderLabels(googleLabels) {
+    const container = document.getElementById('vision-labels');
+    if (!googleLabels || googleLabels.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-dim); font-size:0.85rem;">No labels detected</p>';
+      return;
+    }
+    container.innerHTML = googleLabels.map(l => {
       const pct = (l.score * 100).toFixed(1);
       return `
         <div class="prediction-bar">
@@ -254,54 +232,6 @@
         </div>
       `;
     }).join('');
-
-    // MobileNet labels
-    const mobileContainer = document.getElementById('vision-mobilenet-labels');
-    if (!mobilenetPreds || mobilenetPreds.length === 0) {
-      mobileContainer.innerHTML = '<p style="color:var(--text-dim); font-size:0.8rem;">MobileNet not loaded</p>';
-      return;
-    }
-    mobileContainer.innerHTML = mobilenetPreds.map(p => {
-      const pct = (p.probability * 100).toFixed(1);
-      return `
-        <div class="prediction-bar">
-          <span class="prediction-label">${p.className.split(',')[0]}</span>
-          <div class="prediction-track">
-            <div class="prediction-fill" style="width:${pct}%"></div>
-          </div>
-          <span class="prediction-value">${pct}%</span>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function renderObjects(sourceCanvas, img, objects) {
-    const canvas = document.getElementById('canvas-vision-objects');
-    const ctx = App.drawToCanvas(canvas, img, 500);
-    const scaleX = canvas.width / img.naturalWidth;
-    const scaleY = canvas.height / img.naturalHeight;
-
-    objects.forEach((obj, i) => {
-      const verts = (obj.boundingPoly && obj.boundingPoly.normalizedVertices) || [];
-      if (verts.length < 2) return;
-
-      const x = verts[0].x * canvas.width;
-      const y = verts[0].y * canvas.height;
-      const w = (verts[2].x - verts[0].x) * canvas.width;
-      const h = (verts[2].y - verts[0].y) * canvas.height;
-
-      ctx.strokeStyle = '#ffd94a';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, w, h);
-
-      const label = `${obj.name} ${(obj.score * 100).toFixed(0)}%`;
-      ctx.font = `bold ${Math.max(12, canvas.width * 0.025)}px monospace`;
-      const textWidth = ctx.measureText(label).width;
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
-      ctx.fillRect(x, y - 18, textWidth + 8, 20);
-      ctx.fillStyle = '#ffd94a';
-      ctx.fillText(label, x + 4, y - 3);
-    });
   }
 
   function renderFaces(faces) {
