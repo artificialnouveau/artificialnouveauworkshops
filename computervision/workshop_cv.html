@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How Does the Machine See Your Photo?</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <!-- MobileNet -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+  <!-- BlazeFace (face detection) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface/dist/blazeface.min.js"></script>
+  <!-- COCO-SSD (object detection) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd/dist/coco-ssd.min.js"></script>
+  <!-- MediaPipe Face Mesh runtime (must load before face-landmarks-detection) -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
+  <!-- Face Landmarks Detection -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@1.0.6/dist/face-landmarks-detection.min.js"></script>
+  <!-- face-api.js (bundled with TF.js) for age/gender/expression -->
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js"></script>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="loader-content">
+      <div class="spinner"></div>
+      <p>Loading AI models<span class="dots"></span></p>
+      <p class="loader-sub">This may take a moment on first visit</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header id="app-header">
+    <h1>How Does the Machine See Your Photo?</h1>
+    <p class="subtitle">Everything runs on your device. No images are uploaded anywhere.</p>
+  </header>
+
+  <!-- Step navigation -->
+  <nav id="step-nav">
+    <button class="step-tab active" data-step="1">1. Pixels</button>
+    <button class="step-tab" data-step="2">2. Speaks</button>
+    <button class="step-tab" data-step="3">3. Surveillance</button>
+    <button class="step-tab" data-step="4">4. Break It</button>
+    <button class="step-tab" data-step="5">5. Mirror</button>
+    <button class="step-tab" data-step="6">6. Clone</button>
+    <button class="step-tab" data-step="7">7. Google Vision</button>
+  </nav>
+
+  <!-- Step 1: What the Machine Sees -->
+  <section id="step-1" class="step active">
+    <div class="step-intro">
+      <h2>What the Machine Sees</h2>
+      <p>When you look at a photograph, you see a face, a landscape, a moment. A machine sees none of that. It sees a grid of numbers — millions of tiny colored squares called <strong>pixels</strong>, each defined by three values: Red, Green, and Blue (RGB).</p>
+      <p style="color:var(--text-dim); margin-top:8px">Computer vision is the process of turning that grid of numbers into meaning: "this is a dog," "this person looks happy," "this is a stop sign." Upload a photo to see how.</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-1">
+      <label for="file-input-1" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Tap to upload or take a photo</span>
+      </label>
+      <input type="file" id="file-input-1" accept="image/*" capture="environment">
+    </div>
+
+    <div id="step1-results" class="results hidden">
+
+      <!-- Section: Pixel Grid -->
+      <div class="explainer-block">
+        <h3>Step 1: The Image as Numbers</h3>
+        <p>Every digital image is a grid of pixels. Each pixel is a single colored dot, defined by three numbers between 0 and 255 — one for Red, one for Green, one for Blue. A value of (255, 0, 0) is pure red. (0, 0, 0) is black. (255, 255, 255) is white. Your entire photo is just a spreadsheet of these triplets.</p>
+      </div>
+
+      <div class="canvas-row">
+        <div class="canvas-container">
+          <h3>Your Image</h3>
+          <canvas id="canvas-original-1"></canvas>
+        </div>
+        <div class="canvas-container">
+          <h3>Pixel Grid (your entire image, downsampled)</h3>
+          <canvas id="canvas-pixels"></canvas>
+          <p class="pixel-info" id="pixel-info">Tap any square to see its RGB values</p>
+        </div>
+      </div>
+
+      <!-- Section: Channels -->
+      <div class="explainer-block">
+        <h3>Step 2: Color Channels</h3>
+        <p>Every pixel blends three channels: <strong style="color:#ff6666">Red</strong>, <strong style="color:#66ff66">Green</strong>, and <strong style="color:#6666ff">Blue</strong>. Below you can see your image split into its individual channels. A grayscale version shows how the machine often simplifies the image by discarding color entirely — reducing 3 numbers per pixel to just 1.</p>
+      </div>
+
+      <div class="canvas-row-4">
+        <div class="canvas-container">
+          <h3 style="color:#ff6666">Red Channel</h3>
+          <canvas id="canvas-red"></canvas>
+        </div>
+        <div class="canvas-container">
+          <h3 style="color:#66ff66">Green Channel</h3>
+          <canvas id="canvas-green"></canvas>
+        </div>
+        <div class="canvas-container">
+          <h3 style="color:#6666ff">Blue Channel</h3>
+          <canvas id="canvas-blue"></canvas>
+        </div>
+        <div class="canvas-container">
+          <h3>Grayscale</h3>
+          <canvas id="canvas-gray"></canvas>
+        </div>
+      </div>
+
+      <!-- Section: Edge Detection -->
+      <div class="explainer-block">
+        <h3>Step 3: Edge Detection</h3>
+        <p>Before neural networks, computer vision relied on detecting <strong>edges</strong> — abrupt changes in brightness between neighbouring pixels. This is still the first thing many models "see." The image below shows a simple edge detection filter applied to your photo. Edges are the skeleton of what the machine recognizes.</p>
+      </div>
+
+      <div class="canvas-row">
+        <div class="canvas-container">
+          <h3>Edge Detection</h3>
+          <canvas id="canvas-edges"></canvas>
+        </div>
+        <div class="canvas-container">
+          <h3>Edges + Original</h3>
+          <canvas id="canvas-edges-overlay"></canvas>
+        </div>
+      </div>
+
+      <!-- Section: Classification -->
+      <div class="explainer-block">
+        <h3>Step 4: Pattern Matching</h3>
+        <p>A neural network called <strong>MobileNet</strong> has been trained on millions of labelled images. It learned to associate patterns of pixels with labels. It doesn't "understand" your photo — it matches patterns it has seen before and outputs its best guesses with a confidence percentage. These guesses are called <strong>classifications</strong>.</p>
+      </div>
+
+      <div id="classification-results">
+        <h3>The Machine's Top 5 Guesses:</h3>
+        <div id="predictions"></div>
+      </div>
+
+      <!-- Section: Heatmap -->
+      <div class="explainer-block">
+        <h3>Step 5: Where Is It Looking?</h3>
+        <p>Not every pixel matters equally. The <strong>attention heatmap</strong> below shows which regions of your image most influenced the classification. It works by systematically blocking out parts of the image and measuring how much the model's confidence drops — if blocking a region causes a big drop, that region was important. Orange/red areas are where the model is "paying attention." This may not be where <em>you</em> would look.</p>
+      </div>
+
+      <div id="heatmap-section">
+        <h3>Attention Heatmap</h3>
+        <canvas id="canvas-heatmap"></canvas>
+        <p class="description" style="margin-top:8px" id="heatmap-status"></p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Step 2: The Machine Speaks -->
+  <section id="step-2" class="step">
+    <div class="step-intro">
+      <h2>The Machine Speaks</h2>
+      <p>AI models don't just see — they describe. But their words reveal more about their training data than about your photo. Upload an image to hear the machine narrate what it "sees."</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-2">
+      <label for="file-input-2" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a photo</span>
+      </label>
+      <input type="file" id="file-input-2" accept="image/*" capture="environment">
+    </div>
+
+    <!-- Loading bar for Transformers.js models -->
+    <div id="speaks-loading-bar">
+      <div class="loading-label">
+        <span>Loading models<span class="loading-dots"></span></span>
+        <span id="speaks-loading-percent">0%</span>
+      </div>
+      <div class="loading-track"><div class="loading-fill" id="speaks-loading-fill"></div></div>
+      <div class="loading-steps" id="speaks-loading-steps"></div>
+    </div>
+
+    <div id="step2-results" class="results hidden">
+      <!-- Original image -->
+      <canvas id="canvas-speaks"></canvas>
+
+      <!-- Part A: Image Captioning -->
+      <div class="explainer-block">
+        <h3>The Machine's Description</h3>
+        <p>A neural network (ViT-GPT2) generates a text caption for your photo. It was trained on millions of image-caption pairs scraped from the internet. Notice what it gets right — and what it misses, assumes, or invents.</p>
+      </div>
+      <div id="caption-output" class="mono">...</div>
+
+      <!-- Part B: Zero-Shot Classification -->
+      <div class="explainer-block" style="border-left-color:var(--yellow)">
+        <h3>You Choose the Categories</h3>
+        <p>Type any labels you want and the model (CLIP) will score how well your photo matches each one. The categories you choose shape what the machine "sees." Try labels that expose assumptions: gendered terms, cultural categories, emotional states, or absurd options.</p>
+      </div>
+      <div id="zeroshot-input">
+        <input type="text" id="zeroshot-labels" placeholder="e.g. happy, sad, professional, threatening, beautiful">
+        <button id="zeroshot-run">Classify</button>
+        <!-- Preset suggestion chips -->
+        <div id="zeroshot-presets">
+          <button class="preset-chip" data-labels="happy, sad, angry, surprised, neutral">Emotions</button>
+          <button class="preset-chip" data-labels="professional, casual, threatening, trustworthy">Character</button>
+          <button class="preset-chip" data-labels="beautiful, ugly, average, photogenic">Beauty</button>
+          <button class="preset-chip" data-labels="male, female, non-binary">Gender</button>
+          <button class="preset-chip" data-labels="young, middle-aged, old">Age</button>
+          <button class="preset-chip" data-labels="art, document, selfie, meme, surveillance">Photo type</button>
+        </div>
+      </div>
+      <div id="zeroshot-results"></div>
+
+      <!-- Critical reflection -->
+      <div class="critical-text">
+        <p>"The machine doesn't understand your photo. It pattern-matches against millions of captions written by strangers on the internet. Their biases become its vocabulary."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 3: Who Is Watching? -->
+  <section id="step-3" class="step">
+    <div class="step-intro">
+      <h2>Who Is Watching?</h2>
+      <p>A surveillance camera doesn't see a person. It sees data points. Choose a source and toggle detection layers to see what gets extracted.</p>
+      <div class="model-info">
+        <p><strong>Face Analysis</strong> — <em>BlazeFace</em> detects faces and landmarks; <em>face-api.js</em> (SSD MobileNet v1 + AgeGenderNet + FaceExpressionNet) estimates age, gender, and expression. A crude <strong>BMI estimate</strong> is derived from the face bounding box width-to-height ratio — research (Coetzee et al., 2009) shows facial WHR loosely correlates with body mass, but the estimate is intentionally unreliable, demonstrating how surveillance systems extract body data from minimal facial geometry.</p>
+        <p><strong>Pose</strong> — Facial geometry derived from BlazeFace's 6 keypoints (eyes, nose, mouth, ears).</p>
+        <p><strong>Objects</strong> — <em>COCO-SSD</em> identifies 80 everyday object categories (person, car, dog, chair, etc.).</p>
+        <p><strong>Content</strong> — <em>NudeNet</em> detects and censors exposed body parts (16 categories). Black boxes are drawn over NSFW regions.</p>
+        <p><strong>Scene</strong> — <em>MobileNet v2</em> classifies the image against 1,000 ImageNet categories.</p>
+        <p style="margin-top:6px; font-size:0.8rem; color:var(--text-dim)">All models run locally in your browser via TensorFlow.js. No data is sent to any server.</p>
+      </div>
+    </div>
+
+    <!-- Source selection: upload or webcam -->
+    <div id="source-select">
+      <div class="upload-area" id="upload-area-3">
+        <label for="file-input-3" class="upload-label">
+          <span class="upload-icon">+</span>
+          <span>Upload a photo</span>
+        </label>
+        <input type="file" id="file-input-3" accept="image/*" capture="user">
+      </div>
+      <button id="webcam-btn" class="webcam-button">
+        <span class="upload-icon">&#9673;</span>
+        <span>Use Webcam</span>
+      </button>
+    </div>
+
+    <!-- Detection layer toggles -->
+    <div id="layer-toggles" class="hidden">
+      <h3 class="mono">Detection Layers</h3>
+      <div class="toggle-row">
+        <label class="toggle-chip active" data-layer="demographics">
+          <input type="checkbox" checked> Face Analysis
+          <span class="chip-sub">face / age / gender / expression</span>
+        </label>
+        <label class="toggle-chip" data-layer="pose">
+          <input type="checkbox"> Pose
+          <span class="chip-sub">body skeleton tracking</span>
+        </label>
+        <label class="toggle-chip" data-layer="objects">
+          <input type="checkbox"> Objects
+          <span class="chip-sub">what's in the scene</span>
+        </label>
+        <label class="toggle-chip" data-layer="nsfw">
+          <input type="checkbox"> Content
+          <span class="chip-sub">nudity detection / censoring</span>
+        </label>
+        <label class="toggle-chip" data-layer="scene">
+          <input type="checkbox"> Scene
+          <span class="chip-sub">scene / object classification</span>
+        </label>
+      </div>
+    </div>
+
+    <div id="model-loading-bar">
+      <div class="loading-label">
+        <span>Loading models<span class="loading-dots"></span></span>
+        <span id="loading-percent">0%</span>
+      </div>
+      <div class="loading-track"><div class="loading-fill" id="loading-fill"></div></div>
+      <div class="loading-steps" id="loading-steps"></div>
+    </div>
+
+    <div id="step3-results" class="results hidden">
+      <div class="surveillance-view">
+        <div class="surveillance-header">
+          <span class="rec-dot"></span>
+          <span class="mono">CAM-01 // MULTI-LAYER ANALYSIS</span>
+          <span class="mono" id="timestamp"></span>
+        </div>
+        <canvas id="canvas-surveillance"></canvas>
+        <video id="webcam-video" autoplay playsinline class="hidden"></video>
+        <canvas id="canvas-webcam-overlay" class="hidden"></canvas>
+        <div class="surveillance-overlay" id="surveillance-data"></div>
+      </div>
+
+      <div id="face-stats" class="mono"></div>
+    </div>
+  </section>
+
+  <!-- Step 4: Break the Model -->
+  <section id="step-4" class="step">
+    <div class="step-intro">
+      <h2>Break the Model</h2>
+      <p>Machine vision is fragile. Upload any photo and see what the model thinks. Then try to fool it.</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-4">
+      <label for="file-input-4" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a photo</span>
+      </label>
+      <input type="file" id="file-input-4" accept="image/*" capture="environment">
+    </div>
+
+    <!-- Phase 1: Initial classification -->
+    <div id="step4-phase1" class="results hidden">
+      <div class="comparison-card" style="margin-bottom:20px">
+        <h3>The model thinks this is:</h3>
+        <canvas id="canvas-break-a"></canvas>
+        <div id="predictions-a" class="prediction-list"></div>
+        <div class="confidence-meter">
+          <div class="confidence-label">Top Confidence</div>
+          <div class="meter-track"><div class="meter-fill" id="meter-a"></div></div>
+          <span class="meter-value" id="meter-value-a"></span>
+        </div>
+      </div>
+
+      <!-- Challenge prompt -->
+      <div class="explainer-block" style="border-left-color:var(--yellow)">
+        <h3 style="color:var(--yellow)">Challenge: Can you break it?</h3>
+        <p>Now take or upload another photo of the <strong>same subject</strong>, but try to confuse the model. Ideas:</p>
+        <ul style="color:var(--text-dim); margin-top:8px; padding-left:20px; line-height:2">
+          <li>Cover part of the object with your hand</li>
+          <li>Shoot from an extreme angle (underneath, very close)</li>
+          <li>Change the lighting dramatically</li>
+          <li>Add something unexpected to the frame</li>
+          <li>Photograph a reflection or shadow instead</li>
+        </ul>
+      </div>
+
+      <div class="upload-area" id="upload-area-4b">
+        <label for="file-input-4b" class="upload-label">
+          <span class="upload-icon">VS</span>
+          <span>Upload your trick photo</span>
+        </label>
+        <input type="file" id="file-input-4b" accept="image/*" capture="environment">
+      </div>
+    </div>
+
+    <!-- Phase 2: Comparison -->
+    <div id="step4-phase2" class="results hidden">
+      <div class="comparison-row">
+        <div class="comparison-card">
+          <h3>Original</h3>
+          <canvas id="canvas-break-a2"></canvas>
+          <div id="predictions-a2" class="prediction-list"></div>
+          <div class="confidence-meter">
+            <div class="confidence-label">Confidence</div>
+            <div class="meter-track"><div class="meter-fill" id="meter-a2"></div></div>
+            <span class="meter-value" id="meter-value-a2"></span>
+          </div>
+        </div>
+
+        <div class="vs-divider">VS</div>
+
+        <div class="comparison-card">
+          <h3>Your Trick</h3>
+          <canvas id="canvas-break-b"></canvas>
+          <div id="predictions-b" class="prediction-list"></div>
+          <div class="confidence-meter">
+            <div class="confidence-label">Confidence</div>
+            <div class="meter-track"><div class="meter-fill" id="meter-b"></div></div>
+            <span class="meter-value" id="meter-value-b"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="break-verdict" class="explainer-block"></div>
+
+      <div class="upload-area" id="upload-area-4-retry" style="margin-top:16px">
+        <label for="file-input-4-retry" class="upload-label">
+          <span class="upload-icon">+</span>
+          <span>Try again with a new photo</span>
+        </label>
+        <input type="file" id="file-input-4-retry" accept="image/*" capture="environment">
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 5: The Algorithmic Mirror -->
+  <section id="step-5" class="step">
+    <div class="step-intro">
+      <h2>The Algorithmic Mirror</h2>
+      <p>Beauty filters are not magic. They are a series of deliberate geometric decisions about what a face should look like. Upload a selfie to see the machine reshape you.</p>
+    </div>
+
+    <div class="upload-area" id="upload-area-5">
+      <label for="file-input-5" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a selfie</span>
+      </label>
+      <input type="file" id="file-input-5" accept="image/*" capture="user">
+    </div>
+
+    <div id="step5-results" class="results hidden">
+      <div class="mirror-row">
+        <div class="mirror-card">
+          <h3>You + Landmarks</h3>
+          <canvas id="canvas-landmarks"></canvas>
+          <p class="description">468 points the machine uses to map your face</p>
+        </div>
+        <div class="mirror-card">
+          <h3>The "Improved" You</h3>
+          <canvas id="canvas-filtered"></canvas>
+          <p class="description">Smoothed, symmetrized, resized — by whose standard?</p>
+        </div>
+      </div>
+
+      <div id="filter-details" class="mono">
+        <!-- Populated by JS: what was changed -->
+      </div>
+
+      <!-- Symmetry & Proportionality Analysis -->
+      <div class="explainer-block" style="border-left-color:var(--yellow)">
+        <h3 style="color:var(--yellow)">Symmetry & Proportion Analysis</h3>
+        <p>The machine measures your face against mathematical ideals: perfect bilateral symmetry and classical proportional ratios. No real face matches these — but beauty filters, hiring algorithms, and social media ranking systems use metrics like these to score you.</p>
+      </div>
+
+      <div id="symmetry-analysis" class="mono"></div>
+      <div id="proportion-analysis" class="mono"></div>
+
+      <div id="attractiveness-score" class="mono"></div>
+
+      <div class="critical-text final-prompt">
+        <p>"Which one is you?"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 6: Clone -->
+  <section id="step-6" class="step">
+    <div class="step-intro">
+      <h2>Clone</h2>
+      <p>Face recognition doesn't see faces — it sees numbers. Every face is compressed into a list of 128 numbers called a <strong>face descriptor</strong>. Two faces are "the same person" if their numbers are close enough. Upload two photos to see how the machine measures identity.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px">
+      <div class="upload-area" id="upload-area-6a">
+        <label for="file-input-6a" class="upload-label">
+          <span class="upload-icon">A</span>
+          <span>Upload Face A</span>
+        </label>
+        <input type="file" id="file-input-6a" accept="image/*" capture="user">
+      </div>
+      <div class="upload-area" id="upload-area-6b">
+        <label for="file-input-6b" class="upload-label">
+          <span class="upload-icon">B</span>
+          <span>Upload Face B</span>
+        </label>
+        <input type="file" id="file-input-6b" accept="image/*" capture="user">
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px">
+      <canvas id="canvas-clone-a"></canvas>
+      <canvas id="canvas-clone-b"></canvas>
+    </div>
+
+    <!-- Loading bar for face recognition models -->
+    <div id="clone-loading-bar">
+      <div class="loading-label">
+        <span>Loading face recognition models<span class="loading-dots"></span></span>
+        <span id="clone-loading-percent">0%</span>
+      </div>
+      <div class="loading-track"><div class="loading-fill" id="clone-loading-fill"></div></div>
+      <div class="loading-steps" id="clone-loading-steps"></div>
+    </div>
+
+    <button id="clone-compare-btn" disabled style="
+      display:block; width:100%; padding:14px; margin-bottom:24px;
+      background:var(--accent); border:none; border-radius:var(--radius);
+      color:#000; font-family:var(--mono); font-size:1rem; font-weight:600;
+      cursor:pointer; transition:opacity 0.2s; opacity:0.4;
+    ">Compare Faces</button>
+
+    <div id="step6-results" class="results hidden">
+      <!-- Verdict -->
+      <div id="clone-verdict" class="explainer-block" style="text-align:center; margin-bottom:20px">
+      </div>
+
+      <!-- Similarity bar -->
+      <div style="margin-bottom:20px">
+        <div class="prediction-bar">
+          <span class="prediction-label">Similarity</span>
+          <div class="prediction-track">
+            <div class="prediction-fill" id="clone-similarity-fill" style="width:0%"></div>
+          </div>
+          <span class="prediction-value" id="clone-similarity-value">0%</span>
+        </div>
+        <div class="prediction-bar" style="margin-top:8px">
+          <span class="prediction-label">Distance</span>
+          <div class="prediction-track">
+            <div class="prediction-fill" id="clone-distance-fill" style="width:0%; background:var(--yellow)"></div>
+          </div>
+          <span class="prediction-value" id="clone-distance-value">0.00</span>
+        </div>
+      </div>
+
+      <!-- Descriptor visualization -->
+      <div class="explainer-block">
+        <h3>128-Dimensional Face Descriptors</h3>
+        <p>Each face is encoded as a vector of 128 numbers. Below, each tiny bar represents one dimension of the descriptor. The machine doesn't see eyes, noses, or smiles — it sees these abstract numbers.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px">
+        <div>
+          <h3 class="mono" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:6px">Face A descriptor</h3>
+          <canvas id="canvas-descriptor-a" height="40" style="width:100%; background:var(--bg-card); border-radius:var(--radius)"></canvas>
+        </div>
+        <div>
+          <h3 class="mono" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:6px">Face B descriptor</h3>
+          <canvas id="canvas-descriptor-b" height="40" style="width:100%; background:var(--bg-card); border-radius:var(--radius)"></canvas>
+        </div>
+      </div>
+
+      <div class="critical-text">
+        <p>"A 128-number summary of your face. That's all it takes for a machine to decide if you're you. Governments and corporations use vectors like these to track people across cameras, borders, and databases — often without consent, and with error rates that fall hardest on women and people of colour."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 7: Google Vision API -->
+  <section id="step-7" class="step">
+    <div class="step-intro">
+      <h2>The Commercial Eye</h2>
+      <p>Everything so far ran locally in your browser using open-source models. Now let's send your photo to <strong>Google Cloud Vision</strong> — the same commercial API used by corporations and governments — and compare what a billion-dollar system "sees" versus the free models on your phone.</p>
+      <div class="model-info" style="border-left-color:var(--yellow)">
+        <p><strong style="color:var(--yellow)">How this works:</strong> Your image is sent to a proxy server (run by the workshop host), which forwards it to Google's Vision API and Gemini. The API keys are never exposed to your browser. A hard request cap is in place to limit costs.</p>
+      </div>
+      <div class="google-disclaimer" style="
+        margin-top:14px; padding:14px 16px;
+        background:rgba(255, 74, 74, 0.06);
+        border:1px solid rgba(255, 74, 74, 0.25);
+        border-radius:var(--radius);
+        font-size:0.82rem; line-height:1.6; color:var(--text-dim);
+      ">
+        <strong style="color:var(--red);">Data leaves your device from this point forward.</strong>
+        Unlike the previous steps, which ran entirely in your browser, everything you upload in this section will be transmitted to <strong style="color:var(--text);">Google's servers</strong> and processed in <strong style="color:var(--text);">Google's data centres</strong>. Your image will be handled by Google's Cloud Vision API and Gemini API under <strong style="color:var(--text);">Google's terms of service and privacy policy</strong>. Google may log requests, retain data for abuse monitoring, and process your image on infrastructure spanning multiple countries. You are no longer in control of where your image goes. This is how most commercial computer vision works — and it is itself a lesson in the power asymmetry between users and platforms.
+      </div>
+    </div>
+
+    <!-- Server URL config (hidden by default, for presenter) -->
+    <div id="vision-server-config" class="mono" style="margin-bottom:16px; font-size:0.75rem; color:var(--text-dim)">
+      Server: <input type="text" id="vision-server-url" value="http://localhost:8000" style="
+        background:var(--bg-card); border:1px solid #333; border-radius:4px;
+        color:var(--text); font-family:var(--mono); font-size:0.75rem;
+        padding:4px 8px; width:260px;
+      ">
+    </div>
+
+    <div class="upload-area" id="upload-area-7">
+      <label for="file-input-7" class="upload-label">
+        <span class="upload-icon">+</span>
+        <span>Upload a photo</span>
+        <span style="font-size:0.7rem; color:var(--red); margin-top:4px;">This image will be sent to Google's servers</span>
+      </label>
+      <input type="file" id="file-input-7" accept="image/*" capture="environment">
+    </div>
+
+    <!-- Loading state -->
+    <div id="vision-loading" class="hidden" style="text-align:center; padding:20px; color:var(--yellow); font-family:var(--mono); font-size:0.85rem;">
+      <div class="spinner" style="margin:0 auto 12px"></div>
+      Sending to Google Cloud Vision<span class="dots"></span>
+    </div>
+
+    <!-- Error state -->
+    <div id="vision-error" class="hidden" style="padding:16px; background:var(--bg-card); border-left:3px solid var(--red); border-radius:0 var(--radius) var(--radius) 0; margin-bottom:20px; color:var(--red); font-family:var(--mono); font-size:0.85rem;"></div>
+
+    <div id="step7-results" class="results hidden">
+      <!-- Budget indicator -->
+      <div id="vision-budget" class="mono" style="font-size:0.75rem; color:var(--text-dim); margin-bottom:16px; text-align:right;"></div>
+
+      <!-- Original image -->
+      <canvas id="canvas-vision" style="width:100%; max-width:500px; margin-bottom:24px;"></canvas>
+
+      <!-- Labels: Google vs MobileNet side-by-side -->
+      <div class="explainer-block" style="border-left-color:var(--yellow)">
+        <h3 style="color:var(--yellow)">Label Detection: Google Vision vs MobileNet</h3>
+        <p>Google's commercial API was trained on a vastly larger, proprietary dataset. MobileNet is a lightweight open-source model designed to run on phones. Compare what each one "sees" in the same image — and notice what each one misses.</p>
+      </div>
+
+      <div class="vision-comparison-row">
+        <div class="vision-comparison-card">
+          <h3 class="mono" style="color:var(--yellow)">Google Cloud Vision</h3>
+          <div id="vision-labels"></div>
+        </div>
+        <div class="vision-comparison-card">
+          <h3 class="mono" style="color:var(--accent)">MobileNet (local)</h3>
+          <div id="vision-mobilenet-labels"></div>
+        </div>
+      </div>
+
+      <!-- Object Localization -->
+      <div class="explainer-block">
+        <h3>Object Localization</h3>
+        <p>Google Vision doesn't just classify — it draws bounding boxes around individual objects it recognizes. Each box comes with a label and confidence score.</p>
+      </div>
+      <canvas id="canvas-vision-objects" style="width:100%; max-width:500px; margin-bottom:24px;"></canvas>
+
+      <!-- Face Analysis -->
+      <div id="vision-faces-section" class="hidden">
+        <div class="explainer-block" style="border-left-color:var(--green)">
+          <h3 style="color:var(--green)">Face Analysis</h3>
+          <p>Google's API estimates emotional states from facial geometry. It outputs likelihoods for joy, sorrow, anger, and surprise — reducing complex human expression to five categories. These same classifications power ad targeting, insurance risk assessment, and hiring tools.</p>
+        </div>
+        <div id="vision-faces"></div>
+      </div>
+
+      <!-- Safe Search -->
+      <div class="explainer-block" style="border-left-color:var(--red)">
+        <h3 style="color:var(--red)">Safe Search</h3>
+        <p>Google rates your image for adult content, violence, and other "unsafe" categories. Who decides what is "safe"? These same scores determine what gets shown, hidden, or removed across platforms used by billions of people.</p>
+      </div>
+      <div id="vision-safesearch"></div>
+
+      <!-- Dominant Colors -->
+      <div class="explainer-block">
+        <h3>Dominant Colors</h3>
+        <p>The API extracts the most prominent colors in your image. This is used commercially for ad matching, product categorization, and visual search.</p>
+      </div>
+      <div id="vision-colors" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px;"></div>
+
+      <!-- Gemini: The Machine Narrates -->
+      <div class="explainer-block" style="border-left-color:#a259ff; margin-top:32px;">
+        <h3 style="color:#a259ff">The Machine Narrates — Gemini</h3>
+        <p>The Vision API classifies. <strong>Gemini</strong> narrates. It's a large multimodal model — it sees your image and writes about it in natural language. The labels above are mechanical and auditable. The text below sounds like understanding — but it's still pattern-matching, wrapped in fluent prose. That's what makes it more dangerous: you can't see the seams.</p>
+      </div>
+
+      <div style="font-size:0.75rem; color:var(--red); font-family:var(--mono); margin-bottom:10px;">
+        Your image and prompt will be sent to Google's Gemini servers for processing.
+      </div>
+      <div id="gemini-prompt-section">
+        <div style="margin-bottom:12px;">
+          <input type="text" id="gemini-prompt-input" placeholder="Ask Gemini anything about this image..." style="
+            display:block; width:100%; padding:10px 14px;
+            background:var(--bg-card); border:1px solid #333; border-radius:var(--radius);
+            color:var(--text); font-family:var(--mono); font-size:0.85rem;
+          ">
+        </div>
+        <div id="gemini-presets" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+          <button class="preset-chip gemini-chip" data-prompt="Describe this image in detail. What do you see?">Describe</button>
+          <button class="preset-chip gemini-chip" data-prompt="What emotion does this photograph convey? What mood does it create?">Emotion</button>
+          <button class="preset-chip gemini-chip" data-prompt="Estimate the age, gender, and ethnicity of any people in this image. How confident are you?">Demographics</button>
+          <button class="preset-chip gemini-chip" data-prompt="Is this image safe for work? Could it be considered offensive in any culture? Explain.">Safety judgment</button>
+          <button class="preset-chip gemini-chip" data-prompt="What assumptions are you making about the people or context in this photo? What might you be wrong about?">Assumptions</button>
+          <button class="preset-chip gemini-chip" data-prompt="Describe this photo as if you were writing a police report. Then describe it as if you were writing a caption for an art gallery.">Two framings</button>
+          <button class="preset-chip gemini-chip" data-prompt="What is missing from this image? What can you NOT tell from looking at it?">What's missing</button>
+        </div>
+        <button id="gemini-run" style="
+          padding:8px 20px; background:#a259ff; border:none; border-radius:var(--radius);
+          color:#fff; font-family:var(--mono); font-size:0.85rem; font-weight:600;
+          cursor:pointer; transition:opacity 0.2s;
+        ">Ask Gemini</button>
+      </div>
+
+      <!-- Gemini loading -->
+      <div id="gemini-loading" class="hidden" style="text-align:center; padding:20px; color:#a259ff; font-family:var(--mono); font-size:0.85rem;">
+        <div class="spinner" style="margin:0 auto 12px; border-top-color:#a259ff;"></div>
+        Gemini is thinking<span class="dots"></span>
+      </div>
+
+      <!-- Gemini response -->
+      <div id="gemini-response" class="hidden" style="
+        margin-top:16px; padding:20px; background:var(--bg-card);
+        border-left:3px solid #a259ff; border-radius:0 var(--radius) var(--radius) 0;
+        font-size:0.95rem; line-height:1.7; color:var(--text); white-space:pre-wrap;
+      "></div>
+
+      <!-- Gemini budget -->
+      <div id="gemini-budget" class="mono" style="font-size:0.75rem; color:var(--text-dim); margin-top:8px; text-align:right;"></div>
+
+      <!-- Gemini error -->
+      <div id="gemini-error" class="hidden" style="padding:16px; background:var(--bg-card); border-left:3px solid var(--red); border-radius:0 var(--radius) var(--radius) 0; margin-top:12px; color:var(--red); font-family:var(--mono); font-size:0.85rem;"></div>
+
+      <!-- Three-way comparison reflection -->
+      <div class="critical-text" style="margin-top:32px; border-left-color:#a259ff;">
+        <p>"Three machines looked at the same photo. MobileNet gave you a label. Google Vision gave you a spreadsheet. Gemini gave you a story. The story feels most human — but none of them understood your photograph. They never will."</p>
+      </div>
+
+      <!-- Original critical reflection -->
+      <div class="critical-text">
+        <p>"The local model runs for free, on your device, with no data leaving your phone. The commercial API is more powerful — but your image is now on Google's servers, processed by Google's models, subject to Google's terms. Power and privacy rarely come together."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p class="mono">All processing happens on your device. No data leaves your browser.</p>
+    <p>A workshop tool by Artificial Nouveau</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/step1-pixels.js"></script>
+  <script type="module" src="js/step2-machine-speaks.js"></script>
+  <script src="js/step3-surveillance.js"></script>
+  <script src="js/step4-break.js"></script>
+  <script src="js/step5-beauty.js"></script>
+  <script src="js/step6-clone.js"></script>
+  <script src="js/step7-google-vision.js"></script>
+</body>
+</html>
