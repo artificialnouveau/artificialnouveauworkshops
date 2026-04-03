@@ -534,7 +534,7 @@
       <h2>The Commercial Eye</h2>
       <p>Everything so far ran locally in your browser using open-source models. Now let's send your photo to <strong>Google Cloud Vision</strong> — the same commercial API used by corporations and governments — and compare what a billion-dollar system "sees" versus the free models on your phone.</p>
       <div class="model-info" style="border-left-color:var(--yellow)">
-        <p><strong style="color:var(--yellow)">How this works:</strong> Your image is sent to a proxy server (run by the workshop host), which forwards it to Google's Vision API and Gemini. The API keys are never exposed to your browser. A hard request cap is in place to limit costs.</p>
+        <p><strong style="color:var(--yellow)">How this works:</strong> Your image is sent to a proxy server, which forwards it to Google's Vision API and Gemini. The API keys are never exposed to your browser. A hard request cap is in place to limit costs.</p>
       </div>
       <div class="google-disclaimer" style="
         margin-top:14px; padding:14px 16px;
@@ -548,8 +548,8 @@
       </div>
     </div>
 
-    <!-- Server URL config (hidden by default, for presenter) -->
-    <div id="vision-server-config" class="mono" style="margin-bottom:16px; font-size:0.75rem; color:var(--text-dim)">
+    <!-- Server URL config (hidden, for presenter use only — add ?server=1 to URL to show) -->
+    <div id="vision-server-config" class="mono hidden" style="margin-bottom:16px; font-size:0.75rem; color:var(--text-dim)">
       Server: <input type="text" id="vision-server-url" value="http://localhost:8000" style="
         background:var(--bg-card); border:1px solid #333; border-radius:4px;
         color:var(--text); font-family:var(--mono); font-size:0.75rem;

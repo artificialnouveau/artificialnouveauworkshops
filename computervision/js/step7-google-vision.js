@@ -7,12 +7,21 @@
  */
 
 (function () {
+  // Default to Render deployment; override via ?server=1 to show config field
+  const DEFAULT_SERVER = 'https://cv-workshop-proxy.onrender.com';
+
   const fileInput = document.getElementById('file-input-7');
   const uploadArea = document.getElementById('upload-area-7');
   const resultsDiv = document.getElementById('step7-results');
   const loadingDiv = document.getElementById('vision-loading');
   const errorDiv = document.getElementById('vision-error');
   const serverUrlInput = document.getElementById('vision-server-url');
+  const serverConfig = document.getElementById('vision-server-config');
+
+  // Show server config field only if ?server=1 is in the URL (for presenter)
+  if (new URLSearchParams(window.location.search).get('server') === '1') {
+    serverConfig.classList.remove('hidden');
+  }
 
   // Gemini elements
   const geminiPromptInput = document.getElementById('gemini-prompt-input');
@@ -27,7 +36,9 @@
   let currentFile = null;
 
   function getServerUrl() {
-    return (serverUrlInput.value || 'http://localhost:8000').replace(/\/+$/, '');
+    const val = serverUrlInput.value.trim();
+    // Use the input value only if the config is visible and has been changed
+    return (val && val !== 'http://localhost:8000' ? val : DEFAULT_SERVER).replace(/\/+$/, '');
   }
 
   fileInput.addEventListener('change', async (e) => {
