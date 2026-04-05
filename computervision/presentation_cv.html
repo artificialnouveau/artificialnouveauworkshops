@@ -129,49 +129,44 @@
 
   <div id="progress"></div>
 
-  <!-- 1: Title -->
-  <div class="slide title-slide active" data-notes="Welcome everyone to the Introduction to Computer Vision & AI workshop. I'm Ahnjili ZhuParris.">
+  <!-- ============================================================ -->
+  <!-- TITLE & OUTLINE                                              -->
+  <!-- ============================================================ -->
+
+  <!-- Title -->
+  <div class="slide title-slide active" data-notes="Welcome everyone to the Introduction to Computer Vision & AI workshop.">
     <h1>Introduction to<br><span class="accent">Computer Vision &amp; AI</span></h1>
-    <p class="subtitle">Workshop</p>
-    <p class="subtitle">Ahnjili ZhuParris</p>
+    <p class="subtitle">Artificial Nouveau</p>
   </div>
 
-  <!-- 2: Parts overview -->
-  <div class="slide section-title">
-    <div>
-      <h2>Introduction to <span class="accent">Computer Vision & AI</span></h2>
-      <div class="divider"></div>
-    </div>
-  </div>
-
-  <!-- 3: Outline -->
-  <div class="slide">
+  <!-- Outline -->
+  <div class="slide" data-notes="Five chapters. We start with the basics, then follow the image through the pipeline — from scraping to labeling to surveillance to failure — and end with how artists and activists are pushing back.">
     <h2>Outline</h2>
-    <div class="two-col" style="font-size:1.35rem; max-width:700px; gap:20px">
-      <ul>
-        <li>Who Am I</li>
-        <li>What is AI</li>
-        <li>Introduction to CV</li>
-        <li>The Role of Language in CV</li>
-        <li>Politics of Datasets</li>
-      </ul>
-      <ul>
-        <li>Surveillance &amp; Imagination</li>
-        <li>Self-Surveillance</li>
-        <li>When Machines Fail</li>
-        <li>Creative Responses</li>
-        <li>Conclusion</li>
-      </ul>
+    <div style="max-width:700px; margin:0 auto; text-align:left; font-size:1.15rem; line-height:2.2;">
+      <p><strong style="color:var(--accent)">1.</strong> <strong>Foundations</strong> <span style="color:var(--dim)">— Who Am I / What is AI / How CV Works</span></p>
+      <p><strong style="color:var(--yellow)">2.</strong> <strong>Images &amp; Consent</strong> <span style="color:var(--dim)">— Scraping, Datasets &amp; "Is My Face In There?"</span></p>
+      <p><strong style="color:var(--yellow)">3.</strong> <strong>Language &amp; Power</strong> <span style="color:var(--dim)">— Captions, Labels &amp; the Feedback Loop</span></p>
+      <p><strong style="color:var(--red)">4.</strong> <strong>Surveillance &amp; the Body</strong> <span style="color:var(--dim)">— Control, Beauty &amp; Global Perspectives</span></p>
+      <p><strong style="color:var(--green)">5.</strong> <strong>Failure &amp; Resistance</strong> <span style="color:var(--dim)">— When Machines Break &amp; Artists Push Back</span></p>
     </div>
   </div>
 
-  <!-- 4: Who Am I -->
+  <!-- ============================================================ -->
+  <!-- CHAPTER 1: FOUNDATIONS                                       -->
+  <!-- ============================================================ -->
+
+  <div class="slide section-title">
+    <p style="font-family:var(--mono); color:var(--dim); font-size:0.85rem; margin-bottom:12px;">Chapter 1</p>
+    <h2><span class="accent">Foundations</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <!-- Who Am I -->
   <div class="slide section-title">
     <h2>Who Am I</h2>
     <div class="divider"></div>
   </div>
 
-  <!-- 5 -->
   <div class="slide">
     <h3>Ex-Academic</h3>
     <p style="margin-bottom:20px">Focusing on Medical Surveillance</p>
@@ -182,7 +177,6 @@
     </div>
   </div>
 
-  <!-- 6 -->
   <div class="slide">
     <h3>AI Engineer <span style="color:var(--dim)">(Computer Vision)</span></h3>
     <div class="img-row">
@@ -192,7 +186,6 @@
     </div>
   </div>
 
-  <!-- 7 -->
   <div class="slide">
     <h3>AI Engineer <span style="color:var(--dim)">(Media Researcher)</span></h3>
     <div class="img-row">
@@ -203,7 +196,6 @@
     </div>
   </div>
 
-  <!-- 8 -->
   <div class="slide">
     <h3>Computational Artist</h3>
     <div class="img-row">
@@ -212,13 +204,12 @@
     </div>
   </div>
 
-  <!-- 9: What is AI -->
+  <!-- What is AI -->
   <div class="slide section-title">
     <h2>What is AI</h2>
     <div class="divider"></div>
   </div>
 
-  <!-- 10 -->
   <div class="slide" data-notes="AI is a broad field. Key point: mimicking human intelligence — not replacing it. Ask students: what do they think AI is?">
     <h2>What is AI</h2>
     <div class="card" style="max-width:700px">
@@ -228,13 +219,7 @@
     </div>
   </div>
 
-  <!-- 11: Why AI -->
-  <div class="slide section-title">
-    <h2>Why AI</h2>
-    <div class="divider"></div>
-  </div>
-
-  <!-- 12 -->
+  <!-- Why AI -->
   <div class="slide">
     <h2>Why AI</h2>
     <div class="two-col" style="grid-template-columns:1fr auto; max-width:800px">
@@ -247,15 +232,9 @@
     </div>
   </div>
 
-  <!-- 13: Why AI Now -->
-  <div class="slide section-title">
-    <h2>Why AI <span class="yellow">Now</span></h2>
-    <div class="divider" style="background:var(--yellow)"></div>
-  </div>
-
-  <!-- 14 -->
+  <!-- Why AI Now -->
   <div class="slide">
-    <h2>Why AI Now</h2>
+    <h2>Why AI <span class="yellow">Now</span></h2>
     <div class="two-col" style="grid-template-columns:1fr auto; max-width:900px; gap:40px">
       <ul style="line-height:2.2; font-size:1.2rem;">
         <li>Easily identify trends and patterns within <strong>multi-dimensional</strong> data</li>
@@ -268,14 +247,13 @@
     </div>
   </div>
 
-  <!-- 15: Intro to CV -->
+  <!-- Intro to CV -->
   <div class="slide section-title">
     <h2>Introduction to <span class="accent">CV</span></h2>
     <div class="divider"></div>
   </div>
 
-  <!-- 16 -->
-  <div class="slide" data-notes="Walk through the two stages: first we acquire and clean the image, then the model extracts features like edges and textures. Show the example images.">
+  <div class="slide" data-notes="Walk through the two stages: first we acquire and clean the image, then the model extracts features like edges and textures.">
     <h2>Computer Vision Prep</h2>
     <div class="two-col">
       <div class="card">
@@ -296,7 +274,6 @@
     </div>
   </div>
 
-  <!-- 17 -->
   <div class="slide">
     <h2>Training the AI</h2>
     <div style="text-align:center">
@@ -306,7 +283,6 @@
     <p class="caption">Model &rarr; Predictions &rarr; Mario Probability / Luigi Probability</p>
   </div>
 
-  <!-- 18 -->
   <div class="slide">
     <h2>Computer Vision Applications</h2>
     <div class="three-col" style="margin-top:20px">
@@ -316,14 +292,125 @@
     </div>
   </div>
 
-  <!-- The Role of Language in CV — section -->
+  <!-- ============================================================ -->
+  <!-- CHAPTER 2: IMAGES & CONSENT                                  -->
+  <!-- ============================================================ -->
+
   <div class="slide section-title">
-    <h2>The Role of <span class="yellow">Language</span> in CV</h2>
+    <p style="font-family:var(--mono); color:var(--dim); font-size:0.85rem; margin-bottom:12px;">Chapter 2</p>
+    <h2>Images &amp; <span class="yellow">Consent</span></h2>
+    <div class="divider" style="background:var(--yellow)"></div>
+  </div>
+
+  <!-- Where Do the Images Come From? -->
+  <div class="slide" data-notes="CV needs millions of images. Where do they come from? Not from consenting participants — from the open internet. Scraped without knowledge or permission.">
+    <h2>Where Do the <span class="yellow">Images</span> Come From?</h2>
+    <div class="two-col" style="align-items:stretch">
+      <div class="card yellow-border">
+        <h3 style="color:var(--yellow)">The Scale Problem</h3>
+        <p>Modern CV models need <strong>millions to billions</strong> of images to train. No one photographs that many consenting subjects.</p>
+        <p style="margin-top:12px">Instead, images are <strong>scraped</strong> from the open internet — Flickr, social media, news sites, personal blogs — without the knowledge or consent of the people in them.</p>
+      </div>
+      <div class="card fragment">
+        <h3>Who gave permission?</h3>
+        <ul>
+          <li>You uploaded a photo to Instagram</li>
+          <li>A researcher scraped it into a dataset</li>
+          <li>A company trained a model on it</li>
+          <li>A government used that model to identify you</li>
+        </ul>
+        <p style="margin-top:12px; color:var(--dim)">At no point were you asked.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clearview AI & LAION-5B -->
+  <div class="slide" data-notes="Clearview AI scraped 30 billion photos from social media to build a facial recognition tool sold to police. LAION-5B contained 5.8 billion image-text pairs scraped from the internet — researchers found CSAM in it in 2023, forcing it offline.">
+    <h2>Scraping at <span class="red">Scale</span></h2>
+    <div class="two-col" style="align-items:stretch">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">Clearview AI</h3>
+        <p>Scraped <strong>30+ billion</strong> photos from Facebook, Instagram, LinkedIn, and news sites. Built a facial recognition tool and sold it to law enforcement — without a single person's consent.</p>
+        <p style="margin-top:12px; color:var(--dim)">Fined in the EU, Australia, and Canada. Still operating in the US.</p>
+      </div>
+      <div class="card red-border fragment">
+        <h3 style="color:var(--red)">LAION-5B</h3>
+        <p><strong>5.8 billion</strong> image-text pairs scraped from the internet. Used to train Stable Diffusion and other generative AI.</p>
+        <p style="margin-top:12px; color:var(--dim)">In 2023, researchers found <strong>CSAM</strong> (child sexual abuse material) in the dataset. LAION was forced to take it offline.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Is Your Face in a Dataset? -->
+  <div class="slide" data-notes="This is the bridge to the interactive moment. Make it personal — your face may already be in training data. PimEyes lets you check.">
+    <h2>Is Your Face in a <span class="yellow">Dataset?</span></h2>
+    <div style="max-width:650px; margin:0 auto;">
+      <div class="card yellow-border" style="margin-bottom:20px">
+        <p style="font-size:1.2rem; color:var(--text); line-height:1.8">If you have ever posted a photo online — on social media, a personal website, a news article, a university page — your face may already be in a training dataset.</p>
+        <p style="margin-top:12px; color:var(--dim)">You were never asked. You were never told. And in most countries, you have <strong style="color:var(--text)">no legal right</strong> to have it removed.</p>
+      </div>
+      <div class="card fragment" style="text-align:center; padding:20px;">
+        <p style="font-size:1.3rem; color:var(--accent); margin-bottom:8px;">Let's find out.</p>
+        <p style="color:var(--dim)">Take out your phone. Go to <strong style="color:var(--text)"><a href="https://pimeyes.com" target="_blank" style="color:var(--accent)">pimeyes.com</a></strong>. Search your own face.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive: PimEyes -->
+  <div class="slide" data-notes="Give students 3-5 minutes. Walk around. Ask what they found. Some will find nothing — ask why. Some will find photos they forgot existed. Use this as a discussion moment.">
+    <h2 style="margin-bottom:24px"><span class="green">Try It Now</span></h2>
+    <div style="max-width:600px; margin:0 auto; text-align:center;">
+      <div class="card green-border" style="padding:30px; margin-bottom:20px;">
+        <p style="font-size:1.8rem; color:var(--text); margin-bottom:16px;"><a href="https://pimeyes.com" target="_blank" style="color:var(--accent)">pimeyes.com</a></p>
+        <p style="color:var(--dim); font-size:1.1rem; line-height:1.8">Upload a selfie or photo of yourself.<br>See where your face appears online.</p>
+      </div>
+      <div class="card" style="text-align:left;">
+        <h3>While you search, consider:</h3>
+        <ul>
+          <li>Did you <strong>consent</strong> to these images being findable?</li>
+          <li>Who benefits from your face being <strong>searchable</strong>?</li>
+          <li>Could this tool be used to <strong class="red">stalk</strong> someone?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Politics of Datasets -->
+  <div class="slide" data-notes="Three forms of control: representation, language, and outcomes. Large datasets lack opacity — too big to audit. Ask: who benefits from this?">
+    <h2>Those who control the data control the narrative</h2>
+    <div class="two-col">
+      <div>
+        <div class="card red-border" style="margin-bottom:16px">
+          <h3 style="color:var(--red)">They control Representation</h3>
+          <p>What gets collected and what is ignored?</p>
+        </div>
+        <div class="card yellow-border" style="margin-bottom:16px">
+          <h3 style="color:var(--yellow)">They control The Language</h3>
+          <p>Define the labels, categories, and the taxonomies</p>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <h3>They control The Outcome</h3>
+          <p>They control what gets optimized. Who and what gets to use the data.</p>
+        </div>
+      </div>
+      <div class="card pink-border fragment">
+        <p style="font-size:1.2rem; color:var(--text); line-height:1.8">A meaningful data is a <strong>big</strong> dataset. Once datasets meet a certain scale, they become harder to audit, and therefore have <strong class="red">no opacity</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CHAPTER 3: LANGUAGE & POWER                                  -->
+  <!-- ============================================================ -->
+
+  <div class="slide section-title">
+    <p style="font-family:var(--mono); color:var(--dim); font-size:0.85rem; margin-bottom:12px;">Chapter 3</p>
+    <h2>Language &amp; <span class="yellow">Power</span></h2>
     <div class="divider" style="background:var(--yellow)"></div>
   </div>
 
   <!-- Whose Language? -->
-  <div class="slide" data-notes="But whose language? Modern CV models don't just detect — they describe. Models like CLIP and ViT-GPT2 generate captions and classify images using language. Their vocabulary is inherited from millions of image-caption pairs scraped from the internet. The biases, assumptions, and blind spots of those captions become the model's worldview. Example: An image captioning model describes a photo of a woman in a lab: 'A woman posing for a picture'. The machine saw woman and posing. It missed scientist, researcher, laboratory.">
+  <div class="slide" data-notes="Modern CV models don't just detect — they describe. Models like CLIP and ViT-GPT2 generate captions and classify images using language. Their vocabulary is inherited from millions of image-caption pairs scraped from the internet.">
     <h2>Whose <span class="yellow">Language?</span></h2>
     <div style="display:flex; align-items:center; justify-content:center; gap:40px; max-width:800px; margin:0 auto;">
       <img src="img/woman_scientist.jpg" style="width:280px; border-radius:8px;">
@@ -335,7 +422,7 @@
   </div>
 
   <!-- Labels Are Not Neutral -->
-  <div class="slide" data-notes="ImageNet had 2,832 person subcategories including slurs. The act of labeling is political — who decides the categories? This connects directly to the workshop demo.">
+  <div class="slide" data-notes="ImageNet had 2,832 person subcategories including slurs. The act of labeling is political — who decides the categories?">
     <h2>Labels Are <span class="red">Not Neutral</span></h2>
     <div class="two-col">
       <div>
@@ -374,7 +461,7 @@
   </div>
 
   <!-- Same Image, Different Captions -->
-  <div class="slide" data-notes="The same photograph, three completely different captions. The image is identical. The caption changes everything. This is what happened millions of times in training data.">
+  <div class="slide" data-notes="The same photograph, three completely different captions. The image is identical. The caption changes everything.">
     <h2>Same Image, <span class="yellow">Different Captions</span></h2>
     <div style="max-width:650px; margin:0 auto;">
       <p style="color:var(--dim); margin-bottom:20px; font-size:1.1rem;">One photograph. Three captions. Three different machines.</p>
@@ -391,24 +478,8 @@
     </div>
   </div>
 
-  <!-- Imagination: A Manifesto -->
-  <div class="slide" data-notes="Ruha Benjamin is a professor of African American Studies at Princeton. In Imagination: A Manifesto (2024), she argues that imagination is not a luxury — it is a contested resource. Those who control how we imagine the future control who gets to live in it. She challenges us to ask: whose imagination is encoded in our technologies? When AI systems reflect only the imaginations of their creators, they foreclose alternative futures before they can even be articulated.">
-    <h2>Imagination: <span class="pink">A Manifesto</span></h2>
-    <div style="display:flex; align-items:center; justify-content:center; gap:40px; max-width:800px; margin:0 auto;">
-      <img src="img/imagination_manifesto.webp" style="width:250px; border-radius:8px;">
-      <div>
-        <p style="color:var(--dim); font-size:0.85rem; margin-bottom:16px;">Ruha Benjamin (2024)</p>
-        <ul style="line-height:2; font-size:1.05rem; color:var(--text); padding-left:20px;">
-          <li>Imagination is not a luxury — it is a <strong style="color:var(--pink)">contested resource</strong>. Those who control how we imagine the future control who gets to live in it.</li>
-          <li>When AI systems encode only the imaginations of their creators, they <strong style="color:var(--pink)">foreclose alternative futures</strong> before they can be articulated.</li>
-          <li>The "default settings" of technology reflect <strong style="color:var(--pink)">whose dreams are funded</strong> and whose are dismissed as unrealistic.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
   <!-- Alt-text as Invisible Infrastructure -->
-  <div class="slide" data-notes="Most training captions come from HTML alt-text, written for accessibility or SEO, not for teaching AI. Lazy, stereotyping, wrong, or just IMG_0392.jpg.">
+  <div class="slide" data-notes="Most training captions come from HTML alt-text, written for accessibility or SEO, not for teaching AI.">
     <h2>Alt-text as <span class="yellow">Invisible Infrastructure</span></h2>
     <div class="two-col" style="align-items:stretch">
       <div class="card yellow-border">
@@ -430,7 +501,7 @@
   </div>
 
   <!-- The Feedback Loop -->
-  <div class="slide" data-notes="AI generates captions, those get posted online, future AI trains on those captions. The machine's language becomes self-reinforcing. Like stock photo aesthetics becoming the default image of a concept.">
+  <div class="slide" data-notes="AI generates captions, those get posted online, future AI trains on those captions. The machine's language becomes self-reinforcing.">
     <h2>The <span class="yellow">Feedback Loop</span></h2>
     <div style="max-width:600px; margin:0 auto; text-align:center;">
       <div class="card" style="margin-bottom:16px; padding:20px;">
@@ -450,43 +521,33 @@
     </div>
   </div>
 
-  <!-- 19: Politics of Datasets -->
+  <!-- ============================================================ -->
+  <!-- CHAPTER 4: SURVEILLANCE & THE BODY                           -->
+  <!-- ============================================================ -->
+
   <div class="slide section-title">
-    <h2>Politics of <span class="red">Datasets</span></h2>
+    <p style="font-family:var(--mono); color:var(--dim); font-size:0.85rem; margin-bottom:12px;">Chapter 4</p>
+    <h2>Surveillance &amp; <span class="red">the Body</span></h2>
     <div class="divider" style="background:var(--red)"></div>
   </div>
 
-  <!-- 20 -->
-  <div class="slide" data-notes="Three forms of control: representation, language, and outcomes. Large datasets lack opacity — too big to audit. Ask: who benefits from this?">
-    <h2>Those who control the data control the narrative</h2>
-    <div class="two-col">
+  <!-- Imagination: A Manifesto -->
+  <div class="slide" data-notes="Ruha Benjamin argues that imagination is not a luxury — it is a contested resource. Those who control how we imagine the future control who gets to live in it.">
+    <h2>Imagination: <span class="pink">A Manifesto</span></h2>
+    <div style="display:flex; align-items:center; justify-content:center; gap:40px; max-width:800px; margin:0 auto;">
+      <img src="img/imagination_manifesto.webp" style="width:250px; border-radius:8px;">
       <div>
-        <div class="card red-border" style="margin-bottom:16px">
-          <h3 style="color:var(--red)">They control Representation</h3>
-          <p>What gets collected and what is ignored?</p>
-        </div>
-        <div class="card yellow-border" style="margin-bottom:16px">
-          <h3 style="color:var(--yellow)">They control The Language</h3>
-          <p>Define the labels, categories, and the taxonomies</p>
-        </div>
-        <div class="card" style="margin-bottom:16px">
-          <h3>They control The Outcome</h3>
-          <p>They control what gets optimized. Who and what gets to use the data.</p>
-        </div>
-      </div>
-      <div class="card pink-border fragment">
-        <p style="font-size:1.2rem; color:var(--text); line-height:1.8">A meaningful data is a <strong>big</strong> dataset. Once datasets meet a certain scale, they become harder to audit, and therefore have <strong class="red">no opacity</strong>.</p>
+        <p style="color:var(--dim); font-size:0.85rem; margin-bottom:16px;">Ruha Benjamin (2024)</p>
+        <ul style="line-height:2; font-size:1.05rem; color:var(--text); padding-left:20px;">
+          <li>Imagination is not a luxury — it is a <strong style="color:var(--pink)">contested resource</strong>. Those who control how we imagine the future control who gets to live in it.</li>
+          <li>When AI systems encode only the imaginations of their creators, they <strong style="color:var(--pink)">foreclose alternative futures</strong> before they can be articulated.</li>
+          <li>The "default settings" of technology reflect <strong style="color:var(--pink)">whose dreams are funded</strong> and whose are dismissed as unrealistic.</li>
+        </ul>
       </div>
     </div>
   </div>
 
-  <!-- 21: Surveillance & Imagination -->
-  <div class="slide section-title">
-    <h2>Surveillance &amp; <span class="red">Imagination</span></h2>
-    <div class="divider" style="background:var(--red)"></div>
-  </div>
-
-  <!-- 22 -->
+  <!-- Surveillance as World Building -->
   <div class="slide">
     <h2>Surveillance as World Building</h2>
     <p style="margin-bottom:16px">Data Collection</p>
@@ -498,7 +559,7 @@
     <p class="caption">Czech artist <em>Jakub Geltner</em></p>
   </div>
 
-  <!-- 23 -->
+  <!-- Frozen Imagination: Violence -->
   <div class="slide">
     <h2>Machine Vision as <span class="red">Frozen Imagination</span></h2>
     <h3 style="color:var(--red)">Violence</h3>
@@ -507,7 +568,7 @@
     </div>
   </div>
 
-  <!-- 24 -->
+  <!-- Frozen Imagination is Profitable -->
   <div class="slide" data-notes="1.5 million Uyghurs surveilled using CV. Predictive policing in US/Europe. Profit comes from state contracts, software, and cheap labor for annotation.">
     <h2>Frozen Imagination is <span class="yellow">Profitable</span></h2>
     <div class="two-col" style="max-width:900px">
@@ -529,7 +590,24 @@
     </div>
   </div>
 
-  <!-- 25 -->
+  <!-- Global Surveillance -->
+  <div class="slide" data-notes="CV-powered surveillance is not just a US/China story. India's Aadhaar is the largest biometric database on Earth. Hong Kong protesters developed anti-surveillance tactics in real time. Facial recognition is being deployed in ways that are context-specific but globally connected.">
+    <h2>CV Surveillance is <span class="red">Global</span></h2>
+    <div class="two-col" style="align-items:stretch">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">India: Aadhaar</h3>
+        <p>The world's largest biometric database — <strong>1.4 billion</strong> people enrolled. Iris scans, fingerprints, and facial data linked to identity, banking, and welfare.</p>
+        <p style="margin-top:12px; color:var(--dim)">Exclusion errors have locked millions out of food rations and pensions. The system fails most for those who need it most.</p>
+      </div>
+      <div class="card fragment">
+        <h3>Hong Kong: Counter-Surveillance</h3>
+        <p>During the 2019–2020 protests, demonstrators developed real-time counter-surveillance: <strong>umbrellas over faces</strong>, laser pointers to blind cameras, and coordinated destruction of smart lampposts.</p>
+        <p style="margin-top:12px; color:var(--dim)">Resistance to CV is itself a form of political expression.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frozen Imagination: Expression -->
   <div class="slide">
     <h2>Frozen Imagination: <span class="pink">Expression</span></h2>
     <div class="img-row">
@@ -538,7 +616,6 @@
     </div>
   </div>
 
-  <!-- 26 -->
   <div class="slide">
     <h2>Frozen Imagination: <span class="pink">Expression</span></h2>
     <div class="img-row">
@@ -547,7 +624,7 @@
     </div>
   </div>
 
-  <!-- 27 -->
+  <!-- Frozen Imagination: Health -->
   <div class="slide">
     <h2>Frozen Imagination: <span class="green">Health</span></h2>
     <div class="img-row">
@@ -556,41 +633,13 @@
     </div>
   </div>
 
-  <!-- 28 -->
-  <div class="slide" data-notes="Transition to positive framing: what if tech was built from care instead of control? Three strategies: refusal, redirection, re-imagining.">
-    <h2>Imagination as <span class="green">Abolitionist Counter-Tech</span></h2>
-    <div class="quote">
-      <p>What would tech look like if it were built from an imagination of <strong>care</strong> rather than <strong>control</strong>?</p>
-    </div>
-    <ul style="margin-top:24px" class="fragment">
-      <li><strong>Refusal</strong></li>
-      <li><strong>Redirection</strong></li>
-      <li><strong>Re-imaging</strong> sensing itself</li>
-    </ul>
-  </div>
-
-  <!-- 29 -->
-  <div class="slide">
-    <h2>Abolitionist Counter-Tech</h2>
-    <div class="card red-border" style="max-width:700px">
-      <p style="color:var(--text); margin-bottom:16px">Not enough to ask, <em>"Is the dataset biased?"</em></p>
-      <p style="color:var(--dim); margin-bottom:8px">One must also ask:</p>
-      <ul>
-        <li>Who is presumed <strong class="red">dangerous</strong>, border-crossing, or fraudulent?</li>
-        <li>Who is allowed <strong class="green">opacity</strong>, privacy and anonymity?</li>
-        <li>What non-machine vision methods of sensing were <strong>ruled out</strong> before the project began?</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- 30: Self-Surveillance -->
+  <!-- Self-Surveillance & Beauty -->
   <div class="slide section-title">
     <h2>Self-Surveillance &amp; <span class="pink">Beauty</span></h2>
     <div class="divider" style="background:var(--pink)"></div>
   </div>
 
-  <!-- 31 -->
-  <div class="slide" data-notes="Beauty AI is trained on celebrity photos and surgery before/afters. The criteria reveal whose beauty standards are encoded. Ask students: what's missing from this list?">
+  <div class="slide" data-notes="Beauty AI is trained on celebrity photos and surgery before/afters. The criteria reveal whose beauty standards are encoded.">
     <h2>Training a Cosmetic AI: <span class="pink">World Building</span></h2>
     <div class="two-col">
       <div class="card pink-border">
@@ -614,7 +663,6 @@
     </div>
   </div>
 
-  <!-- 32 -->
   <div class="slide">
     <h2>Training a Cosmetic AI</h2>
     <div class="img-row">
@@ -623,7 +671,6 @@
     </div>
   </div>
 
-  <!-- 33 -->
   <div class="slide">
     <h2>Frozen Imagination: <span class="pink">The Algorithmic Ideal Face</span></h2>
     <div class="img-row">
@@ -632,7 +679,6 @@
     </div>
   </div>
 
-  <!-- 34 -->
   <div class="slide">
     <h2>Living in the <span class="accent">Mirror World</span></h2>
     <div style="text-align:center; margin-top:16px">
@@ -640,13 +686,22 @@
     </div>
   </div>
 
-  <!-- 35: When Computers Fail -->
+  <!-- ============================================================ -->
+  <!-- CHAPTER 5: FAILURE & RESISTANCE                              -->
+  <!-- ============================================================ -->
+
+  <div class="slide section-title">
+    <p style="font-family:var(--mono); color:var(--dim); font-size:0.85rem; margin-bottom:12px;">Chapter 5</p>
+    <h2>Failure &amp; <span class="green">Resistance</span></h2>
+    <div class="divider" style="background:var(--green)"></div>
+  </div>
+
+  <!-- When Computers Fail -->
   <div class="slide section-title">
     <h2>When Computers <span class="red">Fail</span></h2>
     <div class="divider" style="background:var(--red)"></div>
   </div>
 
-  <!-- 36 -->
   <div class="slide">
     <h2>Is AI better than <span class="yellow">pigeons</span>?</h2>
     <div class="img-row">
@@ -656,7 +711,6 @@
     </div>
   </div>
 
-  <!-- 37 -->
   <div class="slide">
     <h2>Is AI better than pigeons?</h2>
     <div class="img-row">
@@ -665,7 +719,6 @@
     </div>
   </div>
 
-  <!-- 38 -->
   <div class="slide">
     <h2>When Computer Vision <span class="red">Fails</span></h2>
     <div class="img-row">
@@ -674,7 +727,6 @@
     </div>
   </div>
 
-  <!-- 39 -->
   <div class="slide">
     <h2>When Computer Vision <span class="red">Fails</span></h2>
     <div class="img-row">
@@ -683,15 +735,12 @@
     </div>
   </div>
 
-
-
-  <!-- 41: Creative Responses -->
+  <!-- Creative Responses -->
   <div class="slide section-title">
     <h2>Creative <span class="green">Responses</span></h2>
     <div class="divider" style="background:var(--green)"></div>
   </div>
 
-  <!-- 42 -->
   <div class="slide">
     <h2><span class="accent">CV Dazzle</span></h2>
     <div style="text-align:center">
@@ -699,7 +748,6 @@
     </div>
   </div>
 
-  <!-- 43 -->
   <div class="slide">
     <h2>CV Dazzle</h2>
     <div class="img-row">
@@ -708,7 +756,6 @@
     </div>
   </div>
 
-  <!-- 44 -->
   <div class="slide">
     <h2>Toko Kihara</h2>
     <p style="margin-bottom:16px"><em>How Not to Get Hit By A Self-Driving Car</em></p>
@@ -718,7 +765,6 @@
     </div>
   </div>
 
-  <!-- 45 -->
   <div class="slide">
     <h2>Toko Kihara — <span class="pink">Is this Violence? Am I too sexy?</span></h2>
     <div style="text-align:center">
@@ -726,7 +772,6 @@
     </div>
   </div>
 
-  <!-- 46 -->
   <div class="slide">
     <h2>Dries Depoorter</h2>
     <p style="margin-bottom:16px"><em>The Follower</em>, 2023–2026</p>
@@ -735,7 +780,6 @@
     </div>
   </div>
 
-  <!-- 47 -->
   <div class="slide">
     <h2>Capture</h2>
     <p style="margin-bottom:16px"><em>Paolo Cirio</em></p>
@@ -745,7 +789,7 @@
   </div>
 
   <!-- ImageNet Roulette -->
-  <div class="slide" data-notes="ImageNet Roulette went viral in 2019. By making the system visible, it forced ImageNet to remove 600k+ images. Art as activism — making the invisible visible.">
+  <div class="slide" data-notes="ImageNet Roulette went viral in 2019. By making the system visible, it forced ImageNet to remove 600k+ images. Art as activism.">
     <h2>Trevor Paglen &amp; Kate Crawford</h2>
     <p style="margin-bottom:16px"><em>ImageNet Roulette</em>, 2019</p>
     <div class="two-col">
@@ -766,28 +810,81 @@
     </div>
   </div>
 
-  <!-- Conclusion -->
+  <!-- Imagination as Counter-Tech (moved here as culmination) -->
+  <div class="slide" data-notes="Transition to positive framing: what if tech was built from care instead of control? Three strategies: refusal, redirection, re-imagining.">
+    <h2>Imagination as <span class="green">Abolitionist Counter-Tech</span></h2>
+    <div class="quote">
+      <p>What would tech look like if it were built from an imagination of <strong>care</strong> rather than <strong>control</strong>?</p>
+    </div>
+    <ul style="margin-top:24px" class="fragment">
+      <li><strong>Refusal</strong></li>
+      <li><strong>Redirection</strong></li>
+      <li><strong>Re-imaging</strong> sensing itself</li>
+    </ul>
+  </div>
+
+  <div class="slide">
+    <h2>Abolitionist Counter-Tech</h2>
+    <div class="card red-border" style="max-width:700px">
+      <p style="color:var(--text); margin-bottom:16px">Not enough to ask, <em>"Is the dataset biased?"</em></p>
+      <p style="color:var(--dim); margin-bottom:8px">One must also ask:</p>
+      <ul>
+        <li>Who is presumed <strong class="red">dangerous</strong>, border-crossing, or fraudulent?</li>
+        <li>Who is allowed <strong class="green">opacity</strong>, privacy and anonymity?</li>
+        <li>What non-machine vision methods of sensing were <strong>ruled out</strong> before the project began?</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- CONCLUSION                                                   -->
+  <!-- ============================================================ -->
+
   <div class="slide section-title">
     <h2><span class="accent">Conclusion</span></h2>
     <div class="divider"></div>
   </div>
 
-  <!-- Conclusion: What We Covered -->
-  <div class="slide" data-notes="Recap the journey of the presentation. Each point maps to a section we covered. The thread running through all of it: machines don't see — they compute, and the choices behind that computation are human, political, and consequential.">
+  <!-- What We Covered -->
+  <div class="slide" data-notes="Recap the journey. Each point maps to a chapter. The thread: machines don't see — they compute, and the choices behind that computation are human, political, and consequential.">
     <h2>What We Covered</h2>
     <div style="max-width:700px; margin:0 auto; font-size:1.05rem; line-height:2.2;">
       <p class="fragment"><span style="color:var(--accent)">Machines see math</span> — pixels, matrices, probability. Not meaning.</p>
+      <p class="fragment"><span style="color:var(--yellow)">Images are taken without consent</span> — scraped, collected, and used to train systems you never agreed to.</p>
       <p class="fragment"><span style="color:var(--yellow)">Language shapes vision</span> — captions become training data, and nobody curates them.</p>
-      <p class="fragment"><span style="color:var(--red)">Datasets encode power</span> — who is represented, who is labelled, who is left out.</p>
-      <p class="fragment"><span style="color:var(--red)">Surveillance is infrastructure</span> — CV powers systems that watch, sort, and judge.</p>
+      <p class="fragment"><span style="color:var(--red)">Surveillance is infrastructure</span> — CV powers systems that watch, sort, and judge — globally.</p>
       <p class="fragment"><span style="color:var(--pink)">Beauty is algorithmic</span> — filters and scores flatten human diversity into a statistical average.</p>
       <p class="fragment"><span style="color:var(--red)">Failure is unevenly distributed</span> — errors cluster along lines of race, gender, and disability.</p>
       <p class="fragment"><span style="color:var(--green)">Artists are pushing back</span> — making the invisible visible, refusing the default.</p>
     </div>
   </div>
 
-  <!-- Conclusion: The Question for You -->
-  <div class="slide" data-notes="Final provocation for photography students. Their work feeds the machine — what responsibility does that create?">
+  <!-- What Can You Do? -->
+  <div class="slide" data-notes="Concrete actions. Don't leave them with only critique — give them agency.">
+    <h2>What Can <span class="green">You</span> Do?</h2>
+    <div class="two-col" style="align-items:stretch; max-width:800px">
+      <div class="card green-border">
+        <h3 style="color:var(--green)">As a Citizen</h3>
+        <ul>
+          <li><strong>Search yourself</strong> — use PimEyes, HaveIBeenTrained to check where your face appears</li>
+          <li><strong>Opt out</strong> — request removal from datasets where possible (GDPR, CCPA)</li>
+          <li><strong>Advocate</strong> — support legislation that requires consent for biometric data</li>
+        </ul>
+      </div>
+      <div class="card fragment" style="border-left-color:var(--accent)">
+        <h3>As a Creative</h3>
+        <ul>
+          <li><strong>Caption with care</strong> — your alt-text and metadata become training data</li>
+          <li><strong>Question the tools</strong> — where did the training data come from?</li>
+          <li><strong>Create counter-narratives</strong> — use your work to make the invisible visible</li>
+          <li><strong>Refuse the default</strong> — whose gaze are you reproducing?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- The Question for You -->
+  <div class="slide" data-notes="Final provocation. Their work feeds the machine — what responsibility does that create?">
     <h2>The Question for <span class="accent">You</span></h2>
     <div style="max-width:650px; margin:0 auto; text-align:center;">
       <p style="font-size:1.4rem; color:var(--text); line-height:1.8; margin-bottom:30px;">
@@ -801,7 +898,10 @@
     </div>
   </div>
 
-  <!-- Workshop -->
+  <!-- ============================================================ -->
+  <!-- WORKSHOP                                                     -->
+  <!-- ============================================================ -->
+
   <div class="slide section-title">
     <h2><span class="green">Workshop</span></h2>
     <div class="divider" style="background:var(--green)"></div>
@@ -812,7 +912,7 @@
     <div style="max-width:600px; margin:0 auto; text-align:center;">
       <div class="card green-border" style="padding:20px; margin-bottom:20px;">
         <ul style="list-style:none; font-size:1.1rem; line-height:2.2;">
-          <li><a href="http://pimeyes.com/" style="color:var(--accent)" target="_blank">pimeyes.com</a> — reverse face search</li>
+          <li><a href="https://pimeyes.com/" style="color:var(--accent)" target="_blank">pimeyes.com</a> — reverse face search</li>
           <li><a href="workshop_cv.html" style="color:var(--accent)" target="_blank">Interactive Demo</a> — how the machine sees your photo</li>
         </ul>
       </div>
@@ -827,7 +927,7 @@
   <!-- Thank You -->
   <div class="slide title-slide">
     <h1>Thank You</h1>
-    <p class="subtitle">Ahnjili ZhuParris</p>
+    <p class="subtitle">Artificial Nouveau</p>
   </div>
 
   <!-- NAV -->
