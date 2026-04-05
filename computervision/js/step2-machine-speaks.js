@@ -1,6 +1,6 @@
 /**
- * step2-machine-speaks.js — Caption comparison: 4 models on the same image
- * Models: ViT-GPT2 (captioning), COCO-SSD (object detection), Florence-2 (vision), Moondream 2 (VLM)
+ * step2-machine-speaks.js — Caption comparison: 5 models on the same image
+ * Models: ViT-GPT2, COCO-SSD, Florence-2, Moondream 2, Gemma 4 E2B
  * Plus: CLIP zero-shot classification
  * Must be loaded as <script type="module">
  */
@@ -28,11 +28,14 @@ const captionVitgpt2 = document.getElementById('caption-vitgpt2');
 const captionCocossd = document.getElementById('caption-cocossd');
 const captionFlorence = document.getElementById('caption-florence');
 const captionMoondream = document.getElementById('caption-moondream');
+const captionGemma4 = document.getElementById('caption-gemma4');
 
 let captioner = null;
 let classifier = null;
 let florenceModel = null;
 let florenceProcessor = null;
+let gemma4Model = null;
+let gemma4Processor = null;
 let moondreamModel = null;
 let moondreamProcessor = null;
 let moondreamTokenizer = null;
@@ -236,6 +239,69 @@ async function runMoondream(blobUrl, element) {
   }
 }
 
+// ── Run Gemma 4 ──
+async function runGemma4(blobUrl, element) {
+  setStatus(element, 'Loading Gemma 4 (large model, may take several minutes)...', 'var(--dim)');
+  try {
+    if (!gemma4Model) {
+      const {
+        Gemma4ForConditionalGeneration,
+        AutoProcessor,
+      } = await import(TRANSFORMERS_URL);
+
+      gemma4Processor = await AutoProcessor.from_pretrained(
+        'onnx-community/gemma-4-E2B-it-ONNX'
+      );
+      gemma4Model = await Gemma4ForConditionalGeneration.from_pretrained(
+        'onnx-community/gemma-4-E2B-it-ONNX', {
+          dtype: 'q4f16',
+          device: 'webgpu',
+          progress_callback: makeProgressCallback('Gemma 4'),
+        }
+      );
+    }
+    setStatus(element, 'Generating caption...', 'var(--dim)');
+
+    const image = await RawImage.fromURL(blobUrl);
+    const messages = [
+      {
+        role: 'user',
+        content: [
+          { type: 'image' },
+          { type: 'text', text: 'Describe this image in one or two sentences.' },
+        ],
+      },
+    ];
+    const prompt = gemma4Processor.apply_chat_template(messages, {
+      enable_thinking: false,
+      add_generation_prompt: true,
+    });
+    const inputs = await gemma4Processor(prompt, image, null, {
+      add_special_tokens: false,
+    });
+    const output = await gemma4Model.generate({
+      ...inputs,
+      max_new_tokens: 100,
+      do_sample: false,
+    });
+    // Decode only the new tokens (skip the prompt)
+    const promptLength = inputs.input_ids.dims[1];
+    const newTokens = output.slice(null, [promptLength, null]);
+    const decoded = gemma4Processor.batch_decode(newTokens, { skip_special_tokens: true });
+    const caption = (decoded[0] || '').trim();
+
+    element.style.color = 'var(--text)';
+    await typeText(element, caption);
+  } catch (err) {
+    console.error('Gemma 4 error:', err);
+    if (err.message && err.message.includes('webgpu')) {
+      setStatus(element, 'WebGPU not supported in this browser. Try Chrome.', 'var(--red)');
+    } else {
+      setStatus(element, 'Error: ' + err.message, 'var(--red)');
+    }
+  }
+}
+
 // ── Image upload — run all models in parallel ──
 fileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
@@ -250,6 +316,7 @@ fileInput.addEventListener('change', async (e) => {
   setStatus(captionCocossd, 'Starting...', 'var(--dim)');
   setStatus(captionFlorence, 'Starting...', 'var(--dim)');
   setStatus(captionMoondream, 'Starting...', 'var(--dim)');
+  setStatus(captionGemma4, 'Starting...', 'var(--dim)');
 
   // Draw to canvas
   const img = await App.loadImage(file);
@@ -261,11 +328,12 @@ fileInput.addEventListener('change', async (e) => {
 
   hideLoading();
 
-  // Run all 4 models in parallel — each handles its own errors
+  // Run all 5 models in parallel — each handles its own errors
   runVitGpt2(currentBlobUrl, captionVitgpt2);
   runCocoSsd(img, captionCocossd);
   runFlorence(currentBlobUrl, captionFlorence);
   runMoondream(currentBlobUrl, captionMoondream);
+  runGemma4(currentBlobUrl, captionGemma4);
 });
 
 // ── Zero-shot classification (CLIP) ──
