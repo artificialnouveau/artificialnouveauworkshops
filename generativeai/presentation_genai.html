@@ -181,15 +181,16 @@
   <!-- Title -->
   <div class="slide title-slide active" data-notes="Welcome everyone. Today we cover Generative AI — what it is, how it works, and why it matters. Press P to open presenter notes.">
     <h1>Introduction to<br><span class="accent">Generative AI</span></h1>
-    <p class="subtitle">Ahnjili ZhuParris</p>
+    <p class="subtitle">Artificial Nouveau</p>
   </div>
 
   <!-- Outline -->
-  <div class="slide" data-notes="Here's the roadmap. We start with what generative AI actually is, then examine it through five characteristics of modern AI empires — drawing on Karen Hao's Empire of AI framework.">
+  <div class="slide" data-notes="Here's the roadmap. We start with what generative AI actually is, then examine it through five characteristics of modern AI empires — drawing on Karen Hao's Empire of AI framework. Each section maps a historical imperial pattern onto today's AI industry.">
     <h2>Outline</h2>
-    <div class="two-col" style="font-size:1.4rem; max-width:800px; gap:24px">
+    <div class="two-col" style="font-size:1.4rem; max-width:850px; gap:24px">
       <ul>
         <li>What is Generative AI</li>
+        <li style="color:var(--dim); font-size:1.1rem; padding-top:12px">The Empire of AI</li>
         <li style="color:var(--red)">1. Resource Appropriation</li>
         <li style="color:var(--green)">2. Scale at All Costs</li>
         <li style="color:var(--orange)">3. Labor Exploitation</li>
@@ -197,7 +198,7 @@
       <ul>
         <li style="color:var(--pink)">4. The Civilizing Mission</li>
         <li style="color:var(--accent)">5. Competitive Justification</li>
-        <li>Conclusion</li>
+        <li style="padding-top:12px">Conclusion</li>
       </ul>
     </div>
   </div>
@@ -217,32 +218,49 @@
     </div>
   </div>
 
-  <div class="slide" data-notes="This framework comes from Karen Hao's book Empire of AI (2025). Hao spent years reporting on OpenAI from the inside and argues that AI companies aren't just tech companies — they're modern empires. The key insight: the logic driving AI expansion isn't new. It's colonial logic — the same patterns used by the East India Company, the Belgian Congo, and the British Empire. Hao identifies characteristics that map directly onto how empires have always operated.">
+  <div class="slide" data-notes="Before we dive into the details, let's talk about empires. Historically, an empire is a political system where a central power extends control over distant peoples and territories — extracting resources, exploiting labour, and imposing its culture as universal. Think the British Empire, the East India Company, the Belgian Congo. Karen Hao spent years reporting on OpenAI from the inside, and her 2025 book 'Empire of AI' argues that the same structural logic — not just metaphorically, but operationally — drives today's AI industry. I'm using her framework because it makes visible the patterns that tech marketing obscures.">
+    <h2>Why <span class="accent">"Empire"</span>?</h2>
+    <div style="display:flex; gap:32px; align-items:start; max-width:1000px; width:100%">
+      <img src="../hku2025_genai_deepfakes/img/empire_of_ai_cover.jpg" style="width:200px; border-radius:8px; flex-shrink:0; box-shadow:0 4px 20px rgba(0,0,0,0.4)">
+      <div style="text-align:left">
+        <div class="card" style="margin-bottom:16px">
+          <h3>What is an Empire?</h3>
+          <p style="color:var(--text)">A system where a <strong>central power</strong> extends control over distant peoples and territories — <em>extracting resources</em>, <em>exploiting labour</em>, and <em>imposing its culture</em> as universal.</p>
+        </div>
+        <div class="card fragment" style="border-left-color:var(--pink); margin-bottom:16px">
+          <h3 style="color:var(--pink)">Karen Hao — <em>Empire of AI</em> (2025)</h3>
+          <p>After years reporting on OpenAI from the inside, Hao argues the logic driving AI expansion isn't new — it's <strong>colonial logic</strong>, the same patterns used by the East India Company, the Belgian Congo, and the British Empire.</p>
+        </div>
+        <div class="card fragment" style="border-left-color:var(--yellow)">
+          <p style="color:var(--text)">She identifies <strong class="yellow">five characteristics</strong> that every empire shares — and that map directly onto how today's AI industry operates.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Here are the five characteristics of an empire, applied to AI. Each one will structure the rest of this presentation. We'll look at how AI companies appropriate resources, scale at all costs, exploit labour, impose a civilizing mission, and justify it all through competition.">
     <h2>The Empire of AI</h2>
-    <p style="color:var(--dim); margin-bottom:20px; font-size:1.2rem">Five characteristics of modern AI empires</p>
-    <div style="display:flex; gap:24px; align-items:start; max-width:1100px; width:100%">
-      <img src="../hku2025_genai_deepfakes/img/empire_of_ai_cover.jpg" style="width:180px; border-radius:8px; flex-shrink:0; box-shadow:0 4px 20px rgba(0,0,0,0.4)">
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; flex:1">
-        <div class="card red-border" style="padding:14px 18px">
-          <h3 style="color:var(--red); font-size:1.1rem">1. Resource Appropriation</h3>
-          <p style="font-size:1rem">Laying claim to data, creative work, and natural resources</p>
-        </div>
-        <div class="card orange-border fragment" style="padding:14px 18px">
-          <h3 style="color:var(--orange); font-size:1.1rem">2. Labor Exploitation</h3>
-          <p style="font-size:1rem">$2/hour content moderators while Silicon Valley earns billions</p>
-        </div>
-        <div class="card yellow-border fragment" style="padding:14px 18px">
-          <h3 style="color:var(--yellow); font-size:1.1rem">3. Competitive Justification</h3>
-          <p style="font-size:1rem">"We must build AGI before China does" — good empire vs evil empire</p>
-        </div>
-        <div class="card pink-border fragment" style="padding:14px 18px">
-          <h3 style="color:var(--pink); font-size:1.1rem">4. The Civilizing Mission</h3>
-          <p style="font-size:1rem">"Democratizing AI" while extracting and homogenizing</p>
-        </div>
-        <div class="card green-border fragment" style="padding:14px 18px; grid-column: span 2">
-          <h3 style="color:var(--green); font-size:1.1rem">5. Scale at All Costs</h3>
-          <p style="font-size:1rem">Imperial expansion demanding more land, water, and energy for data centres</p>
-        </div>
+    <p style="color:var(--dim); margin-bottom:20px; font-size:1.2rem">Five characteristics that make an empire</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:900px; width:100%">
+      <div class="card red-border" style="padding:14px 18px">
+        <h3 style="color:var(--red); font-size:1.1rem">1. Resource Appropriation</h3>
+        <p style="font-size:1rem">Laying claim to data, creative work, and natural resources</p>
+      </div>
+      <div class="card green-border fragment" style="padding:14px 18px">
+        <h3 style="color:var(--green); font-size:1.1rem">2. Scale at All Costs</h3>
+        <p style="font-size:1rem">Imperial expansion demanding more land, water, and energy for data centres</p>
+      </div>
+      <div class="card orange-border fragment" style="padding:14px 18px">
+        <h3 style="color:var(--orange); font-size:1.1rem">3. Labor Exploitation</h3>
+        <p style="font-size:1rem">$2/hour content moderators while Silicon Valley earns billions</p>
+      </div>
+      <div class="card pink-border fragment" style="padding:14px 18px">
+        <h3 style="color:var(--pink); font-size:1.1rem">4. The Civilizing Mission</h3>
+        <p style="font-size:1rem">"Democratizing AI" while extracting and homogenizing</p>
+      </div>
+      <div class="card fragment" style="padding:14px 18px; grid-column: span 2; border-left-color:var(--accent)">
+        <h3 style="color:var(--accent); font-size:1.1rem">5. Competitive Justification</h3>
+        <p style="font-size:1rem">"We must build AGI before China does" — good empire vs evil empire</p>
       </div>
     </div>
   </div>
@@ -895,9 +913,41 @@
     <h1>Questions<span class="accent">?</span></h1>
   </div>
 
+  <div class="slide" data-notes="Now it's your turn. The workshop runs in your browser — no accounts, no data saved. You'll experiment with six generative AI tools hands-on: text-to-image, image-to-image, image-to-text, PhotoMaker, image-to-3D, and text-to-3D. All models are free and open-source.">
+    <h2>Workshop</h2>
+    <p style="color:var(--dim); margin-bottom:20px; font-size:1.2rem">Explore generative AI models directly in your browser</p>
+    <div class="three-col" style="max-width:950px; gap:12px">
+      <div class="card red-border" style="padding:14px 18px">
+        <h3 style="color:var(--red); font-size:1.1rem">Text to Image</h3>
+        <p style="font-size:1rem">Type a prompt, generate an image with FLUX</p>
+      </div>
+      <div class="card green-border" style="padding:14px 18px">
+        <h3 style="color:var(--green); font-size:1.1rem">Image to Image</h3>
+        <p style="font-size:1rem">Upload a photo and transform its style</p>
+      </div>
+      <div class="card yellow-border" style="padding:14px 18px">
+        <h3 style="color:var(--yellow); font-size:1.1rem">Image to Text</h3>
+        <p style="font-size:1rem">Let AI describe what it sees in an image</p>
+      </div>
+      <div class="card pink-border" style="padding:14px 18px">
+        <h3 style="color:var(--pink); font-size:1.1rem">PhotoMaker</h3>
+        <p style="font-size:1rem">Generate new images of a person from a reference photo</p>
+      </div>
+      <div class="card orange-border" style="padding:14px 18px">
+        <h3 style="color:var(--orange); font-size:1.1rem">Image to 3D</h3>
+        <p style="font-size:1rem">Turn a 2D image into a 3D model</p>
+      </div>
+      <div class="card" style="padding:14px 18px">
+        <h3 style="color:var(--accent); font-size:1.1rem">Text to 3D</h3>
+        <p style="font-size:1rem">Describe an object and generate it in 3D</p>
+      </div>
+    </div>
+    <p style="color:var(--dim); font-size:0.95rem; margin-top:16px; font-family:var(--mono)">No accounts needed. Your data is not saved. All models are free &amp; open-source.</p>
+  </div>
+
   <div class="slide title-slide" data-notes="Thank you everyone! If you have more questions, feel free to reach out. Remember: these tools are powerful — use them with intention and respect for others.">
     <h1>Thank You<span class="pink">!</span></h1>
-    <p class="subtitle">Ahnjili ZhuParris</p>
+    <p class="subtitle">Artificial Nouveau</p>
   </div>
 
   <!-- ============================================ -->
