@@ -5,7 +5,11 @@
  * Must be loaded as <script type="module">
  */
 
-import { pipeline, RawImage } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+
+// We import pipeline normally; Florence-2 and Moondream use dynamic imports
+// because they need specific model classes not supported by pipeline()
+const { pipeline, RawImage } = await import(TRANSFORMERS_URL);
 
 const fileInput = document.getElementById('file-input-2');
 const uploadArea = document.getElementById('upload-area-2');
@@ -27,8 +31,11 @@ const captionMoondream = document.getElementById('caption-moondream');
 
 let captioner = null;
 let classifier = null;
-let florencePipeline = null;
-let moondreamPipeline = null;
+let florenceModel = null;
+let florenceProcessor = null;
+let moondreamModel = null;
+let moondreamProcessor = null;
+let moondreamTokenizer = null;
 let currentBlobUrl = null;
 
 // ── Loading bar ──
@@ -107,7 +114,6 @@ async function runVitGpt2(blobUrl, element) {
 async function runCocoSsd(imgElement, element) {
   setStatus(element, 'Loading COCO-SSD...', 'var(--dim)');
   try {
-    // COCO-SSD is loaded globally via TF.js script tag
     if (typeof window.cocoSsd === 'undefined') {
       setStatus(element, 'COCO-SSD not available (script not loaded)', 'var(--red)');
       return;
@@ -132,16 +138,37 @@ async function runCocoSsd(imgElement, element) {
 async function runFlorence(blobUrl, element) {
   setStatus(element, 'Loading Florence-2 (this may take a minute)...', 'var(--dim)');
   try {
-    if (!florencePipeline) {
-      florencePipeline = await pipeline('image-to-text', 'onnx-community/Florence-2-base-ft', {
-        progress_callback: makeProgressCallback('Florence-2'),
-      });
+    if (!florenceModel) {
+      const {
+        Florence2ForConditionalGeneration,
+        AutoProcessor,
+      } = await import(TRANSFORMERS_URL);
+
+      florenceModel = await Florence2ForConditionalGeneration.from_pretrained(
+        'onnx-community/Florence-2-base-ft', {
+          dtype: 'fp32',
+          progress_callback: makeProgressCallback('Florence-2'),
+        }
+      );
+      florenceProcessor = await AutoProcessor.from_pretrained(
+        'onnx-community/Florence-2-base-ft'
+      );
     }
     setStatus(element, 'Generating caption...', 'var(--dim)');
-    const result = await florencePipeline(blobUrl);
-    let caption = result[0].generated_text || result[0].text || JSON.stringify(result);
-    // Clean up any task tokens
-    caption = caption.replace(/<[^>]+>/g, '').trim();
+
+    const image = await RawImage.fromURL(blobUrl);
+    const prompt = '<MORE_DETAILED_CAPTION>';
+    const inputs = await florenceProcessor(image, prompt);
+    const generatedIds = await florenceModel.generate({
+      ...inputs,
+      max_new_tokens: 100,
+    });
+    const generatedText = florenceProcessor.batch_decode(generatedIds, { skip_special_tokens: false })[0];
+
+    // Florence wraps output in task tokens — extract the caption
+    const match = generatedText.match(/<MORE_DETAILED_CAPTION>(.*?)(<\/s>|$)/s);
+    const caption = match ? match[1].trim() : generatedText.replace(/<[^>]+>/g, '').trim();
+
     element.style.color = 'var(--text)';
     await typeText(element, caption);
   } catch (err) {
@@ -154,20 +181,58 @@ async function runFlorence(blobUrl, element) {
 async function runMoondream(blobUrl, element) {
   setStatus(element, 'Loading Moondream 2 (this may take a minute)...', 'var(--dim)');
   try {
-    if (!moondreamPipeline) {
-      moondreamPipeline = await pipeline('image-to-text', 'Xenova/moondream2', {
-        progress_callback: makeProgressCallback('Moondream 2'),
-      });
+    if (!moondreamModel) {
+      const {
+        Moondream1ForConditionalGeneration,
+        AutoProcessor,
+        AutoTokenizer,
+      } = await import(TRANSFORMERS_URL);
+
+      moondreamTokenizer = await AutoTokenizer.from_pretrained('Xenova/moondream2');
+      moondreamProcessor = await AutoProcessor.from_pretrained('Xenova/moondream2');
+      moondreamModel = await Moondream1ForConditionalGeneration.from_pretrained(
+        'Xenova/moondream2', {
+          dtype: {
+            embed_tokens: 'fp16',
+            vision_encoder: 'q8',
+            decoder_model_merged: 'q4',
+          },
+          device: 'webgpu',
+          progress_callback: makeProgressCallback('Moondream 2'),
+        }
+      );
     }
     setStatus(element, 'Generating caption...', 'var(--dim)');
-    const result = await moondreamPipeline(blobUrl);
-    let caption = result[0].generated_text || result[0].text || JSON.stringify(result);
+
+    const prompt = 'Describe this image.';
+    const text = `<image>\n\nQuestion: ${prompt}\n\nAnswer:`;
+    const textInputs = moondreamTokenizer(text);
+    const image = await RawImage.fromURL(blobUrl);
+    const visionInputs = await moondreamProcessor(image);
+
+    const output = await moondreamModel.generate({
+      ...textInputs,
+      ...visionInputs,
+      do_sample: false,
+      max_new_tokens: 100,
+    });
+    const decoded = moondreamTokenizer.batch_decode(output, { skip_special_tokens: true });
+
+    // Extract answer after "Answer:" if present
+    let caption = decoded[0] || '';
+    const answerIdx = caption.lastIndexOf('Answer:');
+    if (answerIdx !== -1) caption = caption.substring(answerIdx + 7).trim();
+
     element.style.color = 'var(--text)';
     await typeText(element, caption);
   } catch (err) {
     console.error('Moondream 2 error:', err);
-    // If pipeline approach fails, try with specific classes as fallback
-    setStatus(element, 'Error: ' + err.message, 'var(--red)');
+    // If WebGPU isn't available, show a specific message
+    if (err.message && err.message.includes('webgpu')) {
+      setStatus(element, 'WebGPU not supported in this browser. Try Chrome.', 'var(--red)');
+    } else {
+      setStatus(element, 'Error: ' + err.message, 'var(--red)');
+    }
   }
 }
 
