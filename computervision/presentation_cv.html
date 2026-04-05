@@ -323,20 +323,14 @@
     <div class="divider" style="background:var(--yellow)"></div>
   </div>
 
-  <!-- When Machines Name Things -->
-  <div class="slide" data-notes="Key point: models describe, not just detect. Their vocabulary comes from internet captions — biased, Western-centric, gendered. The lab-woman example is real.">
-    <h2>When Machines <span class="yellow">Name</span> Things</h2>
-    <div class="two-col" style="align-items:stretch">
-      <div class="card yellow-border">
-        <h3 style="color:var(--yellow)">But whose language?</h3>
-        <p style="margin-bottom:12px">Modern CV models don't just <em>detect</em> — they <strong>describe</strong>. Models like CLIP and ViT-GPT2 generate captions and classify images using language.</p>
-        <p>Their vocabulary is inherited from <strong>millions of image-caption pairs</strong> scraped from the internet. The biases, assumptions, and blind spots of those captions become the model's worldview.</p>
-      </div>
-      <div class="card fragment">
-        <h3>Example</h3>
-        <p style="margin-bottom:12px">An image captioning model describes a photo of a woman in a lab:</p>
-        <p style="font-family:var(--mono); color:var(--pink); font-size:1.1rem">"A woman posing for a picture"</p>
-        <p style="margin-top:12px; color:var(--dim)">The machine saw <em>woman</em> and <em>posing</em>. It missed <em>scientist</em>, <em>researcher</em>, <em>laboratory</em>.</p>
+  <!-- Whose Language? -->
+  <div class="slide" data-notes="But whose language? Modern CV models don't just detect — they describe. Models like CLIP and ViT-GPT2 generate captions and classify images using language. Their vocabulary is inherited from millions of image-caption pairs scraped from the internet. The biases, assumptions, and blind spots of those captions become the model's worldview. Example: An image captioning model describes a photo of a woman in a lab: 'A woman posing for a picture'. The machine saw woman and posing. It missed scientist, researcher, laboratory.">
+    <h2>Whose <span class="yellow">Language?</span></h2>
+    <div style="display:flex; align-items:center; justify-content:center; gap:40px; max-width:800px; margin:0 auto;">
+      <img src="img/woman_scientist.jpg" style="width:280px; border-radius:8px;">
+      <div>
+        <p style="font-family:var(--mono); color:var(--pink); font-size:1.4rem; margin-bottom:20px;">"A woman posing for a picture"</p>
+        <p style="color:var(--dim); font-size:1.05rem; line-height:1.7;">Their vocabulary is inherited from <strong style="color:var(--text)">millions of image-caption pairs</strong> scraped from the internet. The biases, assumptions, and blind spots of those captions become the model's worldview.</p>
       </div>
     </div>
   </div>
@@ -358,7 +352,6 @@
             <li>What is made <strong class="red">invisible</strong> by the taxonomy?</li>
           </ul>
         </div>
-        <p style="color:var(--dim); font-size:0.95rem; line-height:1.7">Every label is a <strong style="color:var(--text)">simplification</strong>. When a model classifies your face as "happy" or "threatening," it is mapping your pixels onto a category that someone, somewhere, decided was meaningful.</p>
       </div>
       <img src="img/imagenet_labels.png" class="fragment">
     </div>
