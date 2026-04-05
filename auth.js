@@ -8,7 +8,7 @@
  */
 
 (function () {
-  const PASSWORD = 'artificialnouveau2026';
+  const PASSWORD = 'aiaiai!!!';
 
   // Skip on localhost for development
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
