@@ -69,6 +69,36 @@ function makeProgressCallback(label) {
   };
 }
 
+// ── Per-card progress bar ──
+function showCardProgress(progressEl, percent) {
+  if (!progressEl) return;
+  if (!progressEl.querySelector('.fill')) {
+    progressEl.innerHTML = '<div class="fill"></div>';
+  }
+  progressEl.classList.add('active');
+  progressEl.querySelector('.fill').style.width = percent + '%';
+}
+
+function hideCardProgress(progressEl) {
+  if (!progressEl) return;
+  progressEl.classList.remove('active');
+}
+
+function makeCardProgressCallback(label, progressEl, statusEl) {
+  return (progress) => {
+    if (progress.status === 'progress' && progress.progress != null) {
+      showCardProgress(progressEl, progress.progress);
+      const file = progress.file ? progress.file.split('/').pop() : '';
+      setStatus(statusEl, `Downloading ${file}... ${Math.round(progress.progress)}%`, 'var(--dim)');
+    } else if (progress.status === 'done') {
+      showCardProgress(progressEl, 100);
+    } else if (progress.status === 'initiate') {
+      showCardProgress(progressEl, 0);
+      setStatus(statusEl, `Downloading ${label}...`, 'var(--dim)');
+    }
+  };
+}
+
 // ── Typing animation ──
 function typeText(element, text, speed = 25) {
   element.textContent = '';
@@ -139,7 +169,8 @@ async function runCocoSsd(imgElement, element) {
 
 // ── Run Florence-2 ──
 async function runFlorence(blobUrl, element) {
-  setStatus(element, 'Loading Florence-2 (this may take a minute)...', 'var(--dim)');
+  const progressEl = document.getElementById('progress-florence');
+  setStatus(element, 'Loading Florence-2...', 'var(--dim)');
   try {
     if (!florenceModel) {
       const {
@@ -150,12 +181,13 @@ async function runFlorence(blobUrl, element) {
       florenceModel = await Florence2ForConditionalGeneration.from_pretrained(
         'onnx-community/Florence-2-base-ft', {
           dtype: 'fp32',
-          progress_callback: makeProgressCallback('Florence-2'),
+          progress_callback: makeCardProgressCallback('Florence-2', progressEl, element),
         }
       );
       florenceProcessor = await AutoProcessor.from_pretrained(
         'onnx-community/Florence-2-base-ft'
       );
+      hideCardProgress(progressEl);
     }
     setStatus(element, 'Generating caption...', 'var(--dim)');
 
@@ -182,7 +214,8 @@ async function runFlorence(blobUrl, element) {
 
 // ── Run Moondream 2 ──
 async function runMoondream(blobUrl, element) {
-  setStatus(element, 'Loading Moondream 2 (this may take a minute)...', 'var(--dim)');
+  const progressEl = document.getElementById('progress-moondream');
+  setStatus(element, 'Loading Moondream 2...', 'var(--dim)');
   try {
     if (!moondreamModel) {
       const {
@@ -201,17 +234,21 @@ async function runMoondream(blobUrl, element) {
             decoder_model_merged: 'q4',
           },
           device: 'webgpu',
-          progress_callback: makeProgressCallback('Moondream 2'),
+          progress_callback: makeCardProgressCallback('Moondream 2', progressEl, element),
         }
       );
+      hideCardProgress(progressEl);
     }
     setStatus(element, 'Generating caption...', 'var(--dim)');
 
     const prompt = 'Describe this image.';
     const text = `<image>\n\nQuestion: ${prompt}\n\nAnswer:`;
     const textInputs = moondreamTokenizer(text);
+
+    // Resize image to 378x378 (Moondream's expected input size)
     const image = await RawImage.fromURL(blobUrl);
-    const visionInputs = await moondreamProcessor(image);
+    const resized = await image.resize(378, 378);
+    const visionInputs = await moondreamProcessor(resized);
 
     const output = await moondreamModel.generate({
       ...textInputs,
@@ -230,7 +267,7 @@ async function runMoondream(blobUrl, element) {
     await typeText(element, caption);
   } catch (err) {
     console.error('Moondream 2 error:', err);
-    // If WebGPU isn't available, show a specific message
+    hideCardProgress(progressEl);
     if (err.message && err.message.includes('webgpu')) {
       setStatus(element, 'WebGPU not supported in this browser. Try Chrome.', 'var(--red)');
     } else {
@@ -241,6 +278,7 @@ async function runMoondream(blobUrl, element) {
 
 // ── Run Gemma 4 ──
 async function runGemma4(blobUrl, element) {
+  const progressEl = document.getElementById('progress-gemma4');
   setStatus(element, 'Loading Gemma 4 (large model, may take several minutes)...', 'var(--dim)');
   try {
     if (!gemma4Model) {
@@ -256,9 +294,10 @@ async function runGemma4(blobUrl, element) {
         'onnx-community/gemma-4-E2B-it-ONNX', {
           dtype: 'q4f16',
           device: 'webgpu',
-          progress_callback: makeProgressCallback('Gemma 4'),
+          progress_callback: makeCardProgressCallback('Gemma 4', progressEl, element),
         }
       );
+      hideCardProgress(progressEl);
     }
     setStatus(element, 'Generating caption...', 'var(--dim)');
 
@@ -294,6 +333,7 @@ async function runGemma4(blobUrl, element) {
     await typeText(element, caption);
   } catch (err) {
     console.error('Gemma 4 error:', err);
+    hideCardProgress(progressEl);
     if (err.message && err.message.includes('webgpu')) {
       setStatus(element, 'WebGPU not supported in this browser. Try Chrome.', 'var(--red)');
     } else {

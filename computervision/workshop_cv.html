@@ -234,27 +234,32 @@
       <div id="caption-comparison" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
         <!-- ViT-GPT2 -->
         <div class="card" style="padding:16px;">
-          <h3 style="font-size:0.85rem; margin-bottom:8px;">ViT-GPT2 <span style="color:var(--dim); font-weight:400;">— Caption Generator</span></h3>
+          <h3 style="font-size:0.85rem; margin-bottom:4px;">ViT-GPT2 <span style="color:var(--dim); font-weight:400;">— Caption Generator</span></h3>
+          <div class="model-progress" id="progress-vitgpt2"></div>
           <div id="caption-vitgpt2" class="mono" style="font-size:0.95rem; min-height:40px; color:var(--dim);">Waiting for image...</div>
         </div>
         <!-- COCO-SSD -->
         <div class="card" style="padding:16px; border-left-color:var(--green);">
-          <h3 style="font-size:0.85rem; color:var(--green); margin-bottom:8px;">COCO-SSD <span style="color:var(--dim); font-weight:400;">— Object Detector (80 classes)</span></h3>
+          <h3 style="font-size:0.85rem; color:var(--green); margin-bottom:4px;">COCO-SSD <span style="color:var(--dim); font-weight:400;">— Object Detector (80 classes)</span></h3>
+          <div class="model-progress" id="progress-cocossd"></div>
           <div id="caption-cocossd" class="mono" style="font-size:0.95rem; min-height:40px; color:var(--dim);">Waiting for image...</div>
         </div>
         <!-- Florence-2 -->
         <div class="card" style="padding:16px; border-left-color:var(--yellow);">
-          <h3 style="font-size:0.85rem; color:var(--yellow); margin-bottom:8px;">Florence-2 <span style="color:var(--dim); font-weight:400;">— Microsoft Vision Model</span></h3>
+          <h3 style="font-size:0.85rem; color:var(--yellow); margin-bottom:4px;">Florence-2 <span style="color:var(--dim); font-weight:400;">— Microsoft Vision Model</span></h3>
+          <div class="model-progress" id="progress-florence"></div>
           <div id="caption-florence" class="mono" style="font-size:0.95rem; min-height:40px; color:var(--dim);">Waiting for image...</div>
         </div>
         <!-- Moondream 2 -->
         <div class="card" style="padding:16px; border-left-color:var(--pink);">
-          <h3 style="font-size:0.85rem; color:var(--pink); margin-bottom:8px;">Moondream 2 <span style="color:var(--dim); font-weight:400;">— Vision-Language Model</span></h3>
+          <h3 style="font-size:0.85rem; color:var(--pink); margin-bottom:4px;">Moondream 2 <span style="color:var(--dim); font-weight:400;">— Vision-Language Model (WebGPU)</span></h3>
+          <div class="model-progress" id="progress-moondream"></div>
           <div id="caption-moondream" class="mono" style="font-size:0.95rem; min-height:40px; color:var(--dim);">Waiting for image...</div>
         </div>
         <!-- Gemma 4 -->
         <div class="card" style="padding:16px; border-left-color:var(--accent);">
-          <h3 style="font-size:0.85rem; color:var(--accent); margin-bottom:8px;">Gemma 4 <span style="color:var(--dim); font-weight:400;">— Google Multimodal (WebGPU)</span></h3>
+          <h3 style="font-size:0.85rem; color:var(--accent); margin-bottom:4px;">Gemma 4 <span style="color:var(--dim); font-weight:400;">— Google Multimodal (WebGPU)</span></h3>
+          <div class="model-progress" id="progress-gemma4"></div>
           <div id="caption-gemma4" class="mono" style="font-size:0.95rem; min-height:40px; color:var(--dim);">Waiting for image...</div>
         </div>
       </div>

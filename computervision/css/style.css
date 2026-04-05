@@ -421,6 +421,26 @@ canvas {
   color: var(--text-dim);
 }
 
+/* Per-model progress bars in caption comparison cards */
+.model-progress {
+  height: 4px;
+  background: #222;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  display: none;
+}
+.model-progress.active {
+  display: block;
+}
+.model-progress .fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
 #caption-output {
   font-size: 1.15rem;
   line-height: 1.7;
