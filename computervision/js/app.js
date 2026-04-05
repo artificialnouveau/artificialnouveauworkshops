@@ -63,8 +63,7 @@ const App = {
   setupNav() {
     document.querySelectorAll('.step-tab').forEach(tab => {
       tab.addEventListener('click', () => {
-        const step = parseInt(tab.dataset.step);
-        this.goToStep(step);
+        this.goToStep(tab.dataset.step);
       });
     });
   },

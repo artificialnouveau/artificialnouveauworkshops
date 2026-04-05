@@ -39,7 +39,8 @@
 
   <!-- Step navigation -->
   <nav id="step-nav">
-    <button class="step-tab active" data-step="1">1. Pixels</button>
+    <button class="step-tab active" data-step="intro">Intro</button>
+    <button class="step-tab" data-step="1">1. Pixels</button>
     <button class="step-tab" data-step="2">2. Speaks</button>
     <button class="step-tab" data-step="3">3. Surveillance</button>
     <button class="step-tab" data-step="4">4. Break It</button>
@@ -48,8 +49,51 @@
     <button class="step-tab" data-step="7">7. Google Vision</button>
   </nav>
 
+  <!-- Intro -->
+  <section id="step-intro" class="step active">
+    <div class="step-intro">
+      <h2>Welcome</h2>
+      <p>This interactive workshop lets you experience computer vision from the inside. Upload your own photos and watch as different AI models analyse, describe, detect, and classify what they "see." Each step reveals a different layer of how machines interpret images — and what they get wrong.</p>
+      <p style="color:var(--yellow); margin-top:12px;"><strong>Best experienced in Chrome</strong> — some models use WebGPU for in-browser AI, which is only fully supported in Chrome.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:800px; margin:24px auto;">
+      <div class="card" style="padding:16px;">
+        <h3 style="color:var(--accent)">1. Pixels</h3>
+        <p style="color:var(--text-dim)">See your photo as the machine does — a grid of numbers. Explore RGB channels, edge detection, and classification heatmaps.</p>
+      </div>
+      <div class="card" style="padding:16px; border-left-color:var(--yellow);">
+        <h3 style="color:var(--yellow)">2. The Machine Speaks</h3>
+        <p style="color:var(--text-dim)">Four different AI models caption the same image. Compare how ViT-GPT2, COCO-SSD, Florence-2, and Moondream 2 each describe your photo differently.</p>
+      </div>
+      <div class="card" style="padding:16px; border-left-color:var(--red);">
+        <h3 style="color:var(--red)">3. Who Is Watching?</h3>
+        <p style="color:var(--text-dim)">Turn on your webcam and toggle surveillance layers: face detection, demographics, pose, objects, and NSFW scanning — all running at once.</p>
+      </div>
+      <div class="card" style="padding:16px; border-left-color:var(--pink);">
+        <h3 style="color:var(--pink)">4. Break It</h3>
+        <p style="color:var(--text-dim)">Upload a slightly altered photo and watch the AI change its mind. How fragile is machine confidence?</p>
+      </div>
+      <div class="card" style="padding:16px; border-left-color:var(--pink);">
+        <h3 style="color:var(--pink)">5. Mirror</h3>
+        <p style="color:var(--text-dim)">See what beauty filters actually do — 468 facial landmarks mapped and transformed in real time.</p>
+      </div>
+      <div class="card" style="padding:16px;">
+        <h3 style="color:var(--accent)">6. Clone</h3>
+        <p style="color:var(--text-dim)">Upload two faces and measure how similar the machine thinks they are. Explore how facial recognition computes identity.</p>
+      </div>
+      <div class="card" style="padding:16px; border-left-color:var(--green);">
+        <h3 style="color:var(--green)">7. Google Vision</h3>
+        <p style="color:var(--text-dim)">Compare your browser's AI against Google's commercial Vision API — same photo, different machines, different answers.</p>
+      </div>
+      <div class="card" style="padding:16px; border-left-color:var(--dim); text-align:center; display:flex; align-items:center; justify-content:center;">
+        <p style="color:var(--text-dim)">Everything runs <strong style="color:var(--text)">in your browser</strong>. No images are uploaded anywhere. Your data stays on your device.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- Step 1: What the Machine Sees -->
-  <section id="step-1" class="step active">
+  <section id="step-1" class="step">
     <div class="step-intro">
       <h2>What the Machine Sees</h2>
       <p>When you look at a photograph, you see a face, a landscape, a moment. A machine sees none of that. It sees a grid of numbers — millions of tiny colored squares called <strong>pixels</strong>, each defined by three values: Red, Green, and Blue (RGB).</p>
