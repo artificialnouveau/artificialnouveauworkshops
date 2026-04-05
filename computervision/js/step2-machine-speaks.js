@@ -1,16 +1,23 @@
 /**
- * step2-machine-speaks.js — Image captioning + zero-shot classification via Transformers.js
- * Models: Xenova/vit-gpt2-image-captioning (captioning), Xenova/clip-vit-base-patch32 (zero-shot)
+ * step2-machine-speaks.js — Caption comparison: 4 models on the same image
+ * Models: ViT-GPT2 (captioning), COCO-SSD (object detection), Florence-2 (vision), Moondream 2 (VLM)
+ * Plus: CLIP zero-shot classification
  * Must be loaded as <script type="module">
  */
 
-import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+import {
+  pipeline,
+  Florence2ForConditionalGeneration,
+  AutoProcessor,
+  AutoTokenizer,
+  Moondream1ForConditionalGeneration,
+  RawImage,
+} from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
 
 const fileInput = document.getElementById('file-input-2');
 const uploadArea = document.getElementById('upload-area-2');
 const results = document.getElementById('step2-results');
 const canvas = document.getElementById('canvas-speaks');
-const captionOutput = document.getElementById('caption-output');
 const zeroshotLabels = document.getElementById('zeroshot-labels');
 const zeroshotRunBtn = document.getElementById('zeroshot-run');
 const zeroshotResults = document.getElementById('zeroshot-results');
@@ -19,8 +26,19 @@ const loadingFill = document.getElementById('speaks-loading-fill');
 const loadingPercent = document.getElementById('speaks-loading-percent');
 const loadingSteps = document.getElementById('speaks-loading-steps');
 
+// Caption output elements
+const captionVitgpt2 = document.getElementById('caption-vitgpt2');
+const captionCocossd = document.getElementById('caption-cocossd');
+const captionFlorence = document.getElementById('caption-florence');
+const captionMoondream = document.getElementById('caption-moondream');
+
 let captioner = null;
 let classifier = null;
+let florenceModel = null;
+let florenceProcessor = null;
+let moondreamModel = null;
+let moondreamProcessor = null;
+let moondreamTokenizer = null;
 let currentBlobUrl = null;
 
 // ── Loading bar ──
@@ -38,7 +56,6 @@ function hideLoading() {
   setTimeout(() => { loadingBar.classList.remove('visible'); }, 600);
 }
 
-// ── Progress callback for model downloads ──
 function makeProgressCallback(label) {
   return (progress) => {
     if (progress.status === 'progress' && progress.progress != null) {
@@ -50,25 +67,6 @@ function makeProgressCallback(label) {
       showLoading(`${label}: downloading...`, 0);
     }
   };
-}
-
-// ── Lazy-load models ──
-async function ensureCaptioner() {
-  if (captioner) return captioner;
-  showLoading('Loading captioning model...', 0);
-  captioner = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning', {
-    progress_callback: makeProgressCallback('Captioning model'),
-  });
-  return captioner;
-}
-
-async function ensureClassifier() {
-  if (classifier) return classifier;
-  showLoading('Loading classification model...', 0);
-  classifier = await pipeline('zero-shot-image-classification', 'Xenova/clip-vit-base-patch32', {
-    progress_callback: makeProgressCallback('CLIP model'),
-  });
-  return classifier;
 }
 
 // ── Typing animation ──
@@ -89,15 +87,168 @@ function typeText(element, text, speed = 30) {
   });
 }
 
-// ── Image upload ──
+// ── Lazy-load models ──
+async function ensureCaptioner() {
+  if (captioner) return captioner;
+  showLoading('Loading ViT-GPT2...', 0);
+  captioner = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning', {
+    progress_callback: makeProgressCallback('ViT-GPT2'),
+  });
+  return captioner;
+}
+
+async function ensureClassifier() {
+  if (classifier) return classifier;
+  showLoading('Loading CLIP...', 0);
+  classifier = await pipeline('zero-shot-image-classification', 'Xenova/clip-vit-base-patch32', {
+    progress_callback: makeProgressCallback('CLIP'),
+  });
+  return classifier;
+}
+
+async function ensureFlorence() {
+  if (florenceModel) return { model: florenceModel, processor: florenceProcessor };
+  showLoading('Loading Florence-2...', 0);
+  florenceModel = await Florence2ForConditionalGeneration.from_pretrained(
+    'onnx-community/Florence-2-base-ft', {
+      dtype: 'fp32',
+      progress_callback: makeProgressCallback('Florence-2'),
+    }
+  );
+  florenceProcessor = await AutoProcessor.from_pretrained('onnx-community/Florence-2-base-ft');
+  return { model: florenceModel, processor: florenceProcessor };
+}
+
+async function ensureMoondream() {
+  if (moondreamModel) return { model: moondreamModel, processor: moondreamProcessor, tokenizer: moondreamTokenizer };
+  showLoading('Loading Moondream 2...', 0);
+  moondreamModel = await Moondream1ForConditionalGeneration.from_pretrained(
+    'Xenova/moondream2', {
+      dtype: {
+        embed_tokens: 'fp16',
+        vision_encoder: 'q8',
+        decoder_model_merged: 'q4',
+      },
+      device: 'webgpu',
+      progress_callback: makeProgressCallback('Moondream 2'),
+    }
+  );
+  moondreamProcessor = await AutoProcessor.from_pretrained('Xenova/moondream2');
+  moondreamTokenizer = await AutoTokenizer.from_pretrained('Xenova/moondream2');
+  return { model: moondreamModel, processor: moondreamProcessor, tokenizer: moondreamTokenizer };
+}
+
+// ── Run individual models ──
+async function runVitGpt2(blobUrl, element) {
+  element.textContent = 'Loading model...';
+  element.style.color = 'var(--dim)';
+  try {
+    const cap = await ensureCaptioner();
+    element.textContent = '';
+    element.style.color = 'var(--text)';
+    const result = await cap(blobUrl);
+    const caption = result[0].generated_text || result[0].text || JSON.stringify(result);
+    await typeText(element, caption);
+  } catch (err) {
+    console.error('ViT-GPT2 error:', err);
+    element.textContent = 'Failed: ' + err.message;
+    element.style.color = 'var(--red)';
+  }
+}
+
+async function runCocoSsd(imgElement, element) {
+  element.textContent = 'Detecting objects...';
+  element.style.color = 'var(--dim)';
+  try {
+    // COCO-SSD is loaded globally via TF.js script tag
+    const model = await cocoSsd.load();
+    const predictions = await model.detect(imgElement);
+    if (predictions.length === 0) {
+      element.textContent = 'No objects detected.';
+      element.style.color = 'var(--dim)';
+    } else {
+      const items = predictions.map(p => `${p.class} (${(p.score * 100).toFixed(0)}%)`);
+      element.style.color = 'var(--text)';
+      await typeText(element, items.join(', '));
+    }
+  } catch (err) {
+    console.error('COCO-SSD error:', err);
+    element.textContent = 'Failed: ' + err.message;
+    element.style.color = 'var(--red)';
+  }
+}
+
+async function runFlorence(blobUrl, element) {
+  element.textContent = 'Loading model...';
+  element.style.color = 'var(--dim)';
+  try {
+    const { model, processor } = await ensureFlorence();
+    element.textContent = 'Generating caption...';
+    const image = await RawImage.fromURL(blobUrl);
+    const prompt = '<MORE_DETAILED_CAPTION>';
+    const inputs = await processor(image, prompt);
+    const generatedIds = await model.generate({
+      ...inputs,
+      max_new_tokens: 100,
+    });
+    const generatedText = processor.batch_decode(generatedIds, { skip_special_tokens: false })[0];
+    // Florence wraps output in task tokens — extract the caption
+    const match = generatedText.match(/<MORE_DETAILED_CAPTION>(.*?)(<\/s>|$)/);
+    const caption = match ? match[1].trim() : generatedText.replace(/<[^>]+>/g, '').trim();
+    element.style.color = 'var(--text)';
+    await typeText(element, caption);
+  } catch (err) {
+    console.error('Florence-2 error:', err);
+    element.textContent = 'Failed: ' + err.message;
+    element.style.color = 'var(--red)';
+  }
+}
+
+async function runMoondream(blobUrl, element) {
+  element.textContent = 'Loading model...';
+  element.style.color = 'var(--dim)';
+  try {
+    const { model, processor, tokenizer } = await ensureMoondream();
+    element.textContent = 'Generating caption...';
+    const prompt = 'Describe this image.';
+    const text = `<image>\n\nQuestion: ${prompt}\n\nAnswer:`;
+    const textInputs = tokenizer(text);
+    const image = await RawImage.fromURL(blobUrl);
+    const visionInputs = await processor(image);
+    const output = await model.generate({
+      ...textInputs,
+      ...visionInputs,
+      do_sample: false,
+      max_new_tokens: 100,
+    });
+    const decoded = tokenizer.batch_decode(output, { skip_special_tokens: true });
+    // Extract answer after "Answer:" if present
+    let caption = decoded[0] || '';
+    const answerIdx = caption.lastIndexOf('Answer:');
+    if (answerIdx !== -1) caption = caption.substring(answerIdx + 7).trim();
+    element.style.color = 'var(--text)';
+    await typeText(element, caption);
+  } catch (err) {
+    console.error('Moondream 2 error:', err);
+    element.textContent = 'Failed: ' + err.message;
+    element.style.color = 'var(--red)';
+  }
+}
+
+// ── Image upload — run all models in parallel ──
 fileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
   uploadArea.classList.add('has-file');
   results.classList.remove('hidden');
-  captionOutput.textContent = 'Loading model...';
   zeroshotResults.innerHTML = '';
+
+  // Reset all caption outputs
+  [captionVitgpt2, captionCocossd, captionFlorence, captionMoondream].forEach(el => {
+    el.textContent = 'Processing...';
+    el.style.color = 'var(--dim)';
+  });
 
   // Draw to canvas
   const img = await App.loadImage(file);
@@ -107,19 +258,13 @@ fileInput.addEventListener('change', async (e) => {
   if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
   currentBlobUrl = URL.createObjectURL(file);
 
-  // Run captioning
-  try {
-    const cap = await ensureCaptioner();
-    hideLoading();
-    captionOutput.textContent = '';
-    const result = await cap(currentBlobUrl);
-    const caption = result[0].generated_text || result[0].text || JSON.stringify(result);
-    await typeText(captionOutput, caption);
-  } catch (err) {
-    console.error('Captioning error:', err);
-    captionOutput.textContent = 'Captioning failed: ' + err.message;
-    hideLoading();
-  }
+  hideLoading();
+
+  // Run all 4 models in parallel
+  runVitGpt2(currentBlobUrl, captionVitgpt2);
+  runCocoSsd(img, captionCocossd);
+  runFlorence(currentBlobUrl, captionFlorence);
+  runMoondream(currentBlobUrl, captionMoondream);
 });
 
 // ── Zero-shot classification ──
@@ -144,7 +289,6 @@ zeroshotRunBtn.addEventListener('click', async () => {
     hideLoading();
     const result = await cls(currentBlobUrl, labels);
 
-    // Render as bar chart
     zeroshotResults.innerHTML = result.map(item => {
       const pct = (item.score * 100).toFixed(1);
       return `

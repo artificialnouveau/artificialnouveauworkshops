@@ -181,12 +181,34 @@
       <!-- Original image -->
       <canvas id="canvas-speaks"></canvas>
 
-      <!-- Part A: Image Captioning -->
+      <!-- Part A: Caption Comparison -->
       <div class="explainer-block">
-        <h3>The Machine's Description</h3>
-        <p>A neural network (ViT-GPT2) generates a text caption for your photo. It was trained on millions of image-caption pairs scraped from the internet. Notice what it gets right — and what it misses, assumes, or invents.</p>
+        <h3>Same Image, Different Machines</h3>
+        <p>Four different AI models describe your photo. Each was trained on different data, with different architectures and priorities. Notice what each gets right — and what it misses, assumes, or invents. Same image, different captions, different worldviews.</p>
       </div>
-      <div id="caption-output" class="mono">...</div>
+
+      <div id="caption-comparison" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
+        <!-- ViT-GPT2 -->
+        <div class="card" style="padding:16px;">
+          <h3 style="font-size:0.85rem; margin-bottom:8px;">ViT-GPT2 <span style="color:var(--dim); font-weight:400;">— Caption Generator</span></h3>
+          <div id="caption-vitgpt2" class="mono" style="font-size:0.95rem; min-height:40px; color:var(--dim);">Waiting for image...</div>
+        </div>
+        <!-- COCO-SSD -->
+        <div class="card" style="padding:16px; border-left-color:var(--green);">
+          <h3 style="font-size:0.85rem; color:var(--green); margin-bottom:8px;">COCO-SSD <span style="color:var(--dim); font-weight:400;">— Object Detector (80 classes)</span></h3>
+          <div id="caption-cocossd" class="mono" style="font-size:0.95rem; min-height:40px; color:var(--dim);">Waiting for image...</div>
+        </div>
+        <!-- Florence-2 -->
+        <div class="card" style="padding:16px; border-left-color:var(--yellow);">
+          <h3 style="font-size:0.85rem; color:var(--yellow); margin-bottom:8px;">Florence-2 <span style="color:var(--dim); font-weight:400;">— Microsoft Vision Model</span></h3>
+          <div id="caption-florence" class="mono" style="font-size:0.95rem; min-height:40px; color:var(--dim);">Waiting for image...</div>
+        </div>
+        <!-- Moondream 2 -->
+        <div class="card" style="padding:16px; border-left-color:var(--pink);">
+          <h3 style="font-size:0.85rem; color:var(--pink); margin-bottom:8px;">Moondream 2 <span style="color:var(--dim); font-weight:400;">— Vision-Language Model</span></h3>
+          <div id="caption-moondream" class="mono" style="font-size:0.95rem; min-height:40px; color:var(--dim);">Waiting for image...</div>
+        </div>
+      </div>
 
       <!-- Part B: Zero-Shot Classification -->
       <div class="explainer-block" style="border-left-color:var(--yellow)">
