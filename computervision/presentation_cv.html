@@ -137,11 +137,10 @@
   </div>
 
   <!-- 2: Parts overview -->
-  <div class="slide section-title" data-notes="Today we cover Part 1: Computer Vision. Tomorrow Part 2: Generative AI & Deepfakes.">
+  <div class="slide section-title">
     <div>
-      <h2><span class="accent">Part 1:</span> Intro to Computer Vision</h2>
+      <h2>Introduction to <span class="accent">Computer Vision & AI</span></h2>
       <div class="divider"></div>
-      <h2 style="color:#555">Part 2: Intro to Generative AI &amp; Deepfakes</h2>
     </div>
   </div>
 
@@ -771,32 +770,51 @@
   <div class="slide section-title">
     <h2><span class="accent">Conclusion</span></h2>
     <div class="divider"></div>
-    <p style="color:var(--dim); font-family:var(--mono); font-size:1rem; margin-top:12px">data → labels → distribution → norms → policy</p>
   </div>
 
-  <!-- Conclusion: all points -->
-  <div class="slide" data-notes="Five ways photographers can influence AI: what you shoot, how you label it, how it enters the pipeline, what norms you reinforce, and direct participation in system design.">
-    <h2><span class="accent">Conclusion</span></h2>
-    <div class="three-col" style="grid-template-columns:1fr 1fr; gap:12px; width:100%">
-      <div class="card fragment" style="padding:16px">
-        <h3>Data Control</h3>
-        <p>What you shoot (and what you <strong>choose not to shoot</strong>) shapes class balance and representation.</p>
-      </div>
-      <div class="card yellow-border fragment" style="padding:16px">
-        <h3 style="color:var(--yellow)">Label / Metadata Control</h3>
-        <p>CV models and retrieval systems are deeply influenced by text. Your captions, keywords, and metadata shape how machines interpret images.</p>
-      </div>
-      <div class="card green-border fragment" style="padding:16px">
-        <h3 style="color:var(--green)">Pipeline Influence</h3>
-        <p>Photographers influence what enters the pipeline — and how it gets compressed, cropped, and filtered before a model ever sees it.</p>
-      </div>
-      <div class="card pink-border fragment" style="padding:16px">
-        <h3 style="color:var(--pink)">Norm-Setting</h3>
-        <p>What is considered a "correct" detection, a "beautiful" image, or a "faithful" reproduction reflects photographic conventions — conventions <strong>you</strong> help define.</p>
-      </div>
-      <div class="card red-border fragment" style="padding:16px; grid-column:1 / -1">
-        <h3 style="color:var(--red)">Direct Technical Participation</h3>
-        <p>If you're working with a lab, company, or museum digitization effort, you can influence system design directly — from dataset curation to annotation guidelines to what counts as ground truth.</p>
+  <!-- Conclusion: What We Covered -->
+  <div class="slide" data-notes="Recap the journey of the presentation. Each point maps to a section we covered. The thread running through all of it: machines don't see — they compute, and the choices behind that computation are human, political, and consequential.">
+    <h2>What We Covered</h2>
+    <div style="max-width:700px; margin:0 auto; font-size:1.05rem; line-height:2.2;">
+      <p class="fragment"><span style="color:var(--accent)">Machines see math</span> — pixels, matrices, probability. Not meaning.</p>
+      <p class="fragment"><span style="color:var(--yellow)">Language shapes vision</span> — captions become training data, and nobody curates them.</p>
+      <p class="fragment"><span style="color:var(--red)">Datasets encode power</span> — who is represented, who is labelled, who is left out.</p>
+      <p class="fragment"><span style="color:var(--red)">Surveillance is infrastructure</span> — CV powers systems that watch, sort, and judge.</p>
+      <p class="fragment"><span style="color:var(--pink)">Beauty is algorithmic</span> — filters and scores flatten human diversity into a statistical average.</p>
+      <p class="fragment"><span style="color:var(--red)">Failure is unevenly distributed</span> — errors cluster along lines of race, gender, and disability.</p>
+      <p class="fragment"><span style="color:var(--green)">Artists are pushing back</span> — making the invisible visible, refusing the default.</p>
+    </div>
+  </div>
+
+  <!-- Conclusion: The Question for You -->
+  <div class="slide" data-notes="Final provocation for photography students. Their work feeds the machine — what responsibility does that create?">
+    <h2>The Question for <span class="accent">You</span></h2>
+    <div style="max-width:650px; margin:0 auto; text-align:center;">
+      <p style="font-size:1.4rem; color:var(--text); line-height:1.8; margin-bottom:30px;">
+        Every photograph you take is potential training data.<br>
+        Every caption you write is a lesson for a machine.<br>
+        Every choice you make about what to shoot — and what not to — shapes what AI learns to see.
+      </p>
+      <p class="fragment" style="font-size:1.2rem; color:var(--accent); font-family:var(--mono);">
+        What kind of machine vision do you want to build?
+      </p>
+    </div>
+  </div>
+
+  <!-- Workshop -->
+  <div class="slide section-title">
+    <h2><span class="green">Workshop</span></h2>
+    <div class="divider" style="background:var(--green)"></div>
+  </div>
+
+  <div class="slide">
+    <h2>Try It Yourself</h2>
+    <div style="max-width:600px; margin:0 auto; text-align:center;">
+      <div class="card green-border" style="padding:20px; margin-bottom:20px;">
+        <ul style="list-style:none; font-size:1.1rem; line-height:2.2;">
+          <li><a href="http://pimeyes.com/" style="color:var(--accent)" target="_blank">pimeyes.com</a> — reverse face search</li>
+          <li><a href="workshop_cv.html" style="color:var(--accent)" target="_blank">Interactive Demo</a> — how the machine sees your photo</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -806,61 +824,10 @@
     <h1>Questions<span class="accent">?</span></h1>
   </div>
 
-  <!-- 50: Workshop -->
-  <div class="slide section-title">
-    <h2><span class="green">Workshop</span></h2>
-    <div class="divider" style="background:var(--green)"></div>
-  </div>
-
-  <!-- 51 -->
-  <div class="slide" data-notes="Hand-off to the workshop. Today: explore PimEyes and the demo app. Tomorrow: we build our own surveillance system together.">
-    <h2>DIY Surveillance State</h2>
-    <div class="two-col" style="align-items:start">
-      <div class="card green-border">
-        <h3 style="color:var(--green)">Today</h3>
-        <ul>
-          <li><a href="http://pimeyes.com/" style="color:var(--accent)" target="_blank">pimeyes.com</a></li>
-          <li><a href="workshop_cv.html" style="color:var(--accent)" target="_blank">Interactive Demo</a></li>
-        </ul>
-      </div>
-      <div class="card yellow-border fragment">
-        <h3 style="color:var(--yellow)">Tomorrow</h3>
-        <p style="color:var(--text)">Let's build a Surveillance State!</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 52: Parts overview (repeat) -->
-  <div class="slide section-title">
-    <div>
-      <h2 style="color:#555">Part 1: Intro to Computer Vision</h2>
-      <div class="divider"></div>
-      <h2><span class="accent">Part 2:</span> Intro to Generative AI &amp; Deepfakes</h2>
-    </div>
-  </div>
-
-  <!-- 53 -->
-  <div class="slide">
-    <h2>DEEPFAKE — A Video Essay</h2>
-    <p class="red" style="margin-bottom:16px; font-family:var(--mono)">* All of the media content here are deepfakes</p>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
-      <video src="img/media2.mp4" controls style="width:100%"></video>
-      <video src="img/media3.mp4" controls style="width:100%"></video>
-    </div>
-    <div class="img-row">
-      <img src="img/image57.png" class="small">
-      <img src="img/image58.png" class="small">
-      <img src="img/image59.jpeg" class="small">
-      <img src="img/image60.jpeg" class="small">
-    </div>
-  </div>
-
-  <!-- 54 -->
-  <div class="slide">
-    <h2>DEEPFAKE — A Video Essay</h2>
-    <div style="text-align:center">
-      <img src="img/image62.jpeg" class="full">
-    </div>
+  <!-- Thank You -->
+  <div class="slide title-slide">
+    <h1>Thank You</h1>
+    <p class="subtitle">Ahnjili ZhuParris</p>
   </div>
 
   <!-- NAV -->
