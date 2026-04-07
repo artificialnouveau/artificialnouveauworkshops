@@ -6,6 +6,7 @@
  */
 
 const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+const TRANSFORMERS_V4_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.0.1';
 
 // We import pipeline normally; Florence-2 and Moondream use dynamic imports
 // because they need specific model classes not supported by pipeline()
@@ -282,10 +283,12 @@ async function runGemma4(blobUrl, element) {
   setStatus(element, 'Loading Gemma 4 (large model, may take several minutes)...', 'var(--dim)');
   try {
     if (!gemma4Model) {
+      // Gemma 4 requires Transformers.js v4+
       const {
         Gemma4ForConditionalGeneration,
         AutoProcessor,
-      } = await import(TRANSFORMERS_URL);
+        RawImage: RawImageV4,
+      } = await import(TRANSFORMERS_V4_URL);
 
       gemma4Processor = await AutoProcessor.from_pretrained(
         'onnx-community/gemma-4-E2B-it-ONNX'
@@ -297,11 +300,14 @@ async function runGemma4(blobUrl, element) {
           progress_callback: makeCardProgressCallback('Gemma 4', progressEl, element),
         }
       );
+      // Store RawImage from v4 for later use
+      gemma4Model._RawImageV4 = RawImageV4;
       hideCardProgress(progressEl);
     }
     setStatus(element, 'Generating caption...', 'var(--dim)');
 
-    const image = await RawImage.fromURL(blobUrl);
+    const RawImageV4 = gemma4Model._RawImageV4;
+    const image = await RawImageV4.fromURL(blobUrl);
     const messages = [
       {
         role: 'user',
