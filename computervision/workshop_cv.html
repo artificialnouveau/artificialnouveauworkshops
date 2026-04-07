@@ -43,10 +43,9 @@
     <button class="step-tab" data-step="1">1. Pixels</button>
     <button class="step-tab" data-step="2">2. Speaks</button>
     <button class="step-tab" data-step="3">3. Surveillance</button>
-    <button class="step-tab" data-step="4">4. Break It</button>
-    <button class="step-tab" data-step="5">5. Mirror</button>
-    <button class="step-tab" data-step="6">6. Clone</button>
-    <button class="step-tab" data-step="7">7. Google Vision</button>
+    <button class="step-tab" data-step="5">4. Mirror</button>
+    <button class="step-tab" data-step="6">5. Clone</button>
+    <button class="step-tab" data-step="7">6. Prompt the Machine</button>
   </nav>
 
   <!-- Intro -->
@@ -71,20 +70,16 @@
         <p style="color:var(--text-dim)">Turn on your webcam and toggle surveillance layers: face detection, demographics, pose, objects, and NSFW scanning — all running at once.</p>
       </div>
       <div class="card" style="padding:16px; border-left-color:var(--pink);">
-        <h3 style="color:var(--pink)">4. Break It</h3>
-        <p style="color:var(--text-dim)">Upload a slightly altered photo and watch the AI change its mind. How fragile is machine confidence?</p>
-      </div>
-      <div class="card" style="padding:16px; border-left-color:var(--pink);">
-        <h3 style="color:var(--pink)">5. Mirror</h3>
+        <h3 style="color:var(--pink)">4. Mirror</h3>
         <p style="color:var(--text-dim)">See how the machine maps your face: 468 landmarks, symmetry scores, and proportion analysis.</p>
       </div>
       <div class="card" style="padding:16px;">
-        <h3 style="color:var(--accent)">6. Clone</h3>
+        <h3 style="color:var(--accent)">5. Clone</h3>
         <p style="color:var(--text-dim)">Upload two faces and measure how similar the machine thinks they are. Explore how facial recognition computes identity.</p>
       </div>
       <div class="card" style="padding:16px; border-left-color:var(--green);">
-        <h3 style="color:var(--green)">7. Google Vision</h3>
-        <p style="color:var(--text-dim)">Compare your browser's AI against Google's commercial Vision API — same photo, different machines, different answers.</p>
+        <h3 style="color:var(--green)">6. Prompt the Machine</h3>
+        <p style="color:var(--text-dim)">Ask Google's Gemini anything about your photo. Try different framings to see how the question shapes the answer.</p>
       </div>
       <div class="card" style="padding:16px; border-left-color:var(--dim); text-align:center; display:flex; align-items:center; justify-content:center;">
         <p style="color:var(--text-dim)">Everything runs <strong style="color:var(--text)">in your browser</strong>. No images are uploaded anywhere. Your data stays on your device.</p>
@@ -375,95 +370,6 @@
   </section>
 
   <!-- Step 4: Break the Model -->
-  <section id="step-4" class="step">
-    <div class="step-intro">
-      <h2>Break the Model</h2>
-      <p>Machine vision is fragile. Upload any photo and see what the model thinks. Then try to fool it.</p>
-    </div>
-
-    <div class="upload-area" id="upload-area-4">
-      <label for="file-input-4" class="upload-label">
-        <span class="upload-icon">+</span>
-        <span>Upload a photo</span>
-      </label>
-      <input type="file" id="file-input-4" accept="image/*" capture="environment">
-    </div>
-
-    <!-- Phase 1: Initial classification -->
-    <div id="step4-phase1" class="results hidden">
-      <div class="comparison-card" style="margin-bottom:20px">
-        <h3>The model thinks this is:</h3>
-        <canvas id="canvas-break-a"></canvas>
-        <div id="predictions-a" class="prediction-list"></div>
-        <div class="confidence-meter">
-          <div class="confidence-label">Top Confidence</div>
-          <div class="meter-track"><div class="meter-fill" id="meter-a"></div></div>
-          <span class="meter-value" id="meter-value-a"></span>
-        </div>
-      </div>
-
-      <!-- Challenge prompt -->
-      <div class="explainer-block" style="border-left-color:var(--yellow)">
-        <h3 style="color:var(--yellow)">Challenge: Can you break it?</h3>
-        <p>Now take or upload another photo of the <strong>same subject</strong>, but try to confuse the model. Ideas:</p>
-        <ul style="color:var(--text-dim); margin-top:8px; padding-left:20px; line-height:2">
-          <li>Cover part of the object with your hand</li>
-          <li>Shoot from an extreme angle (underneath, very close)</li>
-          <li>Change the lighting dramatically</li>
-          <li>Add something unexpected to the frame</li>
-          <li>Photograph a reflection or shadow instead</li>
-        </ul>
-      </div>
-
-      <div class="upload-area" id="upload-area-4b">
-        <label for="file-input-4b" class="upload-label">
-          <span class="upload-icon">VS</span>
-          <span>Upload your trick photo</span>
-        </label>
-        <input type="file" id="file-input-4b" accept="image/*" capture="environment">
-      </div>
-    </div>
-
-    <!-- Phase 2: Comparison -->
-    <div id="step4-phase2" class="results hidden">
-      <div class="comparison-row">
-        <div class="comparison-card">
-          <h3>Original</h3>
-          <canvas id="canvas-break-a2"></canvas>
-          <div id="predictions-a2" class="prediction-list"></div>
-          <div class="confidence-meter">
-            <div class="confidence-label">Confidence</div>
-            <div class="meter-track"><div class="meter-fill" id="meter-a2"></div></div>
-            <span class="meter-value" id="meter-value-a2"></span>
-          </div>
-        </div>
-
-        <div class="vs-divider">VS</div>
-
-        <div class="comparison-card">
-          <h3>Your Trick</h3>
-          <canvas id="canvas-break-b"></canvas>
-          <div id="predictions-b" class="prediction-list"></div>
-          <div class="confidence-meter">
-            <div class="confidence-label">Confidence</div>
-            <div class="meter-track"><div class="meter-fill" id="meter-b"></div></div>
-            <span class="meter-value" id="meter-value-b"></span>
-          </div>
-        </div>
-      </div>
-
-      <div id="break-verdict" class="explainer-block"></div>
-
-      <div class="upload-area" id="upload-area-4-retry" style="margin-top:16px">
-        <label for="file-input-4-retry" class="upload-label">
-          <span class="upload-icon">+</span>
-          <span>Try again with a new photo</span>
-        </label>
-        <input type="file" id="file-input-4-retry" accept="image/*" capture="environment">
-      </div>
-    </div>
-  </section>
-
   <!-- Step 5: The Algorithmic Mirror -->
   <section id="step-5" class="step">
     <div class="step-intro">
@@ -784,7 +690,6 @@
   <script src="js/step1-pixels.js"></script>
   <script type="module" src="js/step2-machine-speaks.js"></script>
   <script src="js/step3-surveillance.js"></script>
-  <script src="js/step4-break.js"></script>
   <script src="js/step5-beauty.js"></script>
   <script src="js/step6-clone.js"></script>
   <script src="js/step7-google-vision.js"></script>
