@@ -291,22 +291,69 @@
     <p class="caption">Model &rarr; Predictions &rarr; Mario Probability / Luigi Probability</p>
   </div>
 
-  <div class="slide" data-notes="These are the main applications of CV today. Each one will come back later in the presentation: facial recognition connects to surveillance and consent, emotion detection to frozen imagination, content moderation to Toko Kihara's work, image captioning to language and power, self-driving cars to Kihara's 'How Not to Get Hit', and medical imaging to my own background.">
-    <h2>Computer Vision Applications</h2>
+  <!-- CV Applications: Seeing -->
+  <div class="slide" data-notes="The first category: detection and perception tasks. The machine learns to identify what is in the image. Object recognition is the foundation of everything else. Pose estimation tracks body geometry. Self-driving cars combine both to navigate.">
+    <h2>CV Applications: <span class="accent">Seeing</span></h2>
     <div class="three-col" style="margin-top:16px; font-size:0.95rem;">
-      <div class="card"><h3>Object Recognition</h3><p style="color:var(--dim)">Identifying and locating objects in images</p></div>
-      <div class="card fragment" style="border-left-color:var(--red)"><h3 style="color:var(--red)">Facial Recognition</h3><p style="color:var(--dim)">Identifying or verifying people by their face</p></div>
-      <div class="card fragment" style="border-left-color:var(--pink)"><h3 style="color:var(--pink)">Emotion Detection</h3><p style="color:var(--dim)">Classifying facial expressions into emotional states</p></div>
+      <div class="card">
+        <h3>Object Recognition</h3>
+        <img src="img/image20.png" class="small" style="margin-top:8px">
+        <p style="color:var(--dim); margin-top:8px">Identifying and locating objects in images</p>
+      </div>
+      <div class="card fragment">
+        <h3>Pose Estimation</h3>
+        <img src="img/image51.jpeg" class="small" style="margin-top:8px">
+        <p style="color:var(--dim); margin-top:8px">Tracking body position and movement</p>
+      </div>
+      <div class="card fragment">
+        <h3>Self-Driving Cars</h3>
+        <img src="img/image21.gif" class="small" style="margin-top:8px">
+        <p style="color:var(--dim); margin-top:8px">Navigating roads, detecting pedestrians</p>
+      </div>
     </div>
-    <div class="three-col fragment" style="margin-top:12px; font-size:0.95rem;">
-      <div class="card" style="border-left-color:var(--yellow)"><h3 style="color:var(--yellow)">Image Captioning</h3><p style="color:var(--dim)">Generating text descriptions of images</p></div>
-      <div class="card" style="border-left-color:var(--red)"><h3 style="color:var(--red)">Content Moderation</h3><p style="color:var(--dim)">Detecting NSFW, violent, or banned content</p></div>
-      <div class="card"><h3>Pose Estimation</h3><p style="color:var(--dim)">Tracking body position and movement</p></div>
+  </div>
+
+  <!-- CV Applications: Describing -->
+  <div class="slide" data-notes="The second category: the machine moves beyond detection to assigning meaning. Image captioning generates language from pixels, connecting directly to Chapter 3. Emotion detection reads facial expressions as data. Medical imaging is where CV saves lives, but also where bias can be fatal.">
+    <h2>CV Applications: <span class="yellow">Describing</span></h2>
+    <div class="three-col" style="margin-top:16px; font-size:0.95rem;">
+      <div class="card" style="border-left-color:var(--yellow)">
+        <h3 style="color:var(--yellow)">Image Captioning</h3>
+        <img src="img/woman_scientist.jpg" class="small" style="margin-top:8px">
+        <p style="color:var(--dim); margin-top:8px">Generating text descriptions of images</p>
+      </div>
+      <div class="card fragment" style="border-left-color:var(--pink)">
+        <h3 style="color:var(--pink)">Emotion Detection</h3>
+        <img src="img/image28.png" class="small" style="margin-top:8px">
+        <p style="color:var(--dim); margin-top:8px">Classifying facial expressions into emotional states</p>
+      </div>
+      <div class="card fragment" style="border-left-color:var(--green)">
+        <h3 style="color:var(--green)">Medical Imaging</h3>
+        <img src="img/image40.jpg" class="small" style="margin-top:8px">
+        <p style="color:var(--dim); margin-top:8px">Detecting disease in scans and pathology</p>
+      </div>
     </div>
-    <div class="three-col fragment" style="margin-top:12px; font-size:0.95rem;">
-      <div class="card" style="border-left-color:var(--green)"><h3 style="color:var(--green)">Medical Imaging</h3><p style="color:var(--dim)">Detecting disease in scans and pathology</p></div>
-      <div class="card"><h3>Self-Driving Cars</h3><p style="color:var(--dim)">Navigating roads, detecting pedestrians</p></div>
-      <div class="card" style="border-left-color:var(--pink)"><h3 style="color:var(--pink)">Deepfake Detection</h3><p style="color:var(--dim)">Identifying AI-generated or manipulated media</p></div>
+  </div>
+
+  <!-- CV Applications: Judging -->
+  <div class="slide" data-notes="The third category is where the stakes get highest. These are the applications that make decisions about people. Facial recognition identifies who you are. Content moderation decides what is acceptable. Deepfake detection decides what is real. All of these are judgment calls encoded in software.">
+    <h2>CV Applications: <span class="red">Judging</span></h2>
+    <div class="three-col" style="margin-top:16px; font-size:0.95rem;">
+      <div class="card" style="border-left-color:var(--red)">
+        <h3 style="color:var(--red)">Facial Recognition</h3>
+        <img src="img/image35.png" class="small" style="margin-top:8px">
+        <p style="color:var(--dim); margin-top:8px">Identifying or verifying people by their face</p>
+      </div>
+      <div class="card fragment" style="border-left-color:var(--red)">
+        <h3 style="color:var(--red)">Content Moderation</h3>
+        <img src="img/image54.png" class="small" style="margin-top:8px">
+        <p style="color:var(--dim); margin-top:8px">Deciding what is acceptable to show</p>
+      </div>
+      <div class="card fragment" style="border-left-color:var(--pink)">
+        <h3 style="color:var(--pink)">Deepfake Detection</h3>
+        <img src="img/grok_kirk.jpeg" class="small" style="margin-top:8px">
+        <p style="color:var(--dim); margin-top:8px">Deciding what is real and what is fabricated</p>
+      </div>
     </div>
   </div>
 
