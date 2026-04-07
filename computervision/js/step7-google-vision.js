@@ -64,6 +64,14 @@
       const canvas = document.getElementById('canvas-vision');
       App.drawToCanvas(canvas, img, 500);
 
+      // Show Prompt the Machine section immediately
+      const promptSection = document.getElementById('prompt-the-machine');
+      if (promptSection) {
+        promptSection.classList.remove('hidden');
+        const promptCanvas = document.getElementById('canvas-prompt');
+        if (promptCanvas) App.drawToCanvas(promptCanvas, img, 500);
+      }
+
       // Call Google Vision API
       const visionResult = await callVisionProxy(file);
 

@@ -631,6 +631,72 @@
       <input type="file" id="file-input-7" accept="image/*" capture="environment">
     </div>
 
+    <!-- Prompt the Machine (always visible after upload) -->
+    <div id="prompt-the-machine" class="hidden" style="margin-bottom:24px;">
+      <canvas id="canvas-prompt" style="width:100%; max-width:500px; margin-bottom:16px;"></canvas>
+
+      <div style="
+        padding:3px 10px; background:#a259ff; color:#fff;
+        font-family:var(--mono); font-size:0.75rem; font-weight:600;
+        border-radius:4px; display:inline-block; margin-bottom:14px;
+      ">PROMPT THE MACHINE</div>
+
+      <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:16px;">
+        Ask <strong style="color:#a259ff">Gemini</strong> anything about your photo. Try different framings to see how the question shapes the answer.
+      </p>
+
+      <div style="background:var(--bg-card); padding:20px; border-radius:var(--radius); margin-bottom:20px;">
+        <div style="margin-bottom:12px;">
+          <input type="text" id="gemini-prompt-input" placeholder="Ask anything about this image..." style="
+            display:block; width:100%; padding:12px 14px;
+            background:var(--bg); border:1px solid #333; border-radius:var(--radius);
+            color:var(--text); font-family:var(--mono); font-size:0.9rem;
+          ">
+        </div>
+        <div id="gemini-presets" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+          <button class="preset-chip gemini-chip" data-prompt="Describe this image in detail. What do you see?">Describe</button>
+          <button class="preset-chip gemini-chip" data-prompt="What emotion does this photograph convey? What mood does it create?">Emotion</button>
+          <button class="preset-chip gemini-chip" data-prompt="Estimate the age, gender, and ethnicity of any people in this image. How confident are you?">Demographics</button>
+          <button class="preset-chip gemini-chip" data-prompt="Is this image safe for work? Could it be considered offensive in any culture? Explain.">Safety judgment</button>
+          <button class="preset-chip gemini-chip" data-prompt="What assumptions are you making about the people or context in this photo? What might you be wrong about?">Assumptions</button>
+          <button class="preset-chip gemini-chip" data-prompt="Describe this photo as if you were writing a police report. Then describe it as if you were writing a caption for an art gallery.">Two framings</button>
+          <button class="preset-chip gemini-chip" data-prompt="What is missing from this image? What can you NOT tell from looking at it?">What's missing</button>
+          <button class="preset-chip gemini-chip" data-prompt="Describe this image as if it were a news photo for a major newspaper.">As news</button>
+          <button class="preset-chip gemini-chip" data-prompt="Describe this image as evidence in a court case. Be clinical and specific.">As evidence</button>
+          <button class="preset-chip gemini-chip" data-prompt="Write a dating profile caption for the person(s) in this image.">As dating profile</button>
+          <button class="preset-chip gemini-chip" data-prompt="Write alt-text for this image as if you were a lazy web developer, then as a careful accessibility advocate. Show both.">Alt-text comparison</button>
+        </div>
+        <button id="gemini-run" style="
+          padding:10px 24px; background:#a259ff; border:none; border-radius:var(--radius);
+          color:#fff; font-family:var(--mono); font-size:0.9rem; font-weight:600;
+          cursor:pointer; transition:opacity 0.2s; width:100%;
+        ">Ask Gemini</button>
+        <div style="font-size:0.7rem; color:var(--red); font-family:var(--mono); margin-top:8px; text-align:center;">
+          Your image and prompt will be sent to Google's Gemini servers
+        </div>
+      </div>
+
+      <!-- Gemini loading -->
+      <div id="gemini-loading" class="hidden" style="text-align:center; padding:20px; color:#a259ff; font-family:var(--mono); font-size:0.85rem;">
+        <div class="spinner" style="margin:0 auto 12px; border-top-color:#a259ff;"></div>
+        Gemini is thinking<span class="dots"></span>
+      </div>
+
+      <!-- Gemini response -->
+      <div id="gemini-response" class="hidden" style="
+        padding:20px; background:var(--bg-card);
+        border-left:3px solid #a259ff; border-radius:0 var(--radius) var(--radius) 0;
+        font-size:0.95rem; line-height:1.7; color:var(--text); white-space:pre-wrap;
+        margin-bottom:16px;
+      "></div>
+
+      <!-- Gemini budget -->
+      <div id="gemini-budget" class="mono" style="font-size:0.75rem; color:var(--text-dim); margin-bottom:24px; text-align:right;"></div>
+
+      <!-- Gemini error -->
+      <div id="gemini-error" class="hidden" style="padding:16px; background:var(--bg-card); border-left:3px solid var(--red); border-radius:0 var(--radius) var(--radius) 0; margin-bottom:24px; color:var(--red); font-family:var(--mono); font-size:0.85rem;"></div>
+    </div>
+
     <!-- Loading state -->
     <div id="vision-loading" class="hidden" style="text-align:center; padding:20px; color:var(--yellow); font-family:var(--mono); font-size:0.85rem;">
       <div class="spinner" style="margin:0 auto 12px"></div>
@@ -704,73 +770,6 @@
       <div id="vision-mobilenet-labels" class="hidden"></div>
       <canvas id="canvas-vision-objects" class="hidden"></canvas>
       <div id="vision-budget" class="hidden"></div>
-
-      <!-- ============================================================ -->
-      <!-- PART B: Gemini — multimodal narration                        -->
-      <!-- ============================================================ -->
-      <div style="border-top:1px solid #222; padding-top:28px; margin-top:8px;"></div>
-
-      <div style="
-        padding:3px 10px; background:#a259ff; color:#fff;
-        font-family:var(--mono); font-size:0.75rem; font-weight:600;
-        border-radius:4px; display:inline-block; margin-bottom:14px;
-      ">PART 2: GEMINI — THE MACHINE NARRATES</div>
-
-      <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:20px;">
-        <strong style="color:#a259ff">Gemini</strong> is Google's multimodal AI. Unlike the Vision API, it doesn't return labels. It <strong style="color:var(--text)">writes about your image in natural language</strong>. It sounds like understanding, but it's pattern-matching wrapped in fluent prose. Ask it anything about your photo.
-      </p>
-
-      <div id="gemini-prompt-section" style="background:var(--bg-card); padding:20px; border-radius:var(--radius); margin-bottom:20px;">
-        <div style="margin-bottom:12px;">
-          <input type="text" id="gemini-prompt-input" placeholder="Ask Gemini anything about this image..." style="
-            display:block; width:100%; padding:12px 14px;
-            background:var(--bg); border:1px solid #333; border-radius:var(--radius);
-            color:var(--text); font-family:var(--mono); font-size:0.9rem;
-          ">
-        </div>
-        <div id="gemini-presets" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
-          <button class="preset-chip gemini-chip" data-prompt="Describe this image in detail. What do you see?">Describe</button>
-          <button class="preset-chip gemini-chip" data-prompt="What emotion does this photograph convey? What mood does it create?">Emotion</button>
-          <button class="preset-chip gemini-chip" data-prompt="Estimate the age, gender, and ethnicity of any people in this image. How confident are you?">Demographics</button>
-          <button class="preset-chip gemini-chip" data-prompt="Is this image safe for work? Could it be considered offensive in any culture? Explain.">Safety judgment</button>
-          <button class="preset-chip gemini-chip" data-prompt="What assumptions are you making about the people or context in this photo? What might you be wrong about?">Assumptions</button>
-          <button class="preset-chip gemini-chip" data-prompt="Describe this photo as if you were writing a police report. Then describe it as if you were writing a caption for an art gallery.">Two framings</button>
-          <button class="preset-chip gemini-chip" data-prompt="What is missing from this image? What can you NOT tell from looking at it?">What's missing</button>
-          <button class="preset-chip gemini-chip" data-prompt="Describe this image as if it were a news photo for a major newspaper.">As news</button>
-          <button class="preset-chip gemini-chip" data-prompt="Describe this image as evidence in a court case. Be clinical and specific.">As evidence</button>
-          <button class="preset-chip gemini-chip" data-prompt="Write a dating profile caption for the person(s) in this image.">As dating profile</button>
-          <button class="preset-chip gemini-chip" data-prompt="Describe this image for a real estate listing. Make it sound appealing.">As real estate</button>
-          <button class="preset-chip gemini-chip" data-prompt="Write alt-text for this image as if you were a lazy web developer, then as a careful accessibility advocate. Show both.">Alt-text comparison</button>
-        </div>
-        <button id="gemini-run" style="
-          padding:10px 24px; background:#a259ff; border:none; border-radius:var(--radius);
-          color:#fff; font-family:var(--mono); font-size:0.9rem; font-weight:600;
-          cursor:pointer; transition:opacity 0.2s; width:100%;
-        ">Ask Gemini</button>
-        <div style="font-size:0.7rem; color:var(--red); font-family:var(--mono); margin-top:8px; text-align:center;">
-          Your image and prompt will be sent to Google's Gemini servers
-        </div>
-      </div>
-
-      <!-- Gemini loading -->
-      <div id="gemini-loading" class="hidden" style="text-align:center; padding:20px; color:#a259ff; font-family:var(--mono); font-size:0.85rem;">
-        <div class="spinner" style="margin:0 auto 12px; border-top-color:#a259ff;"></div>
-        Gemini is thinking<span class="dots"></span>
-      </div>
-
-      <!-- Gemini response -->
-      <div id="gemini-response" class="hidden" style="
-        padding:20px; background:var(--bg-card);
-        border-left:3px solid #a259ff; border-radius:0 var(--radius) var(--radius) 0;
-        font-size:0.95rem; line-height:1.7; color:var(--text); white-space:pre-wrap;
-        margin-bottom:16px;
-      "></div>
-
-      <!-- Gemini budget -->
-      <div id="gemini-budget" class="mono" style="font-size:0.75rem; color:var(--text-dim); margin-bottom:24px; text-align:right;"></div>
-
-      <!-- Gemini error -->
-      <div id="gemini-error" class="hidden" style="padding:16px; background:var(--bg-card); border-left:3px solid var(--red); border-radius:0 var(--radius) var(--radius) 0; margin-bottom:24px; color:var(--red); font-family:var(--mono); font-size:0.85rem;"></div>
 
     </div>
   </section>
