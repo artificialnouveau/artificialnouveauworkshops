@@ -46,6 +46,7 @@
     <button class="step-tab" data-step="5">4. Mirror</button>
     <button class="step-tab" data-step="6">5. Clone</button>
     <button class="step-tab" data-step="7">6. Prompt the Machine</button>
+    <button class="step-tab" data-step="build">7. Build</button>
   </nav>
 
   <!-- Intro -->
@@ -677,6 +678,38 @@
       <canvas id="canvas-vision-objects" class="hidden"></canvas>
       <div id="vision-budget" class="hidden"></div>
 
+    </div>
+  </section>
+
+  <!-- Step: Build Your Own Surveillance State -->
+  <section id="step-build" class="step">
+    <div class="step-intro">
+      <h2>Let's Build Our Own Surveillance State</h2>
+      <p>Now it's your turn. The goal is to design a computer vision system that detects anything and everything you want. There are no limits, no ethics boards, no regulations. What would you build? Who would it watch? What would it measure? What could go wrong?</p>
+    </div>
+
+    <div style="max-width:800px; margin:24px auto;">
+      <div class="card" style="padding:24px; margin-bottom:20px;">
+        <h3 style="margin-bottom:12px;">Your System</h3>
+        <p style="color:var(--text-dim); margin-bottom:16px;">Describe your surveillance system. What does it detect? Who does it watch? Where is it deployed? What data does it collect?</p>
+        <textarea id="build-notes" placeholder="Describe your system here..." style="
+          display:block; width:100%; min-height:200px; padding:16px;
+          background:var(--bg); border:1px solid #333; border-radius:var(--radius);
+          color:var(--text); font-family:var(--mono); font-size:0.95rem;
+          line-height:1.7; resize:vertical;
+        "></textarea>
+      </div>
+
+      <div class="card" style="padding:20px; border-left-color:var(--red);">
+        <h3 style="color:var(--red); margin-bottom:12px;">Now ask yourself</h3>
+        <ul style="line-height:2.2; font-size:1.05rem;">
+          <li>Who benefits from this system?</li>
+          <li>Who is harmed by it?</li>
+          <li>Who decided what it detects?</li>
+          <li>What happens when it's wrong?</li>
+          <li>Would you want to be watched by your own system?</li>
+        </ul>
+      </div>
     </div>
   </section>
 
