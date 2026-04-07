@@ -291,12 +291,22 @@
     <p class="caption">Model &rarr; Predictions &rarr; Mario Probability / Luigi Probability</p>
   </div>
 
-  <div class="slide">
+  <div class="slide" data-notes="These are the main applications of CV today. Each one will come back later in the presentation: facial recognition connects to surveillance and consent, emotion detection to frozen imagination, content moderation to Toko Kihara's work, image captioning to language and power, self-driving cars to Kihara's 'How Not to Get Hit', and medical imaging to my own background.">
     <h2>Computer Vision Applications</h2>
-    <div class="three-col" style="margin-top:20px">
-      <div class="card"><h3>Object Recognition</h3><img src="img/image20.png"></div>
-      <div class="card green-border fragment"><h3 style="color:var(--green)">Segmentation</h3><img src="img/image21.gif"></div>
-      <div class="card pink-border fragment"><h3 style="color:var(--pink)">3D Rendering</h3><img src="img/image22.jpg"></div>
+    <div class="three-col" style="margin-top:16px; font-size:0.95rem;">
+      <div class="card"><h3>Object Recognition</h3><p style="color:var(--dim)">Identifying and locating objects in images</p></div>
+      <div class="card fragment" style="border-left-color:var(--red)"><h3 style="color:var(--red)">Facial Recognition</h3><p style="color:var(--dim)">Identifying or verifying people by their face</p></div>
+      <div class="card fragment" style="border-left-color:var(--pink)"><h3 style="color:var(--pink)">Emotion Detection</h3><p style="color:var(--dim)">Classifying facial expressions into emotional states</p></div>
+    </div>
+    <div class="three-col fragment" style="margin-top:12px; font-size:0.95rem;">
+      <div class="card" style="border-left-color:var(--yellow)"><h3 style="color:var(--yellow)">Image Captioning</h3><p style="color:var(--dim)">Generating text descriptions of images</p></div>
+      <div class="card" style="border-left-color:var(--red)"><h3 style="color:var(--red)">Content Moderation</h3><p style="color:var(--dim)">Detecting NSFW, violent, or banned content</p></div>
+      <div class="card"><h3>Pose Estimation</h3><p style="color:var(--dim)">Tracking body position and movement</p></div>
+    </div>
+    <div class="three-col fragment" style="margin-top:12px; font-size:0.95rem;">
+      <div class="card" style="border-left-color:var(--green)"><h3 style="color:var(--green)">Medical Imaging</h3><p style="color:var(--dim)">Detecting disease in scans and pathology</p></div>
+      <div class="card"><h3>Self-Driving Cars</h3><p style="color:var(--dim)">Navigating roads, detecting pedestrians</p></div>
+      <div class="card" style="border-left-color:var(--pink)"><h3 style="color:var(--pink)">Deepfake Detection</h3><p style="color:var(--dim)">Identifying AI-generated or manipulated media</p></div>
     </div>
   </div>
 
@@ -483,9 +493,6 @@
           The machine's language becomes <span style="color:var(--yellow)">self-reinforcing</span>
         </p>
       </div>
-      <p class="fragment" style="color:var(--dim); font-size:1rem; line-height:1.7;">
-        Photography students will recognise this: it's like <strong style="color:var(--text)">stock photo aesthetics</strong> becoming the "default" image of a concept. The machine doesn't observe reality. It <strong style="color:var(--yellow)">recycles its own descriptions of it</strong>.
-      </p>
     </div>
   </div>
 
@@ -785,7 +792,7 @@
     <h2>Capture</h2>
     <p style="margin-bottom:16px"><em>Paolo Cirio</em></p>
     <div style="text-align:center">
-      <iframe src="https://www.youtube.com/embed/6UTgBKLd8uM?list=PLJHWosFmMRqrFXnQO1tWTQYFIkQQ2JVaR" style="width:95%; max-width:1000px; aspect-ratio:16/9; border:none; border-radius:8px" allowfullscreen></iframe>
+      <iframe src="https://www.youtube.com/embed/6UTgBKLd8uM?list=PLJHWosFmMRqrFXnQO1tWTQYFIkQQ2JVaR" style="width:100%; max-width:1200px; height:75vh; border:none; border-radius:8px" allowfullscreen></iframe>
     </div>
   </div>
 
@@ -824,11 +831,10 @@
     </ul>
   </div>
 
-  <div class="slide">
+  <div class="slide" data-notes="One must also ask: Who is presumed dangerous, border-crossing, or fraudulent? Who is allowed opacity, privacy and anonymity? What non-machine vision methods of sensing were ruled out before the project began?">
     <h2>Abolitionist Counter-Tech</h2>
     <div class="card red-border" style="max-width:700px">
       <p style="color:var(--text); margin-bottom:16px">Not enough to ask, <em>"Is the dataset biased?"</em></p>
-      <p style="color:var(--dim); margin-bottom:8px">One must also ask:</p>
       <ul>
         <li>Who is presumed <strong class="red">dangerous</strong>, border-crossing, or fraudulent?</li>
         <li>Who is allowed <strong class="green">opacity</strong>, privacy and anonymity?</li>
