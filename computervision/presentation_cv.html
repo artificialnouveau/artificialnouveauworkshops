@@ -467,20 +467,27 @@
   </div>
 
   <!-- The Caption is the Training Data -->
-  <div class="slide" data-notes="CLIP (OpenAI, 2021) was trained on 400 million image-caption pairs scraped from the internet. Nobody reviewed or curated them. Every cultural bias in those captions transferred directly into how the model sees. The model doesn't learn from images alone; it learns from what people wrote about images.">
+  <!-- The Caption is the Training Data -->
+  <div class="slide" data-notes="CLIP (OpenAI, 2021) was trained on 400 million image-caption pairs scraped from the internet. Nobody reviewed or curated them. Most of these captions come from HTML alt-text, written for accessibility or SEO, not for teaching AI. The people who wrote those tags never imagined they'd become a machine's understanding of the world.">
     <h2>The Caption is the <span class="yellow">Training Data</span></h2>
-    <div style="display:flex; align-items:center; justify-content:center; gap:40px; max-width:900px; margin:0 auto;">
+    <div style="display:flex; align-items:center; justify-content:center; gap:40px; max-width:950px; margin:0 auto;">
       <div style="flex:1">
-        <div class="card yellow-border" style="margin-bottom:16px">
-          <h3 style="color:var(--yellow)">CLIP</h3>
-          <p>OpenAI (2021). Pulls images and text into the <strong>same mathematical space</strong>. An image of a dog and the word "dog" become neighbouring points.</p>
+        <div class="card yellow-border" style="margin-bottom:12px">
+          <h3 style="color:var(--yellow)">CLIP (OpenAI, 2021)</h3>
+          <p>Pulls images and text into the <strong>same mathematical space</strong>. Trained on <strong>400 million</strong> image-caption pairs scraped from the internet. Most captions come from HTML <strong>alt-text</strong>, written for SEO, not for teaching AI.</p>
         </div>
-        <div class="card fragment">
-          <p><strong>400 million</strong> image-caption pairs scraped from the internet. Nobody curated them.</p>
-          <p style="margin-top:8px; color:var(--yellow)">The model doesn't learn from images alone. <strong>It learns from what people wrote about images.</strong></p>
+        <div class="card fragment" style="padding:16px">
+          <h3>What the machine learned from</h3>
+          <p style="font-family:var(--mono); font-size:0.9rem; line-height:2; color:var(--dim)">
+            <span style="color:var(--red)">alt=""</span> — empty, invisible<br>
+            <span style="color:var(--red)">alt="IMG_0392.jpg"</span> — meaningless<br>
+            <span style="color:var(--yellow)">alt="exotic woman"</span> — stereotyping<br>
+            <span style="color:var(--yellow)">alt="normal family"</span> — whose normal?<br>
+            <span style="color:var(--green)">alt="scientist at work"</span> — rare and specific
+          </p>
         </div>
       </div>
-      <img src="img/clip_diagram.png" class="medium fragment" style="max-width:380px;">
+      <img src="img/clip_diagram.png" class="medium fragment" style="max-width:350px;">
     </div>
   </div>
 
@@ -500,28 +507,6 @@
         <div class="card fragment" style="margin-bottom:12px; border-left:3px solid var(--pink);">
           <p style="font-family:var(--mono); font-size:1.2rem; color:var(--pink)">"A model in an urban photoshoot"</p>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Alt-text as Invisible Infrastructure -->
-  <div class="slide" data-notes="Most training captions come from HTML alt-text, written for accessibility or SEO, not for teaching AI.">
-    <h2>Alt-text as <span class="yellow">Invisible Infrastructure</span></h2>
-    <div class="two-col" style="align-items:stretch">
-      <div class="card yellow-border">
-        <h3 style="color:var(--yellow)">Where do captions come from?</h3>
-        <p>Most training captions come from HTML <strong>alt-text</strong> — written for accessibility or SEO, not for teaching AI.</p>
-        <p style="margin-top:12px">The people who wrote these tags never imagined they'd become a machine's understanding of the world.</p>
-      </div>
-      <div class="card fragment">
-        <h3>Real examples</h3>
-        <p style="font-family:var(--mono); font-size:0.95rem; line-height:2; color:var(--dim)">
-          <span style="color:var(--red)">alt=""</span> — empty, invisible<br>
-          <span style="color:var(--red)">alt="IMG_0392.jpg"</span> — meaningless<br>
-          <span style="color:var(--yellow)">alt="exotic woman"</span> — stereotyping<br>
-          <span style="color:var(--yellow)">alt="normal family"</span> — whose normal?<br>
-          <span style="color:var(--green)">alt="scientist at work"</span> — rare and specific
-        </p>
       </div>
     </div>
   </div>
