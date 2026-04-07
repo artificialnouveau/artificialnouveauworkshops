@@ -561,12 +561,19 @@
   <!-- The Invisible Workers -->
   <div class="slide" data-notes="Every labeled image in a dataset was labeled by a person. ImageNet was annotated through Amazon Mechanical Turk. Content moderation teams in Nairobi, Manila, and Hyderabad review thousands of violent and sexual images daily for less than $2/hour. In 2023, TIME reported that OpenAI paid Kenyan workers less than $2/hour to label toxic content for ChatGPT's safety filters. These workers developed PTSD, anxiety, and depression. The parallel to art: think of Renaissance workshop apprentices painting backgrounds anonymously, or lithography printers whose skill made the edition possible but whose names never appeared. The labor is essential but invisible.">
     <h2>The <span class="red">Invisible</span> Workers</h2>
-    <div class="two-col" style="align-items:stretch">
-      <div class="card red-border">
-        <h3 style="color:var(--red)">Who labels the data?</h3>
-        <p>Every labeled image was labeled by a <strong>person</strong>. Outsourced through Amazon Mechanical Turk, Sama, Scale AI, Appen, and dozens of smaller contractors to workers in Nairobi, Manila, Hyderabad, Caracas, and Accra.</p>
-        <p style="margin-top:12px"><strong class="red">Often less than $2/hour</strong> to categorize violence, abuse, and hate so the model knows what to filter.</p>
+    <div style="display:flex; align-items:center; justify-content:center; gap:30px; max-width:950px; margin:0 auto;">
+      <div style="flex:1">
+        <div class="card red-border" style="margin-bottom:12px">
+          <h3 style="color:var(--red)">Who labels the data?</h3>
+          <p>Every labeled image was labeled by a <strong>person</strong>. Outsourced through Amazon Mechanical Turk, Sama, Scale AI, Appen, and dozens of smaller contractors to workers in Nairobi, Manila, Hyderabad, Caracas, and Accra.</p>
+          <p style="margin-top:12px"><strong class="red">Often less than $2/hour</strong> to categorize violence, abuse, and hate so the model knows what to filter.</p>
+        </div>
+        <div class="card fragment">
+          <h3>You've done it too</h3>
+          <p>Every time you solve a CAPTCHA ("select all traffic lights"), you are labeling training data for free. Google's reCAPTCHA was used to digitize books and train self-driving car models.</p>
+        </div>
       </div>
+      <img src="img/captcha.webp" class="fragment" style="width:250px; border-radius:8px;">
     </div>
   </div>
 
