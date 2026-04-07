@@ -402,7 +402,24 @@
       <div class="card red-border fragment">
         <h3 style="color:var(--red)">LAION-5B</h3>
         <p><strong>5.8 billion</strong> image-text pairs scraped from the internet. Used to train Stable Diffusion and other generative AI.</p>
-        <p style="margin-top:12px; color:var(--dim)">In 2023, researchers found <strong>CSAM</strong> (child sexual abuse material) in the dataset. LAION was forced to take it offline.</p>
+        <p style="margin-top:12px; color:var(--dim)">In 2023, researchers found <strong>CSAM</strong> (child sexual abuse material) in the dataset, including images of children scraped without parental knowledge. LAION was forced to take it offline.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- The Weight of Seeing -->
+  <div class="slide" data-notes="CV models themselves are small (MobileNet is 17MB, CLIP is 400MB) compared to LLMs (hundreds of GB). The environmental cost isn't in training one model. It's in deployment: millions of CCTV cameras running 24/7, data centers storing billions of images, real-time processing at global scale. The cloud is not weightless. It's a network of buildings full of machines that consume electricity and water.">
+    <h2>The Weight of <span class="accent">Seeing</span></h2>
+    <div class="two-col" style="align-items:stretch">
+      <div class="card">
+        <h3>CV models are small</h3>
+        <p>A MobileNet is <strong>17MB</strong>. CLIP is <strong>400MB</strong>. Compare that to GPT-4 at hundreds of gigabytes.</p>
+        <p style="margin-top:12px">Training a CV model uses a fraction of the energy of training a large language model.</p>
+      </div>
+      <div class="card red-border fragment">
+        <h3 style="color:var(--red)">But deployment is massive</h3>
+        <p>The cost isn't in one model. It's in <strong>millions of cameras running 24/7</strong>, data centers storing billions of images, and real-time processing at global scale.</p>
+        <p style="margin-top:12px; color:var(--dim)">The cloud is not weightless. It's buildings full of machines that consume electricity and water.</p>
       </div>
     </div>
   </div>
@@ -553,6 +570,23 @@
     </div>
   </div>
 
+  <!-- The Invisible Workers -->
+  <div class="slide" data-notes="Every labeled image in a dataset was labeled by a person. ImageNet was annotated through Amazon Mechanical Turk. Content moderation teams in Nairobi, Manila, and Hyderabad review thousands of violent and sexual images daily for less than $2/hour. In 2023, TIME reported that OpenAI paid Kenyan workers less than $2/hour to label toxic content for ChatGPT's safety filters. These workers developed PTSD, anxiety, and depression. The parallel to art: think of Renaissance workshop apprentices painting backgrounds anonymously, or lithography printers whose skill made the edition possible but whose names never appeared. The labor is essential but invisible.">
+    <h2>The <span class="red">Invisible</span> Workers</h2>
+    <div class="two-col" style="align-items:stretch">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">Who labels the data?</h3>
+        <p>Every labeled image was labeled by a <strong>person</strong>. ImageNet was annotated through Amazon Mechanical Turk. Content moderation teams in Nairobi, Manila, and Hyderabad review thousands of images daily.</p>
+        <p style="margin-top:12px"><strong class="red">Less than $2/hour</strong> to categorize violence, abuse, and hate so the model knows what to filter.</p>
+      </div>
+      <div class="card fragment">
+        <h3>The art world parallel</h3>
+        <p>Renaissance workshops had anonymous apprentices painting the backgrounds. Lithography printers whose skill made the edition possible, but whose names never appeared.</p>
+        <p style="margin-top:12px; color:var(--dim)">The labor is essential. The credit is absent. The trauma is real.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- ============================================================ -->
   <!-- CHAPTER 4: SURVEILLANCE & IMAGINATION                        -->
   <!-- ============================================================ -->
@@ -619,6 +653,26 @@
         </div>
       </div>
       <img src="img/image27.jpeg" class="fragment">
+    </div>
+  </div>
+
+  <!-- Same Tool, Different Gallery -->
+  <div class="slide" data-notes="The same object detection model can count visitors in a gallery or identify targets for a drone strike. The same facial recognition that unlocks your phone also identifies protesters at a demonstration. Context changes everything, but the model doesn't know the difference. For art students: think about how a photograph changes meaning depending on where it's displayed. A portrait in a gallery vs the same portrait in a police database. The image is identical. The power relation is completely different.">
+    <h2>Same Tool, <span class="red">Different Context</span></h2>
+    <div style="max-width:700px; margin:0 auto;">
+      <div class="card" style="margin-bottom:12px; border-left:3px solid var(--green);">
+        <p style="font-size:1.1rem; color:var(--text)">Object detection counts <strong class="green">visitors in a gallery</strong></p>
+      </div>
+      <div class="card fragment" style="margin-bottom:12px; border-left:3px solid var(--red);">
+        <p style="font-size:1.1rem; color:var(--text)">The same model identifies <strong class="red">targets for a drone strike</strong></p>
+      </div>
+      <div class="card fragment" style="margin-bottom:12px; border-left:3px solid var(--green);">
+        <p style="font-size:1.1rem; color:var(--text)">Facial recognition <strong class="green">unlocks your phone</strong></p>
+      </div>
+      <div class="card fragment" style="margin-bottom:12px; border-left:3px solid var(--red);">
+        <p style="font-size:1.1rem; color:var(--text)">The same model <strong class="red">identifies protesters</strong> at a demonstration</p>
+      </div>
+      <p class="fragment" style="color:var(--dim); margin-top:20px; font-size:1rem; line-height:1.7; text-align:center;">A portrait in a gallery vs the same portrait in a police database.<br>The image is identical. The power relation is completely different.</p>
     </div>
   </div>
 
@@ -776,6 +830,43 @@
     </div>
   </div>
 
+  <!-- Who Becomes Invisible? -->
+  <div class="slide" data-notes="These aren't edge cases. They're the people most affected by CV deployment: wheelchair users on roads, blind users depending on broken captions, people with prosthetics confusing body tracking, facial differences causing authentication failures. The error rate is an accessibility issue. If your system can't see someone, that person doesn't exist to the system. And if the system controls access, mobility, or safety, invisibility becomes danger.">
+    <h2>Who Becomes <span class="red">Invisible?</span></h2>
+    <div class="two-col" style="align-items:stretch">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">The machine can't see everyone</h3>
+        <ul>
+          <li>Wheelchair users <strong>not detected as pedestrians</strong> by self-driving cars</li>
+          <li>Blind users depending on <strong>image captions that are wrong</strong></li>
+          <li>Prosthetic limbs <strong>confusing pose estimation</strong></li>
+          <li>Facial differences causing <strong>authentication failures</strong></li>
+        </ul>
+      </div>
+      <div class="card fragment">
+        <h3>Invisibility as danger</h3>
+        <p>If the system can't see you, you don't exist to it. If that system controls access, mobility, or safety, <strong>invisibility becomes danger</strong>.</p>
+        <p style="margin-top:12px; color:var(--dim)">The error rate isn't evenly distributed. It clusters around the people the training data didn't include.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- When Machines Accuse -->
+  <div class="slide" data-notes="Robert Williams (Detroit, 2020): arrested at his home in front of his family because facial recognition matched him to a shoplifting suspect. He was held for 30 hours. The match was wrong. Porcha Woodruff (Detroit, 2023): arrested while 8 months pregnant on a carjacking charge. The facial recognition match was wrong. She was detained for 11 hours and had contractions from the stress. Nijeer Parks (New Jersey, 2019): spent 10 days in jail after facial recognition misidentified him. He was 30 miles away at the time. In all cases: no human verified the match before arrest. The algorithm was treated as evidence. Nobody was held accountable for the error.">
+    <h2>When Machines <span class="red">Accuse</span></h2>
+    <div style="max-width:750px; margin:0 auto;">
+      <div class="card red-border" style="margin-bottom:12px; padding:16px;">
+        <p style="color:var(--text); font-size:1.05rem; line-height:1.8"><strong>Robert Williams</strong> (Detroit, 2020): arrested at home in front of his family. Facial recognition matched him to a shoplifting suspect. Held for 30 hours. <strong class="red">The match was wrong.</strong></p>
+      </div>
+      <div class="card red-border fragment" style="margin-bottom:12px; padding:16px;">
+        <p style="color:var(--text); font-size:1.05rem; line-height:1.8"><strong>Porcha Woodruff</strong> (Detroit, 2023): arrested while <strong>8 months pregnant</strong> on a carjacking charge. Detained for 11 hours. Had contractions from stress. <strong class="red">The match was wrong.</strong></p>
+      </div>
+      <div class="card fragment" style="padding:16px;">
+        <p style="color:var(--dim); font-size:1rem; line-height:1.7">In every case: no human verified the match before arrest. The algorithm was treated as evidence. <strong style="color:var(--text)">Nobody was held accountable.</strong></p>
+      </div>
+    </div>
+  </div>
+
   <!-- Creative Responses -->
   <div class="slide section-title">
     <h2>Creative <span class="green">Responses</span></h2>
@@ -890,11 +981,10 @@
     <h2>What We Covered</h2>
     <div style="max-width:700px; margin:0 auto; font-size:1.05rem; line-height:2.2;">
       <p class="fragment"><span style="color:var(--accent)">Machines see math</span>: pixels, matrices, probability. Not meaning.</p>
-      <p class="fragment"><span style="color:var(--yellow)">Images are taken without consent</span>: scraped, collected, and used to train systems you never agreed to.</p>
-      <p class="fragment"><span style="color:var(--yellow)">Language shapes vision</span>: captions become training data, and nobody curates them.</p>
-      <p class="fragment"><span style="color:var(--red)">Surveillance is infrastructure</span>: CV powers systems that watch, sort, and judge, globally.</p>
-      <p class="fragment"><span style="color:var(--pink)">Beauty is algorithmic</span>: filters and scores flatten human diversity into a statistical average.</p>
-      <p class="fragment"><span style="color:var(--red)">Failure is unevenly distributed</span>: errors cluster along lines of race, gender, and disability.</p>
+      <p class="fragment"><span style="color:var(--yellow)">Images are taken without consent</span>: scraped at scale, with real environmental and human cost.</p>
+      <p class="fragment"><span style="color:var(--yellow)">Language shapes vision</span>: captions become training data, labeled by invisible, underpaid workers.</p>
+      <p class="fragment"><span style="color:var(--red)">The same tool serves different masters</span>: a gallery counter or a military targeting system.</p>
+      <p class="fragment"><span style="color:var(--red)">Failure is unevenly distributed</span>: errors cluster along lines of race, gender, and disability. People are arrested. Nobody is accountable.</p>
       <p class="fragment"><span style="color:var(--green)">Artists are pushing back</span>: making the invisible visible, refusing the default.</p>
     </div>
   </div>
