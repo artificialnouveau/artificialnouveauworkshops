@@ -717,85 +717,13 @@
   <!-- Step: Dam Square Group Detection -->
   <section id="step-dam" class="step">
     <div class="step-intro">
-      <h2>Group <span style="color:var(--red)">Detection</span></h2>
-      <p>Point your camera at a crowd and watch the machine cluster people into groups in real time. Switch to <strong style="color:var(--red)">Glitch Heatmap</strong> to see per-person glitch effects and movement trails that reveal where people walk.</p>
+      <h2>Dam Square <span style="color:var(--red)">Live</span></h2>
+      <p>Real-time pedestrian detection and group clustering from the Amsterdam Dam Square webcam. The server runs YOLOv8 on a live YouTube stream, clusters people into groups, and optionally applies per-person glitch effects with heatmap trails.</p>
     </div>
-
-    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:24px; max-width:1300px; width:100%; margin:0 auto;">
-      <!-- Video + canvas -->
-      <div style="flex:1 1 640px; max-width:900px;">
-        <video id="dam-video" playsinline muted style="display:none;"></video>
-        <canvas id="dam-canvas" style="width:100%; aspect-ratio:4/3; background:#111; border-radius:var(--radius); border:1px solid #333; display:none;"></canvas>
-        <div style="text-align:center; margin-top:16px;">
-          <button id="dam-start-btn" class="chip" style="padding:12px 32px; font-size:1rem; cursor:pointer; background:var(--red); color:#fff; border:none; border-radius:var(--radius);">Start Webcam</button>
-          <button id="dam-stop-btn" class="chip" style="padding:12px 32px; font-size:1rem; cursor:pointer; background:#333; color:var(--red); border:1px solid var(--red); border-radius:var(--radius); display:none;">Stop</button>
-        </div>
-      </div>
-
-      <!-- Controls panel -->
-      <div style="flex:0 0 300px; width:300px; display:flex; flex-direction:column; gap:14px;">
-        <!-- Stats -->
-        <div class="card" style="padding:16px;">
-          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:2px; color:var(--dim); margin-bottom:6px;">People Detected</div>
-          <div id="dam-people" style="font-size:2rem; font-weight:700; color:var(--red);">--</div>
-        </div>
-        <div class="card" style="padding:16px;">
-          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:2px; color:var(--dim); margin-bottom:6px;">Groups</div>
-          <div id="dam-groups" style="font-size:2rem; font-weight:700; color:var(--red);">--</div>
-        </div>
-        <div class="card" style="padding:16px;">
-          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:2px; color:var(--dim); margin-bottom:6px;">Lone Individuals</div>
-          <div id="dam-lone" style="font-size:2rem; font-weight:700; color:var(--red);">--</div>
-        </div>
-
-        <!-- Legend -->
-        <div class="card" style="padding:16px; min-height:80px; max-height:150px; overflow-y:auto;">
-          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:2px; color:var(--dim); margin-bottom:8px;">Group Colors</div>
-          <div id="dam-legend"></div>
-        </div>
-
-        <!-- Mode toggle -->
-        <div class="card" style="padding:16px;">
-          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:2px; color:var(--dim); margin-bottom:10px;">Mode</div>
-          <div style="display:flex; gap:0; border-radius:6px; overflow:hidden; border:1px solid #333;">
-            <button id="dam-mode-groups" class="active-mode" style="flex:1; padding:8px; background:var(--red); color:#fff; border:none; cursor:pointer; font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Groups</button>
-            <button id="dam-mode-glitch" style="flex:1; padding:8px; background:var(--bg-card); color:var(--dim); border:none; cursor:pointer; font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Glitch Heatmap</button>
-          </div>
-
-          <!-- Group controls -->
-          <div id="dam-group-controls" style="margin-top:14px;">
-            <label style="display:block; font-size:0.8rem; color:var(--dim); margin-bottom:4px;">
-              Grouping Distance <span id="dam-dist-val" style="float:right; color:var(--red);">80px</span>
-            </label>
-            <input type="range" id="dam-dist" min="30" max="300" value="80" style="width:100%; accent-color:var(--red); margin-bottom:10px;">
-            <label style="display:block; font-size:0.8rem; color:var(--dim); margin-bottom:4px;">
-              Min Group Size <span id="dam-min-val" style="float:right; color:var(--red);">2</span>
-            </label>
-            <input type="range" id="dam-min" min="2" max="6" value="2" style="width:100%; accent-color:var(--red); margin-bottom:10px;">
-          </div>
-
-          <!-- Glitch controls -->
-          <div id="dam-glitch-controls" style="margin-top:14px; display:none;">
-            <label style="display:block; font-size:0.8rem; color:var(--dim); margin-bottom:4px;">
-              Glitch Intensity <span id="dam-glitch-val" style="float:right; color:var(--red);">0.50</span>
-            </label>
-            <input type="range" id="dam-glitch" min="0" max="100" value="50" style="width:100%; accent-color:var(--red); margin-bottom:10px;">
-            <label style="display:block; font-size:0.8rem; color:var(--dim); margin-bottom:4px;">
-              Trail Persistence <span id="dam-decay-val" style="float:right; color:var(--red);">0.997</span>
-            </label>
-            <input type="range" id="dam-decay" min="980" max="999" value="997" style="width:100%; accent-color:var(--red); margin-bottom:10px;">
-            <button id="dam-clear" style="width:100%; padding:8px; background:transparent; border:1px solid var(--red); color:var(--red); border-radius:6px; cursor:pointer; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Clear Trails</button>
-          </div>
-
-          <!-- Shared -->
-          <div style="margin-top:14px;">
-            <label style="display:block; font-size:0.8rem; color:var(--dim); margin-bottom:4px;">
-              Detection Confidence <span id="dam-conf-val" style="float:right; color:var(--red);">0.30</span>
-            </label>
-            <input type="range" id="dam-conf" min="10" max="90" value="30" style="width:100%; accent-color:var(--red);">
-          </div>
-        </div>
-      </div>
+    <div style="width:100%; max-width:1200px; margin:20px auto;">
+      <iframe id="dam-iframe" src="about:blank"
+        style="width:100%; height:80vh; border:1px solid #333; border-radius:var(--radius); background:#0a0a0a;"
+        allowfullscreen></iframe>
     </div>
   </section>
 
@@ -812,6 +740,5 @@
   <script src="js/step5-beauty.js"></script>
   <script src="js/step6-clone.js"></script>
   <script src="js/step7-google-vision.js"></script>
-  <script src="js/step-dam.js"></script>
 </body>
 </html>

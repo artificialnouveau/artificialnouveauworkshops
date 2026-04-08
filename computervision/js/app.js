@@ -76,6 +76,13 @@ const App = {
     document.querySelector(`.step-tab[data-step="${n}"]`).classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    // Lazy-load Dam Square HF Space iframe
+    if (n === 'dam') {
+      var iframe = document.getElementById('dam-iframe');
+      if (iframe && (!iframe.src || iframe.src === 'about:blank' || iframe.src.endsWith('about:blank'))) {
+        iframe.src = 'https://artificialnouveau-dam-square.hf.space';
+      }
+    }
   },
 
   /**
