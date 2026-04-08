@@ -122,4 +122,11 @@ const App = {
 };
 
 // Boot
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => {
+  App.init();
+  // Handle #hash deep links (e.g. workshop_cv.html#dam)
+  var hash = window.location.hash.replace('#', '');
+  if (hash && document.getElementById('step-' + hash)) {
+    App.goToStep(hash);
+  }
+});
