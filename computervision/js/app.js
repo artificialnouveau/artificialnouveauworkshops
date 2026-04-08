@@ -75,11 +75,6 @@ const App = {
     document.getElementById(`step-${n}`).classList.add('active');
     document.querySelector(`.step-tab[data-step="${n}"]`).classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // Trigger Dam Square loading with progress indicator
-    if (n === 'dam' && window._damStartLoading) {
-      window._damStartLoading();
-    }
   },
 
   /**
@@ -128,7 +123,7 @@ const App = {
 // Boot
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
-  // Handle #hash deep links (e.g. workshop_cv.html#dam)
+  // Handle #hash deep links (e.g. workshop_cv.html#build)
   var hash = window.location.hash.replace('#', '');
   if (hash && document.getElementById('step-' + hash)) {
     App.goToStep(hash);

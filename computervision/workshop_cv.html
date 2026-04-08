@@ -47,7 +47,6 @@
     <button class="step-tab" data-step="6">5. Clone</button>
     <button class="step-tab" data-step="7">6. Prompt the Machine</button>
     <button class="step-tab" data-step="build">7. Build</button>
-    <button class="step-tab" data-step="dam">8. Dam Square</button>
   </nav>
 
   <!-- Intro -->
@@ -714,114 +713,6 @@
     </div>
   </section>
 
-  <!-- Step: Dam Square Group Detection -->
-  <section id="step-dam" class="step">
-    <div class="step-intro">
-      <h2>Dam Square <span style="color:var(--red)">Live</span></h2>
-      <p>Real-time pedestrian detection and group clustering from the Amsterdam Dam Square webcam. The server runs YOLOv8 on a live YouTube stream, clusters people into groups, and optionally applies per-person glitch effects with heatmap trails.</p>
-    </div>
-    <div style="width:100%; max-width:1200px; margin:20px auto; position:relative;">
-      <!-- Loading overlay -->
-      <div id="dam-loading" style="
-        position:absolute; inset:0; z-index:10;
-        background:#0a0a0a; border:1px solid #333; border-radius:var(--radius);
-        display:flex; flex-direction:column; align-items:center; justify-content:center;
-        gap:16px;
-      ">
-        <div class="spinner" style="width:36px; height:36px; border:3px solid #333; border-top-color:var(--red); border-radius:50%; animation:spin 1s linear infinite;"></div>
-        <div style="font-family:var(--mono); font-size:0.9rem; color:var(--dim);" id="dam-loading-text">Waking up server...</div>
-        <div style="font-family:var(--mono); font-size:0.75rem; color:#555;" id="dam-loading-sub">First load may take up to 2 minutes</div>
-        <div style="width:200px; height:4px; background:#222; border-radius:2px; margin-top:8px; overflow:hidden;">
-          <div id="dam-loading-bar" style="width:0%; height:100%; background:var(--red); border-radius:2px; transition:width 0.5s ease;"></div>
-        </div>
-        <div style="font-family:var(--mono); font-size:0.7rem; color:#555;" id="dam-loading-time">0s</div>
-      </div>
-      <iframe id="dam-iframe" src="about:blank"
-        style="width:100%; height:80vh; border:1px solid #333; border-radius:var(--radius); background:#0a0a0a;"
-        allowfullscreen></iframe>
-    </div>
-    <script>
-      (function() {
-        var DAM_URL = 'https://artificialnouveau-dam-square.hf.space';
-        var loading = document.getElementById('dam-loading');
-        var loadingText = document.getElementById('dam-loading-text');
-        var loadingSub = document.getElementById('dam-loading-sub');
-        var loadingBar = document.getElementById('dam-loading-bar');
-        var loadingTime = document.getElementById('dam-loading-time');
-        var iframe = document.getElementById('dam-iframe');
-        var timer = null;
-        var poller = null;
-        var startTime = null;
-
-        var stages = [
-          { pct: 10, text: 'Waking up server...' },
-          { pct: 30, text: 'Building container...' },
-          { pct: 50, text: 'Loading AI models...' },
-          { pct: 70, text: 'Connecting to live stream...' },
-          { pct: 90, text: 'Almost ready...' },
-        ];
-        var stageIdx = 0;
-
-        function formatTime(ms) {
-          var s = Math.floor(ms / 1000);
-          if (s < 60) return s + 's';
-          return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
-        }
-
-        window._damStartLoading = function() {
-          if (startTime) return; // already started
-          startTime = Date.now();
-          loading.style.display = 'flex';
-          stageIdx = 0;
-          loadingBar.style.width = '5%';
-
-          // Update elapsed time
-          timer = setInterval(function() {
-            var elapsed = Date.now() - startTime;
-            loadingTime.textContent = formatTime(elapsed);
-
-            // Advance stage every ~20s
-            var newStage = Math.min(Math.floor(elapsed / 20000), stages.length - 1);
-            if (newStage > stageIdx) {
-              stageIdx = newStage;
-              loadingText.textContent = stages[stageIdx].text;
-              loadingBar.style.width = stages[stageIdx].pct + '%';
-            }
-          }, 1000);
-
-          // Poll the server until it responds
-          poller = setInterval(function() {
-            fetch(DAM_URL + '/stats', { mode: 'cors' })
-              .then(function(r) {
-                if (r.ok) {
-                  // Server is ready
-                  clearInterval(timer);
-                  clearInterval(poller);
-                  loadingText.textContent = 'Connected!';
-                  loadingBar.style.width = '100%';
-                  iframe.src = DAM_URL;
-                  setTimeout(function() {
-                    loading.style.display = 'none';
-                  }, 1500);
-                }
-              })
-              .catch(function() {
-                // Still loading, continue polling
-              });
-          }, 5000);
-        };
-
-        // Also hide loading when iframe actually loads content
-        iframe.addEventListener('load', function() {
-          if (iframe.src !== 'about:blank') {
-            clearInterval(timer);
-            clearInterval(poller);
-            loading.style.display = 'none';
-          }
-        });
-      })();
-    </script>
-  </section>
 
   <!-- Footer -->
   <footer>

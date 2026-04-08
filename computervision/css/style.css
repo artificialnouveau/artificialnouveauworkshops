@@ -1150,9 +1150,3 @@ footer .mono {
     padding: 8px 4px;
   }
 }
-
-/* ===== Dam Square: mode toggle ===== */
-.active-mode {
-  background: var(--red) !important;
-  color: #fff !important;
-}
