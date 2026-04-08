@@ -75,6 +75,7 @@ const App = {
     document.getElementById(`step-${n}`).classList.add('active');
     document.querySelector(`.step-tab[data-step="${n}"]`).classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
   },
 
   /**
