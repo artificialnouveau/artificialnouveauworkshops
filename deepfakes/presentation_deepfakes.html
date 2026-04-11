@@ -200,6 +200,7 @@
         <li style="color:var(--dim); font-size:1.1rem">Part 1: Deepfakes</li>
         <li>What Are Deepfakes</li>
         <li style="color:var(--accent)">Types &amp; Origins</li>
+        <li style="color:var(--red)">How Easy Is It?</li>
         <li style="color:var(--orange)">Applications</li>
         <li style="color:var(--yellow)">Degrees of Simulation</li>
         <li style="color:var(--red)">Porn &amp; Consent</li>
@@ -294,6 +295,61 @@
     <div style="display:flex; gap:16px; justify-content:center; margin-top:16px">
       <img src="../hku2025_genai_deepfakes/img/slide39_Picture_6.jpg" style="max-height:200px; border-radius:8px; object-fit:contain">
       <img src="../hku2025_genai_deepfakes/img/slide39_Picture_8.jpg" style="max-height:200px; border-radius:8px; object-fit:contain">
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- HOW EASY IS IT?                               -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Before we look at applications, let's talk about accessibility. People assume deepfakes require expertise. They don't. The barrier to entry has collapsed.">
+    <h2>How <span class="red">Easy</span> Is It?</h2>
+    <div class="divider" style="background:var(--red)"></div>
+  </div>
+
+  <div class="slide" data-notes="DeepFaceLive and DeepLiveCam are open-source tools that run real-time face swaps on a live webcam feed. You download the software, pick a face, and your webcam becomes that person in real time. It works on Zoom, Google Meet, Twitch, any video call. No coding required, no cloud service, runs on a consumer GPU. This is what scammers use for live video call fraud.">
+    <h2>Real-Time <span class="red">Deepfakes</span></h2>
+    <div class="two-col" style="max-width:950px; align-items:start">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">DeepLiveCam / DeepFaceLive</h3>
+        <ul>
+          <li><strong>Real-time</strong> face swap on a live webcam</li>
+          <li>Works on Zoom, Google Meet, Twitch</li>
+          <li><strong>Free</strong>, open-source, runs locally</li>
+          <li>No coding required</li>
+          <li>Consumer GPU is enough</li>
+        </ul>
+      </div>
+      <div class="card orange-border fragment">
+        <h3 style="color:var(--orange)">What This Means</h3>
+        <ul>
+          <li>Live video calls are <strong>no longer proof of identity</strong></li>
+          <li>Romance scammers use it to <strong>video chat as someone else</strong></li>
+          <li>$25M stolen from a company via <strong>deepfake video call</strong> (Hong Kong, 2024)</li>
+          <li>You can become anyone in <strong>seconds</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Beyond live face swaps, the full deepfake toolkit is now freely available to anyone. Voice cloning needs just 6 seconds of audio. Lip sync tools make any face say anything. Face swap apps on phones do it in one tap. Telegram bots generate deepfake nudes on demand for a few dollars. The skills required have gone from 'PhD researcher' in 2017 to 'download an app' in 2025.">
+    <h2>The <span class="red">Toolkit</span></h2>
+    <div class="three-col" style="max-width:1000px; gap:12px">
+      <div class="card" style="border-left-color:var(--accent)">
+        <h3 style="color:var(--accent); font-size:1.1rem">Voice Cloning</h3>
+        <p style="font-size:1rem">Clone any voice from <strong>6 seconds</strong> of audio. Free tools available.</p>
+      </div>
+      <div class="card pink-border fragment">
+        <h3 style="color:var(--pink); font-size:1.1rem">Lip Sync</h3>
+        <p style="font-size:1rem">Make any face say anything. Upload video + audio, done.</p>
+      </div>
+      <div class="card red-border fragment">
+        <h3 style="color:var(--red); font-size:1.1rem">Nudify Bots</h3>
+        <p style="font-size:1rem">Telegram bots generate deepfake nudes on demand. <strong>Millions of users.</strong></p>
+      </div>
+    </div>
+    <div class="card fragment" style="max-width:1000px; margin-top:14px; border-left-color:var(--yellow)">
+      <p><strong class="yellow">2017:</strong> PhD-level skills required. <strong class="red">2025:</strong> download an app. The barrier to creating deepfakes has <strong>effectively disappeared</strong>.</p>
     </div>
   </div>
 
