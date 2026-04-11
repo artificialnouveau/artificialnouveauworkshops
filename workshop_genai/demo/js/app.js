@@ -836,12 +836,12 @@ const App = {
   currentStep: 1,
 
   init() {
-    TextToImage.init();
-    ImageToImage.init();
-    ImageToText.init();
-    PhotoMaker.init();
-    ImageTo3D.init();
-    TextTo3D.init();
+    if (document.getElementById('btn-generate')) TextToImage.init();
+    if (document.getElementById('file-img2img')) ImageToImage.init();
+    if (document.getElementById('file-img2txt')) ImageToText.init();
+    if (document.getElementById('file-photomaker')) PhotoMaker.init();
+    if (document.getElementById('file-img3d')) ImageTo3D.init();
+    if (document.getElementById('btn-txt3d')) TextTo3D.init();
     if (document.getElementById('file-faceswap-source')) FaceSwap.init();
     if (document.getElementById('file-pose')) PoseTransfer.init();
     this.setupNav();
