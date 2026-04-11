@@ -22,6 +22,19 @@ const API_BASE = window.location.hostname === 'localhost' || window.location.hos
   : 'https://genai-workshop-api.onrender.com';
 
 /* ================================================================
+   Lazy-load model-viewer (only needed for 3D tabs)
+   ================================================================ */
+let modelViewerLoaded = false;
+function loadModelViewer() {
+  if (modelViewerLoaded) return;
+  modelViewerLoaded = true;
+  const script = document.createElement('script');
+  script.type = 'module';
+  script.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js';
+  document.head.appendChild(script);
+}
+
+/* ================================================================
    Utilities
    ================================================================ */
 function fileToDataURI(file, maxSize = 1024) {
@@ -852,6 +865,7 @@ const App = {
 
   goToStep(n) {
     this.currentStep = n;
+    if (n === 5 || n === 6) loadModelViewer();
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('active'));
     document.getElementById(`step-${n}`).classList.add('active');

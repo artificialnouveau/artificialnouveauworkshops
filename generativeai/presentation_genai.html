@@ -218,24 +218,8 @@
     </div>
   </div>
 
-  <div class="slide" data-notes="Before we dive into the details, let's talk about empires. Historically, an empire is a political system where a central power extends control over distant peoples and territories — extracting resources, exploiting labour, and imposing its culture as universal. Think the British Empire, the East India Company, the Belgian Congo. Karen Hao spent years reporting on OpenAI from the inside, and her 2025 book 'Empire of AI' argues that the same structural logic — not just metaphorically, but operationally — drives today's AI industry. I'm using her framework because it makes visible the patterns that tech marketing obscures.">
-    <h2>Why <span class="accent">"Empire"</span>?</h2>
-    <div style="display:flex; gap:32px; align-items:start; max-width:1000px; width:100%">
-      <img src="../hku2025_genai_deepfakes/img/empire_of_ai_cover.jpg" style="width:200px; border-radius:8px; flex-shrink:0; box-shadow:0 4px 20px rgba(0,0,0,0.4)">
-      <div style="text-align:left">
-        <div class="card" style="margin-bottom:16px">
-          <h3>What is an Empire?</h3>
-          <p style="color:var(--text)">A system where a <strong>central power</strong> extends control over distant peoples and territories — <em>extracting resources</em>, <em>exploiting labour</em>, and <em>imposing its culture</em> as universal.</p>
-        </div>
-        <div class="card fragment" style="border-left-color:var(--pink); margin-bottom:16px">
-          <h3 style="color:var(--pink)">Karen Hao — <em>Empire of AI</em> (2025)</h3>
-          <p>After years reporting on OpenAI from the inside, Hao argues the logic driving AI expansion isn't new — it's <strong>colonial logic</strong>, the same patterns used by the East India Company, the Belgian Congo, and the British Empire.</p>
-        </div>
-        <div class="card fragment" style="border-left-color:var(--yellow)">
-          <p style="color:var(--text)">She identifies <strong class="yellow">five characteristics</strong> that every empire shares — and that map directly onto how today's AI industry operates.</p>
-        </div>
-      </div>
-    </div>
+  <div class="slide" data-notes="What is an Empire? A system where a central power extends control over distant peoples and territories -- extracting resources, exploiting labour, and imposing its culture as universal. Karen Hao, Empire of AI (2025): After years reporting on OpenAI from the inside, Hao argues the logic driving AI expansion isn't new -- it's colonial logic, the same patterns used by the East India Company, the Belgian Congo, and the British Empire. She identifies five characteristics that every empire shares -- and that map directly onto how today's AI industry operates.">
+    <img src="../hku2025_genai_deepfakes/img/empire_of_ai_cover.jpg" style="max-height:70vh; border-radius:12px; box-shadow:0 8px 40px rgba(0,0,0,0.5)">
   </div>
 
   <div class="slide" data-notes="Here are the five characteristics of an empire, applied to AI. Each one will structure the rest of this presentation. We'll look at how AI companies appropriate resources, scale at all costs, exploit labour, impose a civilizing mission, and justify it all through competition.">
@@ -274,32 +258,28 @@
     <div class="divider"></div>
   </div>
 
-  <div class="slide" data-notes="Generative AI is about creating new content — not just classifying or analysing existing data. The key inputs and outputs span text, images, sound, animation, and 3D models. The crucial insight: these models learn statistical patterns and produce novel outputs that resemble their training data.">
+  <div class="slide" data-notes="Generative AI is about creating new content, not just classifying or analysing existing data. Models learn statistical patterns from massive training datasets and generate new outputs that resemble, but are not identical to, what they were trained on. The key modalities span text, images, sound, video, and 3D models. Each can serve as both input and output.">
     <h2>Generative AI</h2>
     <div class="card" style="max-width:750px; margin-bottom:24px">
       <p style="font-size:1.5rem; color:var(--text); line-height:1.8">
         <em>Generative AI</em> enables users to quickly generate <strong>synthetic media</strong> based on a variety of inputs.
       </p>
     </div>
-    <div class="three-col fragment" style="max-width:800px">
-      <div class="card"><h3>Inputs &amp; Outputs</h3>
-        <ul>
-          <li>Text</li>
-          <li>Images</li>
-          <li>Sounds</li>
-          <li>Animation</li>
-          <li>3D Models</li>
-        </ul>
-      </div>
-      <div class="card green-border" style="grid-column: span 2">
-        <h3 style="color:var(--green)">Key Idea</h3>
-        <p style="color:var(--text)">Models learn patterns from training data and generate <strong>new content</strong> that resembles — but is not identical to — what they were trained on.</p>
-      </div>
+    <div class="card green-border fragment" style="max-width:750px; margin-bottom:24px">
+      <h3 style="color:var(--green)">Key Idea</h3>
+      <p style="color:var(--text)">Models learn <strong>patterns</strong> from training data and generate <strong>new content</strong> that resembles, but is not identical to, what they were trained on.</p>
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; max-width:800px" class="fragment">
+      <div class="card" style="padding:12px 20px; flex:1; min-width:140px; text-align:center"><p style="color:var(--text)">Text</p></div>
+      <div class="card" style="padding:12px 20px; flex:1; min-width:140px; text-align:center"><p style="color:var(--text)">Images</p></div>
+      <div class="card" style="padding:12px 20px; flex:1; min-width:140px; text-align:center"><p style="color:var(--text)">Video</p></div>
+      <div class="card" style="padding:12px 20px; flex:1; min-width:140px; text-align:center"><p style="color:var(--text)">Audio</p></div>
+      <div class="card" style="padding:12px 20px; flex:1; min-width:140px; text-align:center"><p style="color:var(--text)">3D Models</p></div>
     </div>
   </div>
 
-  <div class="slide" data-notes="Training a generative model requires massive datasets and significant compute. These images show the training pipeline — from raw data collection through to the neural network learning patterns over many iterations.">
-    <h2>Training Time</h2>
+  <div class="slide" data-notes="So if models learn patterns from data, the next question is: how much data do they need? The answer is: all of it. Training a generative model requires massive datasets and enormous compute. These images show the training pipeline, from raw data collection through to neural networks learning patterns over many iterations. This is what creates the demand for resource appropriation, which we will explore next.">
+    <h2>What Does It Take to <span class="accent">Train</span> a Model?</h2>
     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; max-width:1100px; width:100%">
       <img src="../hku2025_genai_deepfakes/img/slide5_Picture_8.jpg" style="grid-column:1; grid-row:1; width:100%; border-radius:8px; object-fit:contain">
       <img src="../hku2025_genai_deepfakes/img/slide5_Picture_12.png" class="fragment" style="grid-column:1; grid-row:2; width:100%; border-radius:8px; object-fit:contain">
@@ -310,8 +290,8 @@
     </div>
   </div>
 
-  <div class="slide" data-notes="Two primary methods for controlling model behaviour. First: update the training data — more diverse and higher quality data leads to better outputs. Second: reinforcement learning from human feedback (RLHF) — humans rate outputs and the model adjusts. This is how ChatGPT was fine-tuned.">
-    <h2>How to Control a Model</h2>
+  <div class="slide" data-notes="Once a model is trained, who decides what it can and cannot produce? These are the control mechanisms. First: update the training data, more diverse and higher quality data leads to different outputs. Second: reinforcement learning from human feedback (RLHF), where humans rate outputs and the model adjusts. This is how ChatGPT was fine-tuned. But remember: the people doing that rating are often paid $2/hour in Kenya. We will come back to this.">
+    <h2>Who Controls What AI <span class="accent">Produces</span>?</h2>
     <div class="two-col" style="max-width:900px">
       <div class="card yellow-border">
         <h3 style="color:var(--yellow)">Update the Training Dataset</h3>
@@ -334,8 +314,8 @@
     </div>
   </div>
 
-  <div class="slide" data-notes="Two more control mechanisms. Limiting output: reducing the weights of certain terms — for example, making it harder to generate violent or racist imagery. Prompt transformation: the system rewrites user prompts before they reach the model, adding safety constraints or expanding vague requests.">
-    <h2>How to Control a Model</h2>
+  <div class="slide" data-notes="Two more control mechanisms. Limiting output: reducing the weights of certain terms, for example, making it harder to generate violent or racist imagery. Prompt transformation: the system rewrites user prompts before they reach the model, adding safety constraints or expanding vague requests. The question is: whose values determine what gets limited? We will see later how these decisions encode Western defaults and erase cultural specificity.">
+    <h2>Who Controls What AI <span class="accent">Produces</span>?</h2>
     <div class="two-col" style="max-width:900px; align-items:start">
       <div class="card red-border">
         <h3 style="color:var(--red)">Limit What It Can Produce</h3>
@@ -352,27 +332,6 @@
 
   <div class="slide" data-notes="A video to reflect on about generative AI and its implications.">
     <iframe src="https://www.youtube-nocookie.com/embed/ZU767J6p96o" style="width:80%; max-width:700px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- GENERATIVE AI APPLICATIONS                    -->
-  <!-- ============================================ -->
-
-  <div class="slide section-title" data-notes="Now let's look at some of the applications of generative AI — what these tools can actually do today.">
-    <h2>Generative AI <span class="accent">Applications</span></h2>
-    <div class="divider"></div>
-  </div>
-
-  <div class="slide" data-notes="Overview of what generative AI can produce today. The key modalities are text-to-image, text-to-video, image-to-image transformation, image-to-video animation, and combined image+text-to-video. Each has different tools and different levels of maturity.">
-    <h2>Generative AI Applications</h2>
-    <h3>Image &amp; Video Synthesis</h3>
-    <div class="three-col" style="max-width:800px; margin-top:16px">
-      <div class="card"><p style="color:var(--text)">Text-to-Image</p></div>
-      <div class="card"><p style="color:var(--text)">Text-to-Video</p></div>
-      <div class="card"><p style="color:var(--text)">Image-to-Image</p></div>
-      <div class="card"><p style="color:var(--text)">Image-to-Video</p></div>
-      <div class="card" style="grid-column: span 2"><p style="color:var(--text)">Image+Text-to-Video</p></div>
-    </div>
   </div>
 
   <!-- ============================================ -->
@@ -552,6 +511,11 @@
     </div>
   </div>
 
+  <div class="slide" data-notes="OpenAI testified in favor of an Illinois bill that would limit when AI labs can be held liable, even in cases where their products cause critical harm. This is the same company that promises to shield its users from copyright claims while simultaneously lobbying to reduce its own accountability. The pattern: protect the company, not the public.">
+    <h2>Limiting <span class="red">Liability</span></h2>
+    <img src="../hku2025_genai_deepfakes/img/openai_liability_bill.png" style="max-height:65vh; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.4)">
+  </div>
+
   <div class="slide" data-notes="LAION-5B is one of the largest open datasets used to train image generation models like Stable Diffusion. 5 billion image-text pairs scraped from the web. It was later found to contain child sexual abuse material.">
     <h2>LAION-5B Dataset</h2>
     <div class="card red-border" style="max-width:700px">
@@ -560,6 +524,79 @@
         <li>Sourced from Pinterest, WordPress, Blogspot, Flickr, DeviantArt &amp; Wikimedia Commons</li>
         <li class="fragment" style="opacity:0"><strong class="red">Found to contain child sexual abuse material (CSAM)</strong></li>
       </ul>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- LABOR EXPLOITATION                            -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="We just saw what was taken. Now: who did the work? Empires have always relied on cheap or coerced labor. Today's AI empires follow the same pattern: content moderators in Kenya earn $2/hour cleaning up traumatic training data, while the companies they serve are valued in the trillions.">
+    <h2>Labor <span class="orange">Exploitation</span></h2>
+    <div class="divider" style="background:var(--orange)"></div>
+  </div>
+
+  <div class="slide" data-notes="AI's invisible workforce. Sama employed workers in Nairobi, Kenya to review horrific content for $2/hour so ChatGPT could have safety filters. TIME's 2023 investigation revealed workers developed PTSD. Data annotators in India, the Philippines, Venezuela label millions of images for pennies per task.">
+    <h2>The Invisible <span class="orange">Workforce</span></h2>
+    <div class="three-col" style="max-width:1000px; gap:16px">
+      <div class="card orange-border">
+        <h3 style="color:var(--orange)">Content Moderators</h3>
+        <ul>
+          <li>$2/hour in Nairobi, Kenya</li>
+          <li>Review beheadings, CSAM, self-harm</li>
+          <li>PTSD and depression widespread</li>
+          <li>Contracts terminated when workers organized</li>
+        </ul>
+        <p style="color:var(--dim); font-size:0.8rem; margin-top:8px">Source: TIME investigation, 2023</p>
+      </div>
+      <div class="card red-border fragment">
+        <h3 style="color:var(--red)">Data Annotators</h3>
+        <ul>
+          <li>$1–3/hour in India, Philippines, Venezuela</li>
+          <li>Label millions of images &amp; text</li>
+          <li>No benefits, no job security</li>
+          <li>Classified as "independent contractors"</li>
+        </ul>
+        <p style="color:var(--dim); font-size:0.8rem; margin-top:8px">Scale AI, Appen, Remotasks</p>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">Mineral Miners</h3>
+        <ul>
+          <li>Cobalt mines in DRC — 40,000 children</li>
+          <li>Lithium extraction in Chile, Argentina</li>
+          <li>Rare earths in Myanmar, China</li>
+          <li>Powers the GPUs that run AI</li>
+        </ul>
+        <p style="color:var(--dim); font-size:0.8rem; margin-top:8px">Source: Amnesty International</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Video showing workers being displaced by AI. Concept artists, illustrators, copywriters, translators, voice actors, customer service agents — entire professions being devalued or eliminated.">
+    <h2>Displaced by <span class="red">AI</span></h2>
+    <video src="../hku2025_genai_deepfakes/img/ai_displacement_video.mp4" controls style="max-height:60vh; max-width:80%; border-radius:8px; margin-top:12px"></video>
+  </div>
+
+  <div class="slide" data-notes="The pattern is identical to colonial labor structures. The wealth ratio is staggering -- the people doing the most dangerous and psychologically damaging work capture the smallest fraction of value.">
+    <h2>The <span class="red">Colonial</span> Pattern</h2>
+    <p style="color:var(--dim); margin-bottom:20px; font-size:1.1rem">The wealth flows up. The harm flows down.</p>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div class="card" style="border-left-color:var(--orange)">
+        <h3>The Workers</h3>
+        <ul>
+          <li>Content moderator in Kenya: <strong style="color:var(--orange)">$2/hour</strong></li>
+          <li>Data annotator in India: <strong style="color:var(--orange)">$1–3/hour</strong></li>
+          <li>Cobalt miner in DRC: <strong style="color:var(--orange)">$2–3/day</strong></li>
+        </ul>
+      </div>
+      <div class="card fragment" style="border-left-color:var(--green)">
+        <h3>The Companies</h3>
+        <ul>
+          <li>OpenAI valuation: <strong style="color:var(--green)">$150 billion</strong></li>
+          <li>Scale AI valuation: <strong style="color:var(--green)">$14 billion</strong></li>
+          <li>Nvidia market cap: <strong style="color:var(--green)">$3 trillion</strong></li>
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -610,79 +647,6 @@
 
   <div class="slide" data-notes="Video showing the scale and impact of AI data centre infrastructure.">
     <video src="../hku2025_genai_deepfakes/img/datacentre_video.mp4" controls style="max-height:70vh; max-width:80%; border-radius:8px"></video>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- PART 6: LABOR EXPLOITATION                    -->
-  <!-- ============================================ -->
-
-  <div class="slide section-title" data-notes="Empires have always relied on cheap or coerced labor. Today's AI empires follow the same pattern: content moderators in Kenya earn $2/hour cleaning up traumatic training data, while the companies they serve are valued in the trillions.">
-    <h2>Labor <span class="orange">Exploitation</span></h2>
-    <div class="divider" style="background:var(--orange)"></div>
-  </div>
-
-  <div class="slide" data-notes="AI's invisible workforce. Sama employed workers in Nairobi, Kenya to review horrific content for $2/hour so ChatGPT could have safety filters. TIME's 2023 investigation revealed workers developed PTSD. Data annotators in India, the Philippines, Venezuela label millions of images for pennies per task.">
-    <h2>The Invisible <span class="orange">Workforce</span></h2>
-    <div class="three-col" style="max-width:1000px; gap:16px">
-      <div class="card orange-border">
-        <h3 style="color:var(--orange)">Content Moderators</h3>
-        <ul>
-          <li>$2/hour in Nairobi, Kenya</li>
-          <li>Review beheadings, CSAM, self-harm</li>
-          <li>PTSD and depression widespread</li>
-          <li>Contracts terminated when workers organized</li>
-        </ul>
-        <p style="color:var(--dim); font-size:0.8rem; margin-top:8px">Source: TIME investigation, 2023</p>
-      </div>
-      <div class="card red-border fragment">
-        <h3 style="color:var(--red)">Data Annotators</h3>
-        <ul>
-          <li>$1–3/hour in India, Philippines, Venezuela</li>
-          <li>Label millions of images & text</li>
-          <li>No benefits, no job security</li>
-          <li>Classified as "independent contractors"</li>
-        </ul>
-        <p style="color:var(--dim); font-size:0.8rem; margin-top:8px">Scale AI, Appen, Remotasks</p>
-      </div>
-      <div class="card yellow-border fragment">
-        <h3 style="color:var(--yellow)">Mineral Miners</h3>
-        <ul>
-          <li>Cobalt mines in DRC — 40,000 children</li>
-          <li>Lithium extraction in Chile, Argentina</li>
-          <li>Rare earths in Myanmar, China</li>
-          <li>Powers the GPUs that run AI</li>
-        </ul>
-        <p style="color:var(--dim); font-size:0.8rem; margin-top:8px">Source: Amnesty International</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="slide" data-notes="Video showing workers being displaced by AI. Concept artists, illustrators, copywriters, translators, voice actors, customer service agents — entire professions being devalued or eliminated.">
-    <h2>Displaced by <span class="red">AI</span></h2>
-    <video src="../hku2025_genai_deepfakes/img/ai_displacement_video.mp4" controls style="max-height:60vh; max-width:80%; border-radius:8px; margin-top:12px"></video>
-  </div>
-
-  <div class="slide" data-notes="The pattern is identical to colonial labor structures. The wealth ratio is staggering — the people doing the most dangerous and psychologically damaging work capture the smallest fraction of value.">
-    <h2>The <span class="red">Colonial</span> Pattern</h2>
-    <p style="color:var(--dim); margin-bottom:20px; font-size:1.1rem">The wealth flows up. The harm flows down.</p>
-    <div class="two-col" style="max-width:900px; align-items:start">
-      <div class="card" style="border-left-color:var(--orange)">
-        <h3>The Workers</h3>
-        <ul>
-          <li>Content moderator in Kenya: <strong style="color:var(--orange)">$2/hour</strong></li>
-          <li>Data annotator in India: <strong style="color:var(--orange)">$1–3/hour</strong></li>
-          <li>Cobalt miner in DRC: <strong style="color:var(--orange)">$2–3/day</strong></li>
-        </ul>
-      </div>
-      <div class="card fragment" style="border-left-color:var(--green)">
-        <h3>The Companies</h3>
-        <ul>
-          <li>OpenAI valuation: <strong style="color:var(--green)">$150 billion</strong></li>
-          <li>Scale AI valuation: <strong style="color:var(--green)">$14 billion</strong></li>
-          <li>Nvidia market cap: <strong style="color:var(--green)">$3 trillion</strong></li>
-        </ul>
-      </div>
-    </div>
   </div>
 
   <!-- ============================================ -->
@@ -868,6 +832,229 @@
       <video src="../hku2025_genai_deepfakes/img/peckham_slide40_3.mp4" controls style="width:100%; max-height:35vh; border-radius:8px"></video>
       <video src="../hku2025_genai_deepfakes/img/peckham_slide40_4.mp4" controls style="width:100%; max-height:35vh; border-radius:8px"></video>
     </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- THE LIAR'S DIVIDEND                          -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="There is a consequence of generative AI that may be more dangerous than misinformation itself: the ability to dismiss real evidence as fake. When anything can be generated, nothing can be trusted.">
+    <h2>The Liar's <span class="accent">Dividend</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <div class="slide" data-notes="The liar's dividend is a term coined by law professors Bobby Chesney and Danielle Citron in 2019. The idea is simple: as deepfakes and AI-generated content become widespread, liars gain a new defense. Anyone caught on camera doing something incriminating can simply claim the footage is AI-generated. The mere existence of deepfakes gives plausible deniability to everyone, and the people who benefit most are those with something to hide.">
+    <h2>What Is the Liar's Dividend?</h2>
+    <div class="card" style="border-left-color:var(--red); max-width:800px">
+      <p style="font-size:1.3rem">"As the public becomes more aware that video and audio can be faked, <strong>liars</strong> gain a new defense: they can dismiss <strong>authentic evidence</strong> as a deepfake."</p>
+      <p style="color:var(--dim); margin-top:8px">— Chesney &amp; Citron, <em>Deep Fakes: A Looming Challenge</em>, 2019</p>
+    </div>
+    <ul class="fragment" style="max-width:800px; margin-top:20px">
+      <li>Politicians caught on camera claim <strong>"it's AI-generated"</strong></li>
+      <li class="fragment">Authentic footage of police brutality, war crimes, or corruption becomes <strong>easier to deny</strong></li>
+      <li class="fragment">The burden of proof shifts from the accused to the <strong>accuser</strong></li>
+    </ul>
+  </div>
+
+  <div class="slide" data-notes="This is already happening. During the 2023 Gabon coup attempt, the government released a video of President Ali Bongo to prove he was alive and well. Citizens and military officials dismissed it as a deepfake, regardless of whether it was real. In India and across Africa, politicians have dismissed authentic recordings by claiming AI manipulation. Body cam footage, citizen journalism, courtroom evidence, and human rights documentation all become contestable. The paradox: the more we worry about fake content, the easier it becomes to deny real content.">
+    <h2>Already Happening</h2>
+    <div class="two-col" style="max-width:900px">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">Real Evidence Dismissed</h3>
+        <ul>
+          <li>Gabon coup: Bongo video called a deepfake by military</li>
+          <li>Indian politicians dismiss audio leaks as "AI"</li>
+          <li>Body cam footage challenged in court</li>
+          <li>War crimes documentation contested</li>
+        </ul>
+      </div>
+      <div class="card orange-border fragment">
+        <h3 style="color:var(--orange)">The Paradox</h3>
+        <ul>
+          <li>The more we fear <strong>fake</strong> content...</li>
+          <li>...the easier it is to deny <strong>real</strong> content</li>
+          <li>Trust in <strong>all</strong> media erodes</li>
+          <li>The powerful benefit most from this confusion</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- MODEL COLLAPSE                               -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="What happens when AI trains on AI? The internet is filling with synthetic content, and the next generation of models will train on the outputs of the last. This creates a feedback loop with real consequences.">
+    <h2>Model <span class="accent">Collapse</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <div class="slide" data-notes="Researchers at Oxford and Cambridge published a paper in 2023 showing that when language models are trained on data generated by other language models, they progressively degrade. The outputs become more generic, more repetitive, and less diverse. They called this model collapse. Think of it like photocopying a photocopy — each generation loses fidelity. The tail of the distribution disappears first: rare languages, niche knowledge, unusual perspectives. What survives is the most common, most average, most Western, most English-language content.">
+    <h2>The Feedback Loop</h2>
+    <div class="card" style="border-left-color:var(--red); max-width:800px">
+      <p style="font-size:1.3rem">When models train on the outputs of other models, each generation becomes <strong>more generic</strong>, <strong>more repetitive</strong>, and <strong>less diverse</strong>.</p>
+      <p style="color:var(--dim); margin-top:8px">— Shumailov et al., <em>The Curse of Recursion</em>, 2023</p>
+    </div>
+    <ul class="fragment" style="max-width:800px; margin-top:20px">
+      <li>Like photocopying a photocopy — each generation <strong>loses fidelity</strong></li>
+      <li class="fragment">The tail disappears first: <strong>rare languages</strong>, niche knowledge, unusual perspectives</li>
+      <li class="fragment">What survives is the most common, most average, most <strong>English-language</strong> content</li>
+    </ul>
+  </div>
+
+  <div class="slide" data-notes="The scale of this problem is staggering. By some estimates, AI-generated content already makes up a significant and growing share of new content on the internet. Amazon is flooded with AI-generated books. Stock photo sites are filling with synthetic images. News sites publish AI-written articles. Social media is full of AI slop. This means the training data for the next generation of models is increasingly synthetic. The internet — humanity's shared knowledge base — is being polluted by its own reflections. Minority languages, oral traditions, indigenous knowledge systems, and cultural specificity are the first casualties.">
+    <h2>The Internet Is Eating Itself</h2>
+    <div class="two-col" style="max-width:900px">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">AI Slop Everywhere</h3>
+        <ul>
+          <li>Amazon flooded with <strong>AI-generated books</strong></li>
+          <li>Stock sites filling with <strong>synthetic images</strong></li>
+          <li>News sites publishing <strong>AI-written articles</strong></li>
+          <li>Social media awash in <strong>AI-generated content</strong></li>
+        </ul>
+      </div>
+      <div class="card orange-border fragment">
+        <h3 style="color:var(--orange)">What Gets Erased</h3>
+        <ul>
+          <li><strong>Minority languages</strong> — already underrepresented</li>
+          <li><strong>Oral traditions</strong> — never digitized to begin with</li>
+          <li><strong>Indigenous knowledge</strong> — flattened into Western categories</li>
+          <li><strong>Cultural specificity</strong> — replaced by generic averages</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- CONCENTRATION OF POWER                       -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="The early internet was built on decentralized, open protocols — email, the web, RSS. Anyone could build on it. AI is the opposite: a handful of corporations control the foundational models, the compute, and the data. This concentration of power has implications for democracy itself.">
+    <h2>Concentration of <span class="accent">Power</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <div class="slide" data-notes="The early internet promised decentralization. Email is an open protocol — anyone can run a server. The web is an open protocol — anyone can build a site. RSS let anyone publish and subscribe. AI breaks this pattern entirely. The foundational models are controlled by 3-4 corporations. Training a frontier model costs hundreds of millions of dollars. The compute is concentrated in a few cloud providers. The data pipelines are proprietary. There is no 'open protocol' for AI — you use their model, their API, their terms.">
+    <h2>The Internet vs. AI</h2>
+    <div class="two-col" style="max-width:900px">
+      <div class="card" style="border-left-color:var(--green)">
+        <h3 style="color:var(--green)">The Early Internet</h3>
+        <ul>
+          <li><strong>Open protocols</strong> — email, HTTP, RSS</li>
+          <li>Anyone can run a server</li>
+          <li>Decentralized by design</li>
+          <li>Low barrier to entry</li>
+        </ul>
+      </div>
+      <div class="card red-border fragment">
+        <h3 style="color:var(--red)">The AI Era</h3>
+        <ul>
+          <li><strong>Proprietary models</strong> — GPT, Gemini, Claude</li>
+          <li>Training costs <strong>$100M+</strong></li>
+          <li>Concentrated in <strong>3–4 corporations</strong></li>
+          <li>You use their API, their terms</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="The historical parallel is the East India Company. A private corporation granted a charter by the state, which then became more powerful than the state itself. The East India Company had its own army, its own courts, its own currency. It governed 200 million people. Today, AI companies are becoming critical infrastructure that governments depend on but don't control. Schools use GPT. Hospitals use AI diagnostics. Courts use AI risk assessment. Militaries use AI targeting. The companies that build these systems set the rules — what gets filtered, what gets flagged, what gets generated. This is governance without elections.">
+    <h2>The East India Company Parallel</h2>
+    <div class="card" style="border-left-color:var(--accent); max-width:800px">
+      <p style="font-size:1.2rem">A private corporation, chartered by the state, that <strong>became more powerful than the state</strong>. Its own army, courts, and currency. It governed <strong>200 million people</strong>.</p>
+    </div>
+    <div class="card red-border fragment" style="max-width:800px; margin-top:14px">
+      <h3 style="color:var(--red)">Today's Version</h3>
+      <ul>
+        <li>Schools use GPT. Hospitals use AI diagnostics. Courts use AI risk assessment.</li>
+        <li>Governments <strong>depend</strong> on private AI infrastructure they <strong>don't control</strong></li>
+        <li>These companies decide what gets filtered, flagged, or generated</li>
+        <li>Governance without elections</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- DESKILLING                                   -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="As people offload writing, coding, reasoning, and decision-making to AI, what happens to the underlying human skills? This isn't hypothetical — it's already measurable.">
+    <h2>Deskilling &amp; Cognitive <span class="accent">Dependency</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <div class="slide" data-notes="The calculator analogy is useful but understates the problem. When calculators became widespread, students stopped practising mental arithmetic. But the loss was narrow — arithmetic is a mechanical skill. What AI automates is broader: writing, reasoning, diagnosis, design, judgment. Medical students using AI diagnostics without learning the underlying reasoning. Junior developers who can't code without Copilot. Law students who can't draft without GPT. Designers who can't sketch without Midjourney. The question isn't whether AI makes us more productive — it clearly does. The question is what we lose when we stop practising the skills that AI replaces.">
+    <h2>The Calculator Effect at Scale</h2>
+    <div class="two-col" style="max-width:900px">
+      <div class="card" style="border-left-color:var(--yellow)">
+        <h3 style="color:var(--yellow)">Calculators (1970s)</h3>
+        <ul>
+          <li>Lost skill: <strong>mental arithmetic</strong></li>
+          <li>Narrow, mechanical task</li>
+          <li>Easy to verify outputs</li>
+          <li>Augments one specific ability</li>
+        </ul>
+      </div>
+      <div class="card red-border fragment">
+        <h3 style="color:var(--red)">AI (Now)</h3>
+        <ul>
+          <li>Lost skills: <strong>writing, reasoning, diagnosis, design</strong></li>
+          <li>Broad, cognitive tasks</li>
+          <li>Hard to verify if you lack the skill</li>
+          <li>Replaces <strong>judgment itself</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="The dependency trap: if you never learn the skill, you can't evaluate whether the AI output is correct. A junior developer who always uses Copilot can't spot when it hallucinates a plausible but wrong function. A medical student who relies on AI diagnostics can't catch when it misses a rare condition. You become dependent on a system you can't audit. This creates a new kind of inequality: those who learned the skills before AI can use it as a tool. Those who never learned are trapped as consumers of outputs they can't verify.">
+    <h2>The Dependency Trap</h2>
+    <div class="card red-border" style="max-width:800px">
+      <ul>
+        <li>Junior developers who <strong>can't code</strong> without Copilot</li>
+        <li class="fragment">Medical students using AI diagnostics without learning the <strong>reasoning</strong></li>
+        <li class="fragment">Law students who <strong>can't draft</strong> without GPT</li>
+        <li class="fragment">Designers who <strong>can't sketch</strong> without Midjourney</li>
+      </ul>
+    </div>
+    <p class="fragment" style="margin-top:20px; font-size:1.3rem; max-width:800px; color:var(--text)">If you never learn the skill, you can't evaluate whether the AI is <strong class="red">right or wrong</strong>.</p>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- CONSENT LAUNDERING                           -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="We talked about data being scraped from the open web. But there's a quieter, more insidious form of appropriation: companies retroactively changing their terms of service to permit AI training on data users already shared under different terms.">
+    <h2>Consent <span class="accent">Laundering</span></h2>
+    <div class="divider"></div>
+  </div>
+
+  <div class="slide" data-notes="The pattern is consistent: a company offers a service. Users share data under terms that say nothing about AI training. Years later, the company quietly updates its terms to grant itself the right to use that data for AI. Users who shared photos, documents, or creative work under the old terms never consented to this use. But the new terms are retroactive. And nobody reads terms of service updates. This is consent laundering — taking data shared under one set of expectations and repurposing it under new terms that the users never meaningfully agreed to.">
+    <h2>The Pattern</h2>
+    <div class="card" style="border-left-color:var(--red); max-width:800px">
+      <ol style="margin:0; padding-left:20px">
+        <li>Company offers a service — users share data</li>
+        <li class="fragment">Terms say nothing about AI training</li>
+        <li class="fragment">Years later, terms are <strong>quietly updated</strong></li>
+        <li class="fragment">User data is retroactively claimed for AI</li>
+        <li class="fragment">Nobody reads the update — <strong>consent is manufactured</strong></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Google broadened its privacy policy on July 4th 2023 — a US holiday — to include the right to use Google Docs, Maps, and other user data for AI training. Adobe updated its terms in 2024 to claim broad rights over content stored in Creative Cloud, sparking outrage from photographers and designers who had uploaded years of work. Zoom briefly changed its terms in 2023 to allow AI training on meeting content before reversing after backlash. X (formerly Twitter) updated its terms to use posts for Grok training. LinkedIn used members' posts to train AI before adding an opt-out. The pattern is always the same: take first, ask forgiveness later — if anyone notices.">
+    <h2>The Timeline</h2>
+    <div class="card red-border" style="max-width:800px">
+      <ul>
+        <li><strong>July 4, 2023</strong> — Google broadens privacy policy to use Docs, Maps, and user data for AI training (published on a US holiday)</li>
+        <li class="fragment"><strong>2024</strong> — Adobe claims broad rights over Creative Cloud content; photographers and designers revolt</li>
+        <li class="fragment"><strong>2023</strong> — Zoom changes terms to allow AI training on meeting content; reverses after backlash</li>
+        <li class="fragment"><strong>2023</strong> — X (Twitter) updates terms to use posts for Grok training</li>
+        <li class="fragment"><strong>2024</strong> — LinkedIn trains AI on member posts; adds opt-out only after exposure</li>
+      </ul>
+    </div>
+    <p class="fragment" style="margin-top:16px; font-size:1.3rem; color:var(--text)">The pattern: <strong>take first</strong>, ask forgiveness later — <strong class="red">if anyone notices</strong>.</p>
   </div>
 
   <!-- ============================================ -->
