@@ -160,6 +160,8 @@ select.text-input { cursor: pointer; }
     <button class="step-tab" data-step="4">PhotoMaker</button>
     <button class="step-tab" data-step="5">Image to 3D</button>
     <button class="step-tab" data-step="6">Text to 3D</button>
+    <button class="step-tab" data-step="7">Face Swap</button>
+    <button class="step-tab" data-step="8">Pose Transfer</button>
   </nav>
 
   <!-- ============ Tab 1: Text to Image ============ -->
@@ -343,6 +345,79 @@ select.text-input { cursor: pointer; }
     </div>
     <div id="txt3d-results" class="results hidden"><div class="image-gallery" id="txt3d-gallery"></div></div>
     <div id="txt3d-error" class="results hidden"><div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="txt3d-error-text"></div></div>
+  </section>
+
+  <!-- ============ Tab 7: Face Swap ============ -->
+  <section id="step-7" class="step">
+    <div class="step-intro">
+      <h2>Face Swap</h2>
+      <span class="step-badge">Face → Face</span>
+      <p>Upload a source face and a target image. The model will swap the face onto the target.</p>
+      <p class="time-estimate">Estimated time: ~10–20 seconds</p>
+    </div>
+    <div class="explainer-block" style="border-left-color:#ff6ec7">
+      <h3 style="color:#ff6ec7">How it works</h3>
+      <p><strong>Face Swap</strong> detects the face in both images, extracts facial landmarks, and blends the source face onto the target while preserving lighting, angle, and expression.</p>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+      <div>
+        <div class="upload-area" id="upload-area-faceswap-source">
+          <label class="upload-label"><span class="upload-icon">+</span><span>Source face</span></label>
+          <input type="file" id="file-faceswap-source" accept="image/*">
+        </div>
+        <canvas id="canvas-faceswap-source" style="display:none; margin:0 auto 8px;"></canvas>
+      </div>
+      <div>
+        <div class="upload-area" id="upload-area-faceswap-target">
+          <label class="upload-label"><span class="upload-icon">+</span><span>Target image</span></label>
+          <input type="file" id="file-faceswap-target" accept="image/*">
+        </div>
+        <canvas id="canvas-faceswap-target" style="display:none; margin:0 auto 8px;"></canvas>
+      </div>
+    </div>
+    <button class="btn-primary" id="btn-faceswap" disabled>Swap Face</button>
+    <div class="loading-bar" id="faceswap-loading">
+      <div class="loading-label"><span>Swapping face<span class="loading-dots"></span></span></div>
+      <div class="loading-track"><div class="loading-fill" id="faceswap-loading-fill"></div></div>
+      <div class="loading-steps" id="faceswap-loading-status"></div>
+    </div>
+    <div id="faceswap-results" class="results hidden">
+      <div class="mirror-row"><div class="mirror-card"><h3>Original</h3><img id="faceswap-original" class="result-image"></div><div class="mirror-card"><h3>Swapped</h3><img id="faceswap-output" class="result-image"></div></div>
+    </div>
+    <div id="faceswap-error" class="results hidden"><div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="faceswap-error-text"></div></div>
+  </section>
+
+  <!-- ============ Tab 8: Pose Transfer ============ -->
+  <section id="step-8" class="step">
+    <div class="step-intro">
+      <h2>Pose Transfer</h2>
+      <span class="step-badge">Pose → Image</span>
+      <p>Upload a photo of a person in a pose, then describe what you want generated in that same pose.</p>
+      <p class="time-estimate">Estimated time: ~10–20 seconds</p>
+    </div>
+    <div class="explainer-block" style="border-left-color:#ffd94a">
+      <h3 style="color:#ffd94a">How it works</h3>
+      <p><strong>ControlNet-Pose</strong> extracts a skeletal pose from your reference image, then uses it as a constraint while generating a new image from your text prompt. The result matches the body position of the original.</p>
+    </div>
+    <div class="upload-area" id="upload-area-pose">
+      <label class="upload-label"><span class="upload-icon">+</span><span>Upload a pose reference image</span></label>
+      <input type="file" id="file-pose" accept="image/*">
+    </div>
+    <canvas id="canvas-pose-preview" style="display:none; margin:0 auto 16px;"></canvas>
+    <textarea class="text-input" id="pose-prompt" placeholder="Describe what to generate in this pose...">a robot standing in the same pose, cinematic lighting</textarea>
+    <button class="btn-primary" id="btn-pose" disabled>Generate from Pose</button>
+    <div class="loading-bar" id="pose-loading">
+      <div class="loading-label"><span>Generating from pose<span class="loading-dots"></span></span></div>
+      <div class="loading-track"><div class="loading-fill" id="pose-loading-fill"></div></div>
+      <div class="loading-steps" id="pose-loading-status"></div>
+    </div>
+    <div id="pose-results" class="results hidden">
+      <div class="mirror-row">
+        <div class="mirror-card" id="pose-skeleton-card" class="hidden"><h3>Detected Pose</h3><img id="pose-skeleton" class="result-image"></div>
+        <div class="mirror-card"><h3>Generated</h3><img id="pose-output" class="result-image"></div>
+      </div>
+    </div>
+    <div id="pose-error" class="results hidden"><div class="output-block mono" style="border-left-color:var(--red); color:var(--red);" id="pose-error-text"></div></div>
   </section>
 
   <!-- Footer -->
