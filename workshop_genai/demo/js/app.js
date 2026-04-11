@@ -842,8 +842,8 @@ const App = {
     PhotoMaker.init();
     ImageTo3D.init();
     TextTo3D.init();
-    FaceSwap.init();
-    PoseTransfer.init();
+    if (document.getElementById('file-faceswap-source')) FaceSwap.init();
+    if (document.getElementById('file-pose')) PoseTransfer.init();
     this.setupNav();
     this.hideLoader();
   },
