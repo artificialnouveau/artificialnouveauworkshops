@@ -62,7 +62,7 @@ MODELS = {
     "img3d": "tencent/hunyuan3d-2:b1b9449a1277e10402781c5d41eb30c0a0683504fb23fab591ca9dfc2aabe1cb",
     "txt3d": "cjwbw/shap-e:5957069d5c509126a73c7cb68abcddbb985aeefa4d318e7c63ec1352ce6da68c",
     "faceswap": "codeplugtech/face-swap:278a81e7ebb22db98bcba54de985d22cc1abeead2754eb1f2af717247be69b34",
-    "pose": "jagilley/controlnet-pose",
+    "pose": "black-forest-labs/flux-canny-dev",
 }
 
 
@@ -271,9 +271,9 @@ def pose():
 
     image_url = upload_data_uri(image)
     pred_id = start_prediction("pose", {
-        "image": image_url,
+        "control_image": image_url,
         "prompt": prompt,
-        "num_samples": "1",
+        "output_format": "webp",
     })
     return jsonify({"prediction_id": pred_id})
 
