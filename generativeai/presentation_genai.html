@@ -190,15 +190,15 @@
     <div class="two-col" style="font-size:1.4rem; max-width:850px; gap:24px">
       <ul>
         <li>What is Generative AI</li>
-        <li style="color:var(--dim); font-size:1.1rem; padding-top:12px">The Empire of AI</li>
         <li style="color:var(--red)">1. Resource Appropriation</li>
-        <li style="color:var(--green)">2. Scale at All Costs</li>
-        <li style="color:var(--orange)">3. Labor Exploitation</li>
+        <li style="color:var(--orange)">2. Labor Exploitation</li>
+        <li style="color:var(--green)">3. Scale at All Costs</li>
       </ul>
       <ul>
         <li style="color:var(--pink)">4. The Civilizing Mission</li>
         <li style="color:var(--accent)">5. Competitive Justification</li>
-        <li style="padding-top:12px">Conclusion</li>
+        <li>Consequences</li>
+        <li>Conclusion</li>
       </ul>
     </div>
   </div>
@@ -267,62 +267,6 @@
     <div class="card fragment" style="max-width:750px">
       <p style="color:var(--text); font-size:1.2rem">Text &middot; Images &middot; Video &middot; Audio &middot; 3D Models</p>
     </div>
-  </div>
-
-  <div class="slide" data-notes="So if models learn patterns from data, the next question is: how much data do they need? The answer is: all of it. Training a generative model requires massive datasets and enormous compute. These images show the training pipeline, from raw data collection through to neural networks learning patterns over many iterations. This is what creates the demand for resource appropriation, which we will explore next.">
-    <h2>What Does It Take to <span class="accent">Train</span> a Model?</h2>
-    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; max-width:1100px; width:100%">
-      <img src="../hku2025_genai_deepfakes/img/slide5_Picture_8.jpg" style="grid-column:1; grid-row:1; width:100%; border-radius:8px; object-fit:contain">
-      <img src="../hku2025_genai_deepfakes/img/slide5_Picture_12.png" class="fragment" style="grid-column:1; grid-row:2; width:100%; border-radius:8px; object-fit:contain">
-      <img src="../hku2025_genai_deepfakes/img/slide5_Picture_2.jpg" class="fragment" style="grid-column:2; grid-row:1; width:100%; border-radius:8px; object-fit:contain">
-      <img src="../hku2025_genai_deepfakes/img/slide5_Picture_4.png" class="fragment" style="grid-column:2; grid-row:2; width:100%; border-radius:8px; object-fit:contain">
-      <img src="../hku2025_genai_deepfakes/img/slide5_Picture_6.jpg" class="fragment" style="grid-column:3; grid-row:1; width:100%; border-radius:8px; object-fit:contain">
-      <img src="../hku2025_genai_deepfakes/img/slide5_Picture_10.jpg" class="fragment" style="grid-column:3; grid-row:2; width:100%; border-radius:8px; object-fit:contain">
-    </div>
-  </div>
-
-  <div class="slide" data-notes="Once a model is trained, who decides what it can and cannot produce? These are the control mechanisms. First: update the training data, more diverse and higher quality data leads to different outputs. Second: reinforcement learning from human feedback (RLHF), where humans rate outputs and the model adjusts. This is how ChatGPT was fine-tuned. But remember: the people doing that rating are often paid $2/hour in Kenya. We will come back to this.">
-    <h2>Who Controls What AI <span class="accent">Produces</span>?</h2>
-    <div class="two-col" style="max-width:900px">
-      <div class="card yellow-border">
-        <h3 style="color:var(--yellow)">Update the Training Dataset</h3>
-        <ul>
-          <li>Increase the <strong>diversity</strong> of the dataset</li>
-          <li>Improve the <strong>quality</strong> of the data</li>
-        </ul>
-      </div>
-      <div class="card green-border fragment">
-        <h3 style="color:var(--green)">Reinforcement Learning</h3>
-        <ul>
-          <li>Provide <strong>user feedback</strong></li>
-          <li>Human-in-the-loop training</li>
-        </ul>
-      </div>
-    </div>
-    <div class="img-row fragment" style="margin-top:20px">
-      <img src="../hku2025_genai_deepfakes/img/slide6_Picture_16.jpg" class="medium">
-      <img src="../hku2025_genai_deepfakes/img/slide6_Picture_19.jpg" class="medium">
-    </div>
-  </div>
-
-  <div class="slide" data-notes="Two more control mechanisms. Limiting output: reducing the weights of certain terms, for example, making it harder to generate violent or racist imagery. Prompt transformation: the system rewrites user prompts before they reach the model, adding safety constraints or expanding vague requests. The question is: whose values determine what gets limited? We will see later how these decisions encode Western defaults and erase cultural specificity.">
-    <h2>Who Controls What AI <span class="accent">Produces</span>?</h2>
-    <div class="two-col" style="max-width:900px; align-items:start">
-      <div class="card red-border">
-        <h3 style="color:var(--red)">Limit What It Can Produce</h3>
-        <p>Reduce the weights of certain terms or content (such as violent or racist imagery)</p>
-        <img src="../hku2025_genai_deepfakes/img/slide7_Picture_21.jpg" style="margin-top:12px; width:100%; border-radius:6px">
-      </div>
-      <div class="card fragment">
-        <h3>Prompt Transformation</h3>
-        <p>Increase and diversify the dataset to shape how prompts are interpreted</p>
-        <img src="../hku2025_genai_deepfakes/img/slide7_Content_Placeholder_10.jpg" style="margin-top:12px; width:100%; border-radius:6px">
-      </div>
-    </div>
-  </div>
-
-  <div class="slide" data-notes="A video to reflect on about generative AI and its implications.">
-    <iframe src="https://www.youtube-nocookie.com/embed/ZU767J6p96o" style="width:80%; max-width:700px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
   </div>
 
   <!-- ============================================ -->
@@ -1177,32 +1121,6 @@
     <h2>Next Time</h2>
     <p style="color:var(--dim); margin-bottom:24px; font-size:1.3rem">Introduction to <span class="accent">Deepfakes</span></p>
     <img src="../hku2025_genai_deepfakes/img/madonna_pope_deepfake.webp" style="max-height:55vh; border-radius:12px; box-shadow:0 8px 40px rgba(0,0,0,0.5)">
-  </div>
-
-  <div class="slide" data-notes="A preview of how the empire framework continues into our deepfakes discussion. Each of these dynamics shapes how deepfakes are produced, distributed, and weaponized.">
-    <p style="color:var(--dim); margin-bottom:20px; font-size:1.2rem">Through the lens of the empire</p>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:900px; width:100%">
-      <div class="card red-border" style="padding:14px 18px">
-        <h3 style="color:var(--red); font-size:1.1rem">1. Resource Appropriation</h3>
-        <p style="font-size:1rem">Faces, voices, and likenesses scraped without consent</p>
-      </div>
-      <div class="card green-border fragment" style="padding:14px 18px">
-        <h3 style="color:var(--green); font-size:1.1rem">2. Scale at All Costs</h3>
-        <p style="font-size:1rem">Deepfake tools becoming cheaper, faster, and more accessible</p>
-      </div>
-      <div class="card orange-border fragment" style="padding:14px 18px">
-        <h3 style="color:var(--orange); font-size:1.1rem">3. Labor Exploitation</h3>
-        <p style="font-size:1rem">Non-consensual intimate imagery disproportionately targeting women</p>
-      </div>
-      <div class="card pink-border fragment" style="padding:14px 18px">
-        <h3 style="color:var(--pink); font-size:1.1rem">4. The Civilizing Mission</h3>
-        <p style="font-size:1rem">"Creative tools for everyone" masking real harms</p>
-      </div>
-      <div class="card fragment" style="padding:14px 18px; grid-column: span 2; border-left-color:var(--accent)">
-        <h3 style="color:var(--accent); font-size:1.1rem">5. Competitive Justification</h3>
-        <p style="font-size:1rem">If we don't build detection tools, someone else will weaponize them first</p>
-      </div>
-    </div>
   </div>
 
   <div class="slide title-slide" data-notes="Thank you everyone! If you have more questions, feel free to reach out. Remember: these tools are powerful — use them with intention and respect for others.">
