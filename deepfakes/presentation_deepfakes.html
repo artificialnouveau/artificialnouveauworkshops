@@ -187,8 +187,8 @@
   <!-- TITLE                                        -->
   <!-- ============================================ -->
 
-  <div class="slide title-slide active" data-notes="Welcome to the Deepfakes workshop. This presentation explores deepfakes, their origins, applications, and the ethical questions they raise — from consent violations to memorial deepfakes to necromemetics. Press P to open presenter notes, N for section nav.">
-    <h1><span class="red">Deepfakes</span></h1>
+  <div class="slide title-slide active" data-notes="Welcome to the Introduction to Deepfakes workshop. This presentation explores deepfakes, their origins, applications, and the ethical questions they raise — from consent violations to memorial deepfakes to necromemetics. Press P to open presenter notes, N for section nav.">
+    <h1>Introduction to <span class="red">Deepfakes</span></h1>
     <p class="subtitle">Artificial Nouveau</p>
   </div>
 
@@ -388,7 +388,7 @@
         <iframe src="https://www.youtube-nocookie.com/embed/9WfZuNceFDM?start=16" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
       </div>
       <div>
-        <video src="../hku2025_genai_deepfakes/img/slide50_Online_Media_2.mp4" controls style="width:100%; border-radius:8px"></video>
+        <video src="../hku2025_genai_deepfakes/img/slide50_Online_Media_2.mp4#t=97" controls style="width:100%; border-radius:8px"></video>
       </div>
     </div>
   </div>
@@ -421,12 +421,12 @@
 
   <div class="slide" data-notes="AI companionship is a growing market — chatbots and avatars that provide emotional connection. Some use deepfake technology to create realistic virtual partners. This raises questions about dependency, manipulation, and what happens when the line between synthetic and real relationships blurs.">
     <h2>Companionship</h2>
-    <div class="two-col" style="max-width:950px; align-items:start">
+    <div class="two-col" style="max-width:850px; align-items:center">
       <div>
         <img src="../hku2025_genai_deepfakes/img/slide53_Picture_2.png" class="medium">
       </div>
       <div>
-        <video src="../hku2025_genai_deepfakes/img/slide53_ScreenRecording_10-14-2025_09-53-10_1.mp4" controls style="width:100%; border-radius:8px"></video>
+        <video src="../hku2025_genai_deepfakes/img/slide53_ScreenRecording_10-14-2025_09-53-10_1.mp4" controls style="width:100%; max-height:55vh; border-radius:8px; object-fit:contain"></video>
       </div>
     </div>
   </div>
@@ -468,6 +468,10 @@
   <div class="slide section-title" data-notes="So far we've looked at scammers, fraudsters, studios, and grieving families. But deepfake tools have become so cheap and easy that now everyday people are doing it. Catfishing used to mean hiding behind a stolen photo. Now you can generate yourself into anyone else's life.">
     <h2>Everyone Is <span class="orange">Catfishing</span></h2>
     <div class="divider" style="background:var(--orange)"></div>
+  </div>
+
+  <div class="slide" data-notes="A Kemi Frank clip on the everyday catfishing economy, setting up the section.">
+    <video src="../hku2025_genai_deepfakes/img/catfishing_kemifrank.mp4" controls style="max-height:75vh; max-width:85%; border-radius:8px"></video>
   </div>
 
   <div class="slide" data-notes="So far we have talked about deepfakes being done to people. But increasingly, people are deepfaking themselves. Influencers, OnlyFans creators, and actors are licensing their likeness so AI can generate content of them 24/7 without them having to be present. This is consensual, commercial deepfaking, and it is a growing industry.">
@@ -531,8 +535,11 @@
     </div>
   </div>
 
+  <div class="slide" data-notes="BBC News segment on the rise of fake AI influencers sexualising Black women, showing how the synthetic-persona problem maps onto real communities and harms.">
+    <video src="../hku2025_genai_deepfakes/img/catfishing_bbc_fake_ai_influencers.mp4" controls style="max-height:75vh; max-width:85%; border-radius:8px"></video>
+  </div>
+
   <div class="slide" data-notes="A viral example. Tennis content creator Tatiana Elizabeth posted a photo from the US Open two years ago. A regular user, not an AI influencer, not a scammer, took that photo, used AI to swap her own face onto Tatiana's body, then geotagged it 'Miami Open' to pretend she was courtside. This is the new normal: real people using AI to inhabit other people's lives, bar for bar.">
-    <h2>Bar for <span class="orange">Bar</span></h2>
     <div class="two-col" style="max-width:1000px; align-items:center; gap:28px">
       <div>
         <img src="../hku2025_genai_deepfakes/img/catfishing_tatiana.png" style="width:100%; border-radius:8px; object-fit:contain">
@@ -662,42 +669,9 @@
     <div class="divider" style="background:var(--green)"></div>
   </div>
 
-  <div class="slide" data-notes="Physical adversarial attacks are wearable interventions that confuse face detection and recognition systems. Adam Harvey's CV Dazzle (2010) used high-contrast angular makeup to break the old Viola-Jones face detector. Mostly useless against modern CNNs, but it seeded a whole genre. His HyperFace fabric prints many fake faces onto clothing so detectors find dozens of faces instead of yours. Sharif et al. at CMU (2016) developed 'Accessorize to a Crime', 3D-printable glasses frames that make Face++ misclassify the wearer as a specific chosen target person.">
-    <h2>Physical <span class="accent">Adversarial Attacks</span></h2>
-    <div class="three-col" style="max-width:1050px; gap:16px">
-      <div class="card" style="border-left-color:var(--accent); padding:18px">
-        <h3 style="color:var(--accent); font-size:1.1rem">CV Dazzle</h3>
-        <p style="font-size:0.95rem; color:var(--dim); margin-bottom:6px; font-family:var(--mono)">Adam Harvey, 2010</p>
-        <ul>
-          <li>High-contrast <strong>angular makeup</strong></li>
-          <li>Broke the <strong>Viola-Jones</strong> face detector</li>
-          <li>Mostly useless against modern CNNs, but seeded a whole genre</li>
-        </ul>
-      </div>
-      <div class="card pink-border" style="padding:18px">
-        <h3 style="color:var(--pink); font-size:1.1rem">HyperFace</h3>
-        <p style="font-size:0.95rem; color:var(--dim); margin-bottom:6px; font-family:var(--mono)">Adam Harvey</p>
-        <ul>
-          <li>Fabric prints <strong>many fake faces</strong></li>
-          <li>Detectors find <strong>dozens of faces</strong> instead of yours</li>
-          <li>Floods the signal rather than hiding it</li>
-        </ul>
-      </div>
-      <div class="card yellow-border" style="padding:18px">
-        <h3 style="color:var(--yellow); font-size:1.1rem">Accessorize to a Crime</h3>
-        <p style="font-size:0.95rem; color:var(--dim); margin-bottom:6px; font-family:var(--mono)">Sharif et al., CMU, 2016</p>
-        <ul>
-          <li>3D-printable <strong>glasses frames</strong></li>
-          <li>Makes Face++ <strong>misclassify</strong> you as a chosen target</li>
-          <li>A targeted adversarial attack on face recognition</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
   <div class="slide" data-notes="Welcome to Chechnya, HBO documentary by David France (2020), is the landmark ethical use of deepfakes. It used real-time deepfake face replacement to protect LGBTQ+ Chechen subjects fleeing persecution, while preserving their emotional performance (breath, tears, micro-expressions). Volunteer 'face donors' lent their identities. This is the strongest argument that deepfakes can be a protective technology, not just an abusive one.">
     <h2>Welcome to <span class="green">Chechnya</span></h2>
-    <div class="two-col" style="max-width:950px; align-items:start; gap:24px">
+    <div class="two-col" style="max-width:1100px; align-items:center; gap:24px">
       <div class="card green-border">
         <h3 style="color:var(--green)">Landmark Ethical Use</h3>
         <p style="font-size:0.95rem; color:var(--dim); margin-bottom:10px; font-family:var(--mono)">HBO, David France, 2020</p>
@@ -708,24 +682,22 @@
           <li>Volunteer <strong>face donors</strong> lent their identities</li>
         </ul>
       </div>
-      <div class="card fragment" style="border-left-color:var(--accent)">
-        <p style="font-size:1.2rem; color:var(--text); line-height:1.6">The strongest argument that deepfakes can be a <strong class="green">protective</strong> technology, not just an abusive one.</p>
+      <div>
+        <video src="../hku2025_genai_deepfakes/img/welcome_to_chechnya.mp4#t=40" controls style="width:100%; max-height:55vh; border-radius:8px; object-fit:contain"></video>
       </div>
     </div>
   </div>
 
-  <div class="slide" data-notes="Two artists working with deepfakes as political and satirical material. Rachel Maclean is a Scottish video artist known for using AI and CGI to create surreal, critical works that sit at the intersection of pop culture and power. Brave New Films is a progressive media group producing deepfake parodies of US political figures to mock and critique them. Both show deepfakes used for pointed political commentary, not concealment.">
+  <div class="slide" data-notes="Rachel Maclean is a Scottish video artist known for using AI and CGI to create surreal, critical works that sit at the intersection of pop culture and power. Duck is an example of deepfakes as pointed political and cultural commentary, not concealment.">
     <h2>Political &amp; <span class="pink">Satirical</span> Deepfakes</h2>
-    <div class="two-col" style="max-width:1000px; align-items:start; gap:24px">
-      <div>
-        <video src="../hku2025_genai_deepfakes/img/artforum_rachel_maclean.mp4" controls style="width:100%; max-height:50vh; border-radius:8px"></video>
-        <p class="caption"><strong>Rachel Maclean</strong><br>AI video work via Artforum</p>
-      </div>
-      <div>
-        <video src="../hku2025_genai_deepfakes/img/artforum_bravenewfilms_whitehouse.mp4" controls style="width:100%; max-height:50vh; border-radius:8px"></video>
-        <p class="caption"><strong>Brave New Films</strong><br>Deepfake White House parody</p>
-      </div>
-    </div>
+    <video src="../hku2025_genai_deepfakes/img/artforum_rachel_maclean.mp4" controls style="max-height:70vh; max-width:80%; border-radius:8px"></video>
+    <p class="caption"><strong>Rachel Maclean</strong><br>Duck</p>
+  </div>
+
+  <div class="slide" data-notes="Brave New Films is a progressive media group producing deepfake parodies of US political figures to mock and critique them. Deepfakes used as political satire, directly and openly labelled.">
+    <h2>Political &amp; <span class="pink">Satirical</span> Deepfakes</h2>
+    <video src="../hku2025_genai_deepfakes/img/artforum_bravenewfilms_whitehouse.mp4" controls style="max-height:70vh; max-width:80%; border-radius:8px"></video>
+    <p class="caption">Deepfake White House parody</p>
   </div>
 
   <div class="slide" data-notes="Consumer features. Signal added face blurring for protest photos in 2020, citing this exact concern around facial recognition and state surveillance. iOS Live Photos has blurring features too. These are boring features, but they represent the mainstream trickle-down of anti-surveillance thinking into everyday apps used by billions.">
