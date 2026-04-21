@@ -218,16 +218,17 @@
         </ul>
       </div>
     </div>
-    <p style="margin-top:28px; color:var(--dim); font-family:var(--mono); font-size:0.95rem; letter-spacing:0.12em; text-transform:uppercase">The Liar's Dividend  ·  Conclusion</p>
   </div>
 
   <!-- DEEPFAKE @ Peckham Digital -->
   <div class="slide" data-notes="These are photos from my DEEPFAKE exhibition at Peckham Digital, an art project exploring the cultural implications of deepfake technology. Art can be a powerful way to make these issues tangible and accessible.">
     <h2>DEEPFAKE @ Peckham Digital</h2>
-    <iframe src="https://player.vimeo.com/video/1082448682?badge=0&autopause=0&player_id=0&app_id=58479" style="width:80%; max-width:750px; aspect-ratio:16/9; border:none; border-radius:8px" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" allowfullscreen></iframe>
-    <div style="display:flex; gap:16px; justify-content:center; margin-top:16px">
-      <img src="../hku2025_genai_deepfakes/img/slide39_Picture_6.jpg" style="max-height:200px; border-radius:8px; object-fit:contain">
-      <img src="../hku2025_genai_deepfakes/img/slide39_Picture_8.jpg" style="max-height:200px; border-radius:8px; object-fit:contain">
+    <div class="two-col" style="max-width:1200px; align-items:center; gap:24px">
+      <iframe src="https://player.vimeo.com/video/1082448682?badge=0&autopause=0&player_id=0&app_id=58479" style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" allowfullscreen></iframe>
+      <div style="display:flex; flex-direction:column; gap:16px">
+        <img src="../hku2025_genai_deepfakes/img/slide39_Picture_6.jpg" style="width:100%; max-height:320px; border-radius:8px; object-fit:contain">
+        <img src="../hku2025_genai_deepfakes/img/slide39_Picture_8.jpg" style="width:100%; max-height:320px; border-radius:8px; object-fit:contain">
+      </div>
     </div>
   </div>
 
@@ -284,27 +285,23 @@
     <div class="divider" style="background:var(--red)"></div>
   </div>
 
-  <div class="slide" data-notes="DeepFaceLive and DeepLiveCam are open-source tools that run real-time face swaps on a live webcam feed. You download the software, pick a face, and your webcam becomes that person in real time. It works on Zoom, Google Meet, Twitch, any video call. No coding required, no cloud service, runs on a consumer GPU. This is what scammers use for live video call fraud.">
+  <div class="slide" data-notes="DeepFaceLive and DeepLiveCam are open-source tools that run real-time face swaps on a live webcam feed. You download the software, pick one photo of a face, and your webcam becomes that person in real time. It works on Zoom, Google Meet, Twitch, any video call. No coding required, no cloud service, runs on a consumer GPU. This is what scammers use for live video call fraud.">
     <h2>Real-Time <span class="red">Deepfakes</span></h2>
-    <div class="two-col" style="max-width:950px; align-items:start">
+    <div class="two-col" style="max-width:1100px; align-items:center; gap:24px">
       <div class="card red-border">
         <h3 style="color:var(--red)">DeepLiveCam / DeepFaceLive</h3>
         <ul>
           <li><strong>Real-time</strong> face swap on a live webcam</li>
+          <li>Only <strong>one photo</strong> needed</li>
           <li>Works on Zoom, Google Meet, Twitch</li>
           <li><strong>Free</strong>, open-source, runs locally</li>
           <li>No coding required</li>
           <li>Consumer GPU is enough</li>
         </ul>
       </div>
-      <div class="card orange-border fragment">
-        <h3 style="color:var(--orange)">What This Means</h3>
-        <ul>
-          <li>Live video calls are <strong>no longer proof of identity</strong></li>
-          <li>Romance scammers use it to <strong>video chat as someone else</strong></li>
-          <li>$25M stolen from a company via <strong>deepfake video call</strong> (Hong Kong, 2024)</li>
-          <li>You can become anyone in <strong>seconds</strong></li>
-        </ul>
+      <div>
+        <img src="../hku2025_genai_deepfakes/img/deeplivecam_demo.gif" style="width:100%; border-radius:8px; object-fit:contain">
+        <p class="caption">Source: <a href="https://github.com/hacksider/Deep-Live-Cam" style="color:var(--accent)">Deep-Live-Cam</a></p>
       </div>
     </div>
   </div>
@@ -314,11 +311,13 @@
     <div class="three-col" style="max-width:1000px; gap:12px">
       <div class="card" style="border-left-color:var(--accent)">
         <h3 style="color:var(--accent); font-size:1.1rem">Voice Cloning</h3>
-        <p style="font-size:1rem">Clone any voice from <strong>6 seconds</strong> of audio. Free tools available.</p>
+        <p style="font-size:1rem">Clone any voice from <strong>6 seconds</strong> of audio.</p>
+        <p style="font-size:0.9rem; margin-top:8px"><a href="https://elevenlabs.io/" target="_blank" rel="noopener" style="color:var(--accent)">elevenlabs.io</a></p>
       </div>
       <div class="card pink-border fragment">
         <h3 style="color:var(--pink); font-size:1.1rem">Lip Sync</h3>
         <p style="font-size:1rem">Make any face say anything. Upload video + audio, done.</p>
+        <p style="font-size:0.9rem; margin-top:8px"><a href="https://www.heygen.com/" target="_blank" rel="noopener" style="color:var(--pink)">heygen.com</a></p>
       </div>
       <div class="card red-border fragment">
         <h3 style="color:var(--red); font-size:1.1rem">Nudify Bots</h3>
@@ -327,71 +326,6 @@
     </div>
     <div class="card fragment" style="max-width:1000px; margin-top:14px; border-left-color:var(--yellow)">
       <p><strong class="yellow">2017:</strong> PhD-level skills required. <strong class="red">2025:</strong> download an app. The barrier to creating deepfakes has <strong>effectively disappeared</strong>.</p>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- LICENSING YOUR FACE                           -->
-  <!-- ============================================ -->
-
-  <div class="slide" data-notes="So far we have talked about deepfakes being done to people. But increasingly, people are deepfaking themselves. Influencers, OnlyFans creators, and actors are licensing their likeness so AI can generate content of them 24/7 without them having to be present. This is consensual, commercial deepfaking, and it is a growing industry.">
-    <h2>Deepfaking <span class="accent">Yourself</span></h2>
-    <p style="color:var(--dim); margin-bottom:20px; font-size:1.1rem">When deepfakes become a business model</p>
-    <div class="three-col" style="max-width:1000px; gap:12px">
-      <div class="card" style="border-left-color:var(--accent)">
-        <h3 style="color:var(--accent); font-size:1.1rem">Influencers</h3>
-        <ul>
-          <li>AI clones handle <strong>DMs, comments, live chats</strong></li>
-          <li>Post content while you sleep</li>
-          <li>Scale to <strong>multiple platforms</strong> simultaneously</li>
-          <li>Companies like Forever Voices sell "AI versions" of creators</li>
-        </ul>
-      </div>
-      <div class="card pink-border fragment">
-        <h3 style="color:var(--pink); font-size:1.1rem">OnlyFans Creators</h3>
-        <ul>
-          <li>AI generates explicit content <strong>from their likeness</strong></li>
-          <li>24/7 content production, <strong>no shoots needed</strong></li>
-          <li>Some creators earn more from their AI clone than themselves</li>
-          <li>Raises question: who owns the synthetic output?</li>
-        </ul>
-      </div>
-      <div class="card orange-border fragment">
-        <h3 style="color:var(--orange); font-size:1.1rem">Actors</h3>
-        <ul>
-          <li>Studios license actors' likenesses for <strong>AI-generated scenes</strong></li>
-          <li>Central issue of the <strong>2023 SAG-AFTRA strike</strong></li>
-          <li>Background actors scanned and replaced by AI</li>
-          <li>James Earl Jones licensed his voice to AI before his death</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <div class="slide" data-notes="Synthetic influencers are AI-generated personas that never existed as real people. Lil Miquela has 2.7 million Instagram followers and has done brand deals with Prada, Calvin Klein, and Samsung. Aitana Lopez is a Spanish AI model earning up to 10,000 euros per month from brand partnerships. These personas are owned by companies, not individuals, and they never age, complain, or demand raises. They are displacing real models and influencers while also normalising the idea that a 'person' online might not be real at all.">
-    <h2>Synthetic <span class="pink">Influencers</span></h2>
-    <div class="two-col" style="max-width:900px; align-items:start">
-      <div class="card pink-border">
-        <h3 style="color:var(--pink)">Lil Miquela</h3>
-        <ul>
-          <li><strong>2.7M</strong> Instagram followers</li>
-          <li>Brand deals with Prada, Calvin Klein, Samsung</li>
-          <li>Entirely AI-generated, owned by Brud (now Dapper Labs)</li>
-          <li>Has "dated", released music, done interviews</li>
-        </ul>
-      </div>
-      <div class="card orange-border fragment">
-        <h3 style="color:var(--orange)">The Business Case</h3>
-        <ul>
-          <li>Never age, never complain, never demand a raise</li>
-          <li>Available <strong>24/7</strong> in any language</li>
-          <li>No scandals, no cancellation risk</li>
-          <li>Displacing real models and influencers</li>
-        </ul>
-      </div>
-    </div>
-    <div class="card fragment" style="max-width:900px; margin-top:14px; border-left-color:var(--yellow)">
-      <p><strong class="yellow">The question:</strong> if the person you follow, buy from, and trust <strong>doesn't exist</strong>, what does authenticity even mean?</p>
     </div>
   </div>
 
@@ -536,6 +470,67 @@
     <div class="divider" style="background:var(--orange)"></div>
   </div>
 
+  <div class="slide" data-notes="So far we have talked about deepfakes being done to people. But increasingly, people are deepfaking themselves. Influencers, OnlyFans creators, and actors are licensing their likeness so AI can generate content of them 24/7 without them having to be present. This is consensual, commercial deepfaking, and it is a growing industry.">
+    <h2>Deepfaking <span class="accent">Yourself</span></h2>
+    <p style="color:var(--dim); margin-bottom:20px; font-size:1.1rem">When deepfakes become a business model</p>
+    <div class="three-col" style="max-width:1000px; gap:12px">
+      <div class="card" style="border-left-color:var(--accent)">
+        <h3 style="color:var(--accent); font-size:1.1rem">Influencers</h3>
+        <ul>
+          <li>AI clones handle <strong>DMs, comments, live chats</strong></li>
+          <li>Post content while you sleep</li>
+          <li>Scale to <strong>multiple platforms</strong> simultaneously</li>
+          <li>Companies like Forever Voices sell "AI versions" of creators</li>
+        </ul>
+      </div>
+      <div class="card pink-border fragment">
+        <h3 style="color:var(--pink); font-size:1.1rem">OnlyFans Creators</h3>
+        <ul>
+          <li>AI generates explicit content <strong>from their likeness</strong></li>
+          <li>24/7 content production, <strong>no shoots needed</strong></li>
+          <li>Some creators earn more from their AI clone than themselves</li>
+          <li>Raises question: who owns the synthetic output?</li>
+        </ul>
+      </div>
+      <div class="card orange-border fragment">
+        <h3 style="color:var(--orange); font-size:1.1rem">Actors</h3>
+        <ul>
+          <li>Studios license actors' likenesses for <strong>AI-generated scenes</strong></li>
+          <li>Central issue of the <strong>2023 SAG-AFTRA strike</strong></li>
+          <li>Background actors scanned and replaced by AI</li>
+          <li>James Earl Jones licensed his voice to AI before his death</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Synthetic influencers are AI-generated personas that never existed as real people. Lil Miquela has 2.7 million Instagram followers and has done brand deals with Prada, Calvin Klein, and Samsung. Aitana Lopez is a Spanish AI model earning up to 10,000 euros per month from brand partnerships. These personas are owned by companies, not individuals, and they never age, complain, or demand raises. They are displacing real models and influencers while also normalising the idea that a 'person' online might not be real at all.">
+    <h2>Synthetic <span class="pink">Influencers</span></h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div class="card pink-border">
+        <h3 style="color:var(--pink)">Lil Miquela</h3>
+        <ul>
+          <li><strong>2.7M</strong> Instagram followers</li>
+          <li>Brand deals with Prada, Calvin Klein, Samsung</li>
+          <li>Entirely AI-generated, owned by Brud (now Dapper Labs)</li>
+          <li>Has "dated", released music, done interviews</li>
+        </ul>
+      </div>
+      <div class="card orange-border fragment">
+        <h3 style="color:var(--orange)">The Business Case</h3>
+        <ul>
+          <li>Never age, never complain, never demand a raise</li>
+          <li>Available <strong>24/7</strong> in any language</li>
+          <li>No scandals, no cancellation risk</li>
+          <li>Displacing real models and influencers</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card fragment" style="max-width:900px; margin-top:14px; border-left-color:var(--yellow)">
+      <p><strong class="yellow">The question:</strong> if the person you follow, buy from, and trust <strong>doesn't exist</strong>, what does authenticity even mean?</p>
+    </div>
+  </div>
+
   <div class="slide" data-notes="A viral example. Tennis content creator Tatiana Elizabeth posted a photo from the US Open two years ago. A regular user, not an AI influencer, not a scammer, took that photo, used AI to swap her own face onto Tatiana's body, then geotagged it 'Miami Open' to pretend she was courtside. This is the new normal: real people using AI to inhabit other people's lives, bar for bar.">
     <h2>Bar for <span class="orange">Bar</span></h2>
     <div class="two-col" style="max-width:1000px; align-items:center; gap:28px">
@@ -592,18 +587,16 @@
     <div class="divider" style="background:var(--red)"></div>
   </div>
 
-  <div class="slide" data-notes="Two-party violation: a real person's face is swapped onto another real person's body in pornographic content. Neither party consented. This is the classic deepfake porn scenario — taking a celebrity's face and putting it on a porn performer's body. Click the image to unblur if needed for discussion.">
+  <div class="slide" data-notes="Two-party violation: a real person's face is swapped onto another real person's body in pornographic content. Neither party consented. This is the classic deepfake porn scenario — taking a celebrity's face and putting it on a porn performer's body.">
     <h2>Porn <span class="red">(Two Party Violation)</span></h2>
     <h3 style="color:var(--dim)">Faceswap / Bodyswap</h3>
-    <img src="../hku2025_genai_deepfakes/img/slide56_Picture_2.jpg" class="medium" style="filter:blur(8px); transition:filter 0.3s" onclick="this.style.filter=this.style.filter==='none'?'blur(8px)':'none'" title="Click to toggle blur">
-    <p class="caption">Click image to toggle blur</p>
+    <img src="../hku2025_genai_deepfakes/img/slide56_Picture_2.jpg" class="medium">
   </div>
 
   <div class="slide" data-notes="One-party violation with Deepnude: an AI that generates nude images from clothed photos. Only one person is involved — the victim whose clothed photo is 'undressed' by AI. The original Deepnude app was taken down but the code was open-sourced and countless clones exist. This disproportionately targets women and girls.">
     <h2>Porn <span class="red">(One Party Violation)</span></h2>
     <h3 style="color:var(--dim)">Deepnude</h3>
-    <img src="../hku2025_genai_deepfakes/img/slide57_Picture_2.jpg" class="medium" style="filter:blur(8px); transition:filter 0.3s" onclick="this.style.filter=this.style.filter==='none'?'blur(8px)':'none'" title="Click to toggle blur">
-    <p class="caption">Click image to toggle blur</p>
+    <img src="../hku2025_genai_deepfakes/img/slide57_Picture_2.jpg" class="medium">
   </div>
 
   <div class="slide" data-notes="Another form of one-party violation: generating explicit content purely from text prompts describing a real person. No source image needed — just a name and description. The 'waifu' variant generates anime-style explicit content based on real people. Both are violations even though no photograph was used as input.">
