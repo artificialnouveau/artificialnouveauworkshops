@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="../auth.js"></script>
+  <title>Introduction Code 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #141414;
+      --text: #e8e8e8;
+      --dim: #777;
+      --accent: #4a9eff;
+      --green: #00ff66;
+      --red: #ff4a4a;
+      --yellow: #ffd94a;
+      --pink: #ff6ec7;
+      --orange: #ff8c42;
+      --purple: #b48eff;
+      --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow: hidden;
+      height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .slide {
+      display: none;
+      position: absolute;
+      inset: 0;
+      padding: 40px 80px;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+    }
+
+    .slide::before, .slide::after { content: ''; flex: 1 0 0px; }
+    .slide > *:first-child { margin-top: 0; }
+    .slide.active { display: flex; animation: fadeIn 0.35s ease; }
+    .slide.fade-out { display: flex; animation: fadeOut 0.25s ease forwards; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+    .fragment { opacity: 0; transition: opacity 0.4s ease; }
+    .fragment.visible { opacity: 1; }
+
+    .slide h1 { font-size: 4.2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 16px; }
+    .slide h2 { font-size: 3.2rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 20px; }
+    .slide h3 { font-size: 1.8rem; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
+    .slide p, .slide li { font-size: 1.5rem; line-height: 1.7; color: var(--dim); }
+    .slide ul { list-style: none; padding: 0; text-align: left; }
+    .slide ul li { padding: 6px 0; padding-left: 24px; position: relative; }
+    .slide ul li::before { content: '\2192'; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); }
+    .slide strong { color: var(--text); font-weight: 600; }
+    .slide em { color: var(--accent); font-style: normal; }
+    .slide a { color: var(--accent); text-decoration: none; }
+    .slide a:hover { text-decoration: underline; }
+
+    .accent { color: var(--accent); }
+    .green { color: var(--green); }
+    .red { color: var(--red); }
+    .yellow { color: var(--yellow); }
+    .pink { color: var(--pink); }
+    .orange { color: var(--orange); }
+    .purple { color: var(--purple); }
+
+    .title-slide { align-items: center; text-align: center; justify-content: center; }
+    .title-slide h1 { font-size: 4.8rem; }
+    .title-slide .subtitle { font-size: 1.6rem; color: var(--dim); font-family: var(--mono); margin-top: 12px; }
+
+    .section-title { align-items: center; text-align: center; justify-content: center; }
+    .section-title h2 { font-size: 3.8rem; color: var(--accent); }
+    .section-title .divider { width: 80px; height: 3px; background: var(--accent); margin: 20px auto; border-radius: 2px; }
+
+    .sub-section { align-items: center; text-align: center; justify-content: center; }
+    .sub-section h3 { font-size: 2.4rem; color: var(--dim); letter-spacing: 0.05em; text-transform: uppercase; }
+    .sub-section .sub-divider { width: 40px; height: 2px; background: var(--dim); margin: 12px auto; border-radius: 2px; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; width: 100%; text-align: left; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; width: 100%; text-align: left; }
+
+    .img-row { display: flex; gap: 16px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+    .img-row img { max-height: 320px; border-radius: 8px; object-fit: contain; }
+
+    .card { background: var(--bg-card); border-radius: 12px; padding: 24px; border-left: 3px solid var(--accent); text-align: left; }
+    .card.green-border { border-left-color: var(--green); }
+    .card.red-border { border-left-color: var(--red); }
+    .card.yellow-border { border-left-color: var(--yellow); }
+    .card.pink-border { border-left-color: var(--pink); }
+    .card.orange-border { border-left-color: var(--orange); }
+    .card.purple-border { border-left-color: var(--purple); }
+
+    .slide img { max-width: 100%; max-height: 70vh; border-radius: 8px; object-fit: contain; width: auto; height: auto; }
+    .slide img.full { max-height: 85vh; margin: 0 auto; display: block; }
+    .slide img.small { max-height: 220px; }
+    .slide img.medium { max-height: 400px; }
+    .img-row img { max-height: 400px; object-fit: contain; }
+    .card img { max-width: 100%; height: auto; object-fit: contain; border-radius: 6px; }
+    .slide video, .slide iframe { border-radius: 8px; }
+
+    .caption { font-size: 0.95rem; color: var(--dim); font-family: var(--mono); text-align: center; margin-top: 8px; }
+
+    .quote { font-size: 1.8rem; font-style: italic; line-height: 1.6; color: var(--text); border-left: 4px solid var(--accent); padding: 20px 30px; background: var(--bg-card); border-radius: 0 12px 12px 0; max-width: 700px; text-align: left; }
+
+    .warning-badge { display: inline-block; padding: 10px 24px; border: 2px solid var(--red); border-radius: 8px; color: var(--red); font-family: var(--mono); font-size: 1.1rem; margin-top: 16px; }
+
+    .timeline { text-align: left; max-width: 700px; width: 100%; }
+    .timeline-item { padding: 16px 0 16px 32px; border-left: 2px solid #333; position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: -6px; top: 22px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+    .timeline-item .year { font-family: var(--mono); font-size: 1rem; color: var(--accent); margin-bottom: 4px; }
+    .timeline-item p { font-size: 1.2rem; }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 1.15rem;
+    }
+    table.data-table th, table.data-table td {
+      padding: 16px 20px;
+      text-align: left;
+      border-bottom: 1px solid #222;
+    }
+    table.data-table th {
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    table.data-table td { color: var(--dim); }
+    table.data-table td:first-child { color: var(--text); font-weight: 500; }
+    table.data-table tr:hover td { color: var(--text); }
+
+    .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+
+    #nav { position: fixed; bottom: 24px; right: 30px; display: flex; gap: 8px; z-index: 100; }
+    #nav button { width: 40px; height: 40px; border: 1px solid #333; background: var(--bg-card); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all 0.2s; }
+    #nav button:hover { border-color: var(--accent); color: var(--accent); }
+    #slide-counter { position: fixed; bottom: 30px; left: 30px; font-family: var(--mono); font-size: 0.8rem; color: var(--dim); z-index: 100; }
+    #progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); transition: width 0.3s ease; z-index: 100; }
+
+    #section-nav {
+      position: fixed; top: 3px; left: 0; right: 0; z-index: 99;
+      display: flex; justify-content: center; gap: 4px; padding: 8px 16px;
+      background: linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.8) 80%, transparent 100%);
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+      flex-wrap: wrap;
+    }
+    #section-nav.visible { opacity: 1; pointer-events: auto; }
+    #section-nav button {
+      border: 1px solid #333; background: var(--bg-card); color: var(--dim);
+      border-radius: 20px; padding: 4px 14px; cursor: pointer;
+      font-family: var(--mono); font-size: 0.7rem; white-space: nowrap;
+      transition: all 0.2s;
+    }
+    #section-nav button:hover { border-color: var(--accent); color: var(--accent); }
+    #section-nav button.active { border-color: var(--accent); color: var(--accent); background: rgba(74,158,255,0.12); }
+
+    @media (max-width: 900px) {
+      .slide { padding: 30px 24px; }
+      .slide h1 { font-size: 2.2rem; }
+      .title-slide h1 { font-size: 2.6rem; }
+      .slide h2 { font-size: 1.8rem; }
+      .two-col, .three-col, .tool-grid { grid-template-columns: 1fr; gap: 20px; }
+      .quote { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress"></div>
+  <div id="section-nav"></div>
+
+  <!-- ============================================ -->
+  <!-- TITLE                                        -->
+  <!-- ============================================ -->
+
+  <div class="slide title-slide active" data-notes="Welcome. Introduce yourself. Press P to open presenter notes, N for section nav.">
+    <h1>I am<br><span class="accent">Ahnjili</span></h1>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- WHO AM I                                     -->
+  <!-- ============================================ -->
+
+  <div class="slide" data-notes="My background is academic. I spent years as a researcher working on machine learning applied to clinical and behavioural data: cry detection for neonates, smartphone-and-wearable biomarkers for depression severity, and objective monitoring of facioscapulohumeral dystrophy in clinical trials.">
+    <h2>Ex-Academic</h2>
+    <div style="display:flex; gap:14px; margin-top:8px; max-width:95%; align-items:center; justify-content:center; flex-wrap:wrap">
+      <img src="img/cry_detection_paper.png" alt="Frontiers in Pediatrics paper: Smartphone-Based Cry Detection" style="width:32%; max-height:55vh; border-radius:8px; object-fit:contain">
+      <img src="img/depression_paper.png" alt="Scientific Reports paper: smartphone and wearable biomarker for depression severity" style="width:32%; max-height:55vh; border-radius:8px; object-fit:contain">
+      <img src="img/fshd_paper.png" alt="Paper: Objective Monitoring of Facioscapulohumeral Dystrophy" style="width:32%; max-height:55vh; border-radius:8px; object-fit:contain">
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Beyond academia, my interest is in how AI reshapes faces and identities, from de-aging in film to AI-generated historical portraits circulating on social media as if they were real photographs.">
+    <h2>AI Engineer: Cosmetic Computer Vision</h2>
+    <div style="display:flex; gap:16px; margin-top:8px; max-width:85%; align-items:center; justify-content:center">
+      <img src="img/deniro_deaging.jpg" alt="De-aging stills" style="width:100%; max-height:38vh; border-radius:8px; object-fit:contain">
+    </div>
+    <div style="display:flex; gap:16px; margin-top:18px; max-width:60%; align-items:center; justify-content:center">
+      <img src="img/beethoven_1.jpg" alt="Beethoven AI portrait Instagram post" style="width:50%; max-height:32vh; border-radius:8px; object-fit:contain">
+      <img src="img/beethoven_2.jpg" alt="Beethoven AI portrait Instagram post" style="width:50%; max-height:32vh; border-radius:8px; object-fit:contain">
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Currently I work as an AI engineer and media researcher, looking at how images, narratives, and bodies circulate across media. From reproductive rights imagery to fantasy TV marketing to early-2000s sitcoms, the visual culture is the dataset.">
+    <h2>AI Engineer: Digital Culture Researcher</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px; max-width:75%; width:100%">
+      <img src="img/my_body_my_choice.jpg" alt="My Body My Choice protest" style="width:100%; max-height:32vh; border-radius:8px; object-fit:contain">
+      <img src="img/house_of_dragon.jpg" alt="House of the Dragon promo" style="width:100%; max-height:32vh; border-radius:8px; object-fit:contain">
+      <img src="img/fragile_prolife.jpg" alt="Pro-life Fragile protest sign" style="width:100%; max-height:32vh; border-radius:8px; object-fit:contain">
+      <img src="img/everybody_hates_chris.jpg" alt="Everybody Hates Chris promo" style="width:100%; max-height:32vh; border-radius:8px; object-fit:contain">
+    </div>
+  </div>
+
+  <!-- VOICES -->
+  <div class="slide" data-notes="Voices: an Ars Electronica project exploring synthetic voice and identity.">
+    <h2>Computational Artist: VOICES</h2>
+    <iframe src="https://www.youtube-nocookie.com/embed/rKX4oOXQ2j0" style="width:80%; max-width:900px; aspect-ratio:16/9; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+
+  <!-- Fashion Police Drones -->
+  <div class="slide" data-notes="Fashion Police Drones: a satirical computational art project imagining drones that surveil and police people's clothing choices.">
+    <h2>Computational Artist: Fashion Police Drones</h2>
+    <div style="display:flex; gap:14px; margin-top:8px; max-width:95%; align-items:center; justify-content:center">
+      <iframe src="https://www.youtube-nocookie.com/embed/FmHWW-h6G5E" style="width:30%; aspect-ratio:9/16; max-height:65vh; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <iframe src="https://www.youtube-nocookie.com/embed/QwhF7XVgr5Q" style="width:30%; aspect-ratio:9/16; max-height:65vh; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <iframe src="https://www.youtube-nocookie.com/embed/_TywTP3kjwc" style="width:30%; aspect-ratio:9/16; max-height:65vh; border:none; border-radius:8px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- Future Wake -->
+  <div class="slide" data-notes="Future Wake: a computational art project speculating on future homicide victims and perpetrators using predictive models and AI-generated faces.">
+    <h2>Computational Artist: Future Wake</h2>
+    <div style="display:flex; gap:18px; margin-top:8px; max-width:95%; align-items:center; justify-content:center">
+      <video src="img/HTHM315_preview.webm" autoplay loop muted playsinline style="width:30%; max-height:65vh; border-radius:8px; object-fit:contain"></video>
+      <video src="img/CHBF314_preview.webm" autoplay loop muted playsinline style="width:30%; max-height:65vh; border-radius:8px; object-fit:contain"></video>
+      <video src="img/LABM315_preview.webm" autoplay loop muted playsinline style="width:30%; max-height:65vh; border-radius:8px; object-fit:contain"></video>
+    </div>
+  </div>
+
+  <!-- DEEPFAKE @ Peckham Digital -->
+  <div class="slide" data-notes="These are photos from my DEEPFAKE exhibition at Peckham Digital, an art project exploring the cultural implications of deepfake technology. Art can be a powerful way to make these issues tangible and accessible.">
+    <h2>Computational Artist: DEEPFAKE</h2>
+    <iframe src="https://player.vimeo.com/video/1082448682?badge=0&autopause=0&player_id=0&app_id=58479" style="width:80%; max-width:1000px; aspect-ratio:16/9; border:none; border-radius:8px" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" allowfullscreen></iframe>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- PART 6: NECROMEMETICS                        -->
+  <!-- ============================================ -->
+
+  <div class="slide section-title" data-notes="Now we shift into a deeper exploration: necromemetics. How the dead are turned into memes, myths, and digital puppets — and how deepfakes have supercharged this ancient process.">
+    <h2><span class="purple">Necromemetics</span></h2>
+    <div class="divider" style="background:var(--purple)"></div>
+    <p style="color:var(--dim); font-size:1.3rem; margin-top:16px">Can Memes Dilute History</p>
+  </div>
+
+  <div class="slide sub-section" data-notes="Let's start with the story that's been impossible to escape. Charlie Kirk — who he was, what happened to him, and how he became the biggest meme of 2025.">
+    <h3><span class="red">Charlie Kirk</span></h3>
+    <div class="sub-divider" style="background:var(--red)"></div>
+  </div>
+
+  <div class="slide" data-notes="Charlie Kirk was the founder of Turning Point USA, a conservative youth organization. He had a massive Christian right Gen Z following and became famous for his viral campus debate clips where he'd challenge liberal students. He was the GenZ-facing bridge for MAGA — 'the younger kind of person who sold out to them' as one journalist put it. He was deeply controversial: hated by the left for his extremism, and hated by the far-right 'gropers' who saw him as embarrassing and a sellout.">
+    <h2>Who Was Charlie Kirk?</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <ul>
+        <li>Founder of <strong>Turning Point USA</strong> — conservative youth org</li>
+        <li>Famous for <strong>viral campus debate clips</strong> challenging liberal students</li>
+        <li class="fragment">The <strong>Gen Z face of MAGA</strong> — built to bridge boomers and young conservatives</li>
+        <li class="fragment">Hated by the far-right "gropers" as <strong>embarrassing</strong> and a <strong>sellout</strong></li>
+      </ul>
+      <div style="display:flex; justify-content:center">
+        <video src="../necromemetics/kirk_intro.mp4" controls style="max-height:60vh; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="On September 10, 2025, Charlie Kirk was shot and killed in front of a crowd of students in Utah. There is something painfully modern about his assassination — a man whose prominence came from viral clips on social media, and whose death would be instantly played to millions on social media. A bystander called Elder TikTok, who was five people away from Kirk in line, immediately started filming and promoting his Instagram while Kirk lay dying. This distills the spirit of our age: someone is dying and the instinct is to get out your phone for attention, likes, and digitized prestige.">
+    <h2>September 10, 2025</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div>
+        <ul>
+          <li>Charlie Kirk was <strong>shot and killed</strong> in front of students in Utah</li>
+          <li class="fragment">A man whose prominence came from <strong>viral clips</strong> — whose death would be <strong>instantly played to millions</strong></li>
+          <li class="fragment">Bystander <strong>"Elder TikTok"</strong> — five people away in line — immediately started filming and <strong>promoting his Instagram</strong></li>
+          <li class="fragment"><em>"Jesus is Lord. Make sure you subscribe to Elder TikTok on Instagram"</em> — while Kirk lay dying</li>
+        </ul>
+      </div>
+      <div style="display:flex; justify-content:center">
+        <video src="../necromemetics/kirk_shooting_reaction.mp4" controls style="max-height:60vh; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Kirk's death was immediately turned into both entertainment and propaganda. The memorial had pyrotechnics, AI voice cloning of Kirk speaking from beyond the grave, and 90K attendees — it was structured more like a political rally or concert than a funeral. Trump, Vance, Rubio used the event to frame Kirk's death as 'the start of a holy war' — grief was a recruitment tool. The line between mourning and marketing, between grief and spectacle, completely dissolved.">
+    <h2>Death as Entertainment &amp; Propaganda</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <ul>
+        <li>Trump: <em>"Millions of Charlie Kirks were created today"</em></li>
+        <li class="fragment">Flags at <strong>half-staff</strong> — his death weaponized as <strong>state propaganda</strong></li>
+        <li class="fragment">The line between <strong>mourning and marketing</strong>, grief and spectacle, completely dissolved</li>
+      </ul>
+      <div style="display:flex; flex-direction:column; gap:8px; align-items:center">
+        <video src="../necromemetics/kirk_memorial.mp4" controls style="max-height:38vh; border-radius:8px"></video>
+        <video src="../necromemetics/kirk_rally.mp4" controls style="max-height:38vh; border-radius:8px"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Within a week of Kirk's death, memes appeared. Crypto accounts made AI 'Kirk as Terminator' videos. Leftists discovered they could troll MAGA by mocking Kirk — 'Kirkin on it' became slang. Within a month, Trump stopped mentioning Kirk and the martyr narrative collapsed. Then total Kirkification — every face on the internet replaced with his.">
+    <h2>Charlie Kirk</h2>
+    <div class="two-col" style="max-width:1000px; align-items:start">
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <video src="../necromemetics/kirk_short.mp4" controls style="max-height:55vh; border-radius:8px;"></video>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <video src="../necromemetics/kirk_terminator.mp4" controls style="max-height:55vh; border-radius:8px;"></video>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="There are three different factions sharing these memes for completely different reasons. MAGA boomers who sincerely share AI slop of Kirk ascending to heaven. Young far-right gropers who hated Kirk as a sellout and use ironic memes to spread neo-Nazi imagery. And leftists who use the memes to mock MAGA and process the absurdity.">
+    <h2>Three Factions, One Meme</h2>
+    <div class="three-col" style="max-width:900px">
+      <div class="card red-border">
+        <h3 style="color:var(--red)">MAGA Boomers</h3>
+        <ul>
+          <li><strong>Sincerely</strong> share AI slop</li>
+          <li>Kirk ascending to heaven</li>
+          <li>Kirk talking to Jesus</li>
+          <li>Megachurches play these videos</li>
+        </ul>
+      </div>
+      <div class="card yellow-border fragment">
+        <h3 style="color:var(--yellow)">The Gropers</h3>
+        <ul>
+          <li>Far-right Gen Z extremists</li>
+          <li><strong>Hated</strong> Kirk as a sellout</li>
+          <li>Use ironic memes to spread <strong>neo-Nazi imagery</strong></li>
+          <li>Agartha edits, black sun symbols</li>
+        </ul>
+      </div>
+      <div class="card accent fragment">
+        <h3 style="color:var(--accent)">Leftists</h3>
+        <ul>
+          <li><strong>Ironic</strong> sharing</li>
+          <li>Mock the martyr narrative</li>
+          <li>Dark absurdist humor</li>
+          <li>Process political trauma</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Harambe was a gorilla shot at Cincinnati Zoo in May 2016 after a child fell into his enclosure. Within days, 'dicks out for Harambe' was everywhere. The meme transcended the actual event — Harambe became a symbol of internet culture itself. Over time, as other celebrities died, they were added to 'Harambe's Heaven in the Sky' — an ongoing folklore tradition.">
+    <h2>Harambe: The First Internet Saint</h2>
+    <div style="display:flex; gap:24px; align-items:center; justify-content:center;">
+      <img src="../necromemetics/harambe_zoo.jpg" style="max-height:65vh; border-radius:8px">
+      <img src="../necromemetics/harambe_candle.webp" style="max-height:65vh; border-radius:8px">
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Ruby Justice Lo coined the term necromimetics (which we're extending to necromemetics) to describe how we turn dead people's bodies into myths and narratives that then define social norms. This isn't new — governments have always used the executed criminal and the politician lying in state as symbols of legitimacy. Political and religious movements turn people into martyrs. Either way, we mythologize the person — appropriating their likeness into an idea that's less about the human being and more about the story we choose to tell.">
+    <h2>Necromemetics</h2>
+    <div class="quote" style="border-left-color:var(--purple)">
+      "We turn people's bodies into myths and narratives that then define social norms."
+    </div>
+    <p class="caption">— Ruby Justice Lo, artist & researcher</p>
+    <ul class="fragment" style="max-width:700px; margin-top:20px">
+      <li>We think more about the dead <strong>as people who died</strong> than as people who lived</li>
+      <li>Governments use the dead as <strong>symbols of legitimacy</strong></li>
+      <li>Movements turn them into <strong>martyrs</strong> to rally behind</li>
+      <li>The person becomes an <strong>idea</strong> — less about the human, more about the story</li>
+    </ul>
+  </div>
+
+  <div class="slide" data-notes="These three moments define how photography turns death into symbol. Mamie Till insisted on an open casket for her 14-year-old son Emmett in 1955. Abraham Zapruder's 26-second home movie of JFK's assassination became the most analyzed film in history. And Darnella Frazier filmed George Floyd's murder on her phone in 2020. In each case, the image outlived the person. The photograph became the story.">
+    <h2>Death Frozen Into Symbol</h2>
+    <div class="three-col" style="max-width:900px">
+      <div>
+        <div class="card fragment" style="border-left-color:var(--yellow)">
+          <h3 style="color:var(--yellow)">1955</h3>
+          <p style="font-size:1.3rem; margin-top:8px"><strong>Emmett Till's Open Casket</strong></p>
+        </div>
+      </div>
+      <div>
+        <div class="card fragment" style="border-left-color:var(--dim)">
+          <h3 style="color:var(--dim)">1963</h3>
+          <p style="font-size:1.3rem; margin-top:8px"><strong>Zapruder Film</strong></p>
+        </div>
+      </div>
+      <div>
+        <div class="card fragment red-border">
+          <h3 style="color:var(--red)">2020</h3>
+          <p style="font-size:1.3rem; margin-top:8px"><strong>George Floyd Video</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Sora, OpenAI's video generator, has made this exponentially worse. People used it to generate hyper-realistic clips of deceased celebrities and historical figures in bizarre and offensive scenarios. MLK was shown making racist noises during 'I Have a Dream.' MLK and Malcolm X were shown fighting each other. JFK, Queen Elizabeth II, Stephen Hawking — all turned into digital puppets. OpenAI eventually paused MLK images only after the King estate complained. Everyone else is still fair game.">
+    <h2>AI Resurrection</h2>
+    <ul style="max-width:700px">
+      <li>OpenAI's <strong>Sora</strong> generates hyper-realistic video from text prompts</li>
+      <li class="fragment">Users immediately created <strong>offensive deepfakes</strong> of the dead</li>
+      <li class="fragment">MLK, JFK, Queen Elizabeth II, Stephen Hawking — all turned into <strong>digital puppets</strong></li>
+      <li class="fragment">OpenAI paused MLK images only <strong>after the King estate complained</strong></li>
+      <li class="fragment">Everyone else? Still <strong>fair game</strong></li>
+    </ul>
+    <div class="warning-badge fragment">The dead have no rights to their own image</div>
+  </div>
+
+  <div class="slide" data-notes="Another Sora example demonstrating the range of styles and scenarios the model can produce. When this level of quality is applied to deceased people, the results are indistinguishable from real footage.">
+    <h2>Sora in Action</h2>
+    <video src="../hku2025_genai_deepfakes/img/peckham_sora2_38.mp4" controls style="max-height:65vh; max-width:80%; border-radius:8px"></video>
+  </div>
+
+  <div class="slide" data-notes="A second Sora in Action example, sourced from TikTok (@andrewwilloughby1).">
+    <h2>Sora in Action</h2>
+    <video src="img/sora_in_action_2.mp4" controls style="max-height:70vh; max-width:55%; border-radius:8px"></video>
+  </div>
+
+  <div class="slide" data-notes="This is the core problem: who gets protection from synthetic resurrection, and who doesn't? Henry Ajder raised the key question: many deceased individuals don't have well-resourced estates to protect them. We want to avoid a situation where unless we're very famous, society accepts a free-for-all over how we continue to be represented after death.">
+    <h2>Who Gets Protection?</h2>
+    <div class="quote" style="border-left-color:var(--red); font-size:1.4rem">
+      "King's estate rightfully raised this with OpenAI, but many deceased individuals don't have well-known and well-resourced estates to represent them. We want to avoid a situation where unless we're very famous, society accepts that after we die there is a free-for-all over how we continue to be represented."
+    </div>
+    <p class="caption">— Henry Ajder, generative AI expert</p>
+    <div class="two-col fragment" style="max-width:800px; margin-top:20px">
+      <div class="card green-border">
+        <h3 style="color:var(--green)">Protected (if they ask)</h3>
+        <ul>
+          <li>MLK (after estate complained)</li>
+          <li>Famous people with <strong>resourced estates</strong></li>
+        </ul>
+      </div>
+      <div class="card red-border">
+        <h3 style="color:var(--red)">Unprotected</h3>
+        <ul>
+          <li>Everyone else</li>
+          <li>The dead can't <strong>opt out</strong></li>
+          <li>No estate = <strong>no recourse</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-notes="Meme culture doesn't just distort how we remember people — it actively competes with the historical record. When millions encounter a figure first through ironic memes, that becomes their baseline understanding. The meme replaces the biography. History becomes a content library, and the dead become interchangeable props in whatever narrative gets the most engagement.">
+    <h2>Memes vs. History</h2>
+    <div class="two-col" style="max-width:900px; align-items:start">
+      <div>
+        <div class="card" style="border-left-color:var(--yellow)">
+          <h3 style="color:var(--yellow)">How History Works</h3>
+          <ul>
+            <li class="fragment">Built on evidence, context, and debate</li>
+            <li class="fragment">Acknowledges complexity and contradiction</li>
+            <li class="fragment">Evolves through scholarship over time</li>
+            <li class="fragment">The person exists in a specific moment</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="card red-border">
+          <h3 style="color:var(--red)">How Meme Culture Works</h3>
+          <ul>
+            <li class="fragment">Built on virality, emotion, and speed</li>
+            <li class="fragment">Flattens everything into a single image or joke</li>
+            <li class="fragment">Evolves through remixing in hours</li>
+            <li class="fragment">The person becomes an interchangeable symbol</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <img src="../necromemetics/kirk_minecraft_death.png" class="fragment" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:var(--bg); padding:40px 80px; z-index:10" alt="Kirk Minecraft death screen meme">
+  </div>
+
+  <!-- ============================================ -->
+  <!-- THANK YOU                                    -->
+  <!-- ============================================ -->
+
+  <div class="slide title-slide" data-notes="Thank the audience and point them to the grants workshop at tinyurl.com/artnougrants. Mention the Grant Desk: 117 active grants, fellowships and residencies in AI, arts, film, research and tech.">
+    <h1>Thank You<span class="accent">!</span></h1>
+    <p class="subtitle"><a href="https://www.artificialnouveau.com" target="_blank" rel="noopener" style="color:inherit">www.artificialnouveau.com</a></p>
+    <div style="display:flex; gap:32px; margin-top:32px; align-items:center; justify-content:center; flex-wrap:wrap; max-width:90%">
+      <img src="img/grant_desk.png" alt="The Grant Desk: grants, fellowships and residencies in AI, arts, film, research and tech" style="max-width:420px; max-height:32vh; border-radius:8px; object-fit:contain; background:#f5f1e0; padding:8px">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:10px">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&amp;data=https%3A%2F%2Ftinyurl.com%2Fartnougrants&amp;margin=10" alt="QR code linking to tinyurl.com/artnougrants" style="width:200px; height:200px; border-radius:8px; background:#fff; padding:8px">
+        <a href="https://tinyurl.com/artnougrants" target="_blank" rel="noopener" style="color:var(--accent); font-family:var(--mono); font-size:1.1rem">tinyurl.com/artnougrants</a>
+        <p class="subtitle" style="margin-top:4px; font-size:0.95rem">Grants Desk</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div id="slide-counter"></div>
+  <div id="nav">
+    <button onclick="prev()" title="Previous">&#8592;</button>
+    <button onclick="next()" title="Next">&#8594;</button>
+    <button onclick="toggleFullscreen()" title="Fullscreen (F)" style="font-size:0.8rem">&#x26F6;</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+    let transitioning = false;
+
+    function show(n) {
+      n = Math.max(0, Math.min(n, total - 1));
+      if (n === current || transitioning) return;
+
+      transitioning = true;
+      const prevSlide = slides[current];
+      const nextSlide = slides[n];
+      const prevIndex = current;
+
+      prevSlide.classList.add('fade-out');
+      prevSlide.addEventListener('animationend', function handler() {
+        prevSlide.removeEventListener('animationend', handler);
+        prevSlide.classList.remove('active', 'fade-out');
+        current = n;
+        var frags = nextSlide.querySelectorAll('.fragment');
+        frags.forEach(function(f) {
+          if (n < prevIndex) f.classList.add('visible');
+          else f.classList.remove('visible');
+        });
+        nextSlide.classList.add('active');
+        document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+        document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+        transitioning = false;
+      }, { once: true });
+
+      setTimeout(function() {
+        if (transitioning) {
+          prevSlide.classList.remove('active', 'fade-out');
+          current = n;
+          var frags = nextSlide.querySelectorAll('.fragment');
+          frags.forEach(function(f) {
+            if (n < prevIndex) f.classList.add('visible');
+            else f.classList.remove('visible');
+          });
+          nextSlide.classList.add('active');
+          document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + total;
+          document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+          transitioning = false;
+        }
+      }, 400);
+    }
+
+    function next() {
+      var frags = slides[current].querySelectorAll('.fragment:not(.visible)');
+      if (frags.length > 0) { frags[0].classList.add('visible'); return; }
+      show(current + 1);
+    }
+
+    function prev() {
+      var frags = slides[current].querySelectorAll('.fragment.visible');
+      if (frags.length > 0) { frags[frags.length - 1].classList.remove('visible'); return; }
+      show(current - 1);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+      else document.exitFullscreen();
+    }
+
+    // Presenter notes
+    var presenterWin = null;
+    var presenterStartTime = null;
+    var presenterTimerInterval = null;
+
+    function formatTime(ms) {
+      var s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60);
+      s = s % 60; m = m % 60;
+      return (h > 0 ? h + ':' : '') + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function updatePresenter() {
+      if (!presenterWin || presenterWin.closed) return;
+      var doc = presenterWin.document;
+      var notes = slides[current].getAttribute('data-notes') || '(no notes for this slide)';
+      var title = slides[current].querySelector('h1, h2');
+      var titleText = title ? title.textContent : 'Slide ' + (current + 1);
+      var nextTitle = '(end)';
+      if (current + 1 < total) {
+        var nt = slides[current + 1].querySelector('h1, h2');
+        nextTitle = nt ? nt.textContent : 'Slide ' + (current + 2);
+      }
+      var el = doc.getElementById('p-slide-num'); if (el) el.textContent = 'Slide ' + (current + 1) + ' / ' + total;
+      el = doc.getElementById('p-title'); if (el) el.textContent = titleText;
+      el = doc.getElementById('p-notes'); if (el) el.textContent = notes;
+      el = doc.getElementById('p-next'); if (el) el.textContent = nextTitle;
+    }
+
+    function openPresenter() {
+      if (presenterWin && !presenterWin.closed) { presenterWin.focus(); return; }
+      presenterWin = window.open('', 'presenter', 'width=500,height=400,toolbar=no,menubar=no');
+      var doc = presenterWin.document;
+      doc.open();
+      doc.write('<!DOCTYPE html><html><head><title>Presenter Notes</title><style>body{background:#111;color:#e8e8e8;font-family:-apple-system,sans-serif;padding:20px;margin:0}.timer{font-size:3rem;font-family:monospace;color:#4a9eff;margin-bottom:8px}.slide-num{font-size:0.85rem;color:#777;margin-bottom:16px}.title{font-size:1.3rem;color:#fff;margin-bottom:16px;border-bottom:1px solid #333;padding-bottom:12px}.notes{font-size:1.1rem;line-height:1.8;color:#ccc;margin-bottom:24px;min-height:80px}.next-label{font-size:0.75rem;color:#777;margin-bottom:4px}.next-title{font-size:1rem;color:#999}button{padding:6px 16px;border:1px solid #444;background:transparent;color:#999;border-radius:4px;cursor:pointer;font-size:0.8rem;margin-right:8px}button:hover{border-color:#4a9eff;color:#4a9eff}.controls{margin-bottom:16px}</style></head><body><div class="timer" id="p-timer">00:00</div><div class="controls"><button id="p-reset">Reset Timer</button><button id="p-prev">&larr; Prev</button><button id="p-next-btn">Next &rarr;</button></div><div class="slide-num" id="p-slide-num"></div><div class="title" id="p-title"></div><div class="notes" id="p-notes"></div><div class="next-label">NEXT SLIDE</div><div class="next-title" id="p-next"></div></body></html>');
+      doc.close();
+      doc.getElementById('p-prev').addEventListener('click', function() { prev(); });
+      doc.getElementById('p-next-btn').addEventListener('click', function() { next(); });
+      doc.getElementById('p-reset').addEventListener('click', function() { presenterStartTime = Date.now(); });
+      doc.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+      });
+      presenterStartTime = presenterStartTime || Date.now();
+      clearInterval(presenterTimerInterval);
+      presenterTimerInterval = setInterval(function() {
+        if (presenterWin && !presenterWin.closed) {
+          var el = presenterWin.document.getElementById('p-timer');
+          if (el) el.textContent = formatTime(Date.now() - presenterStartTime);
+        } else clearInterval(presenterTimerInterval);
+      }, 1000);
+      updatePresenter();
+    }
+
+    // Section navigation bar
+    var sectionNav = document.getElementById('section-nav');
+    var sectionSlides = [];
+    slides.forEach(function(s, i) {
+      if (s.classList.contains('section-title') || s.classList.contains('title-slide')) {
+        var h = s.querySelector('h2') || s.querySelector('h1');
+        if (h) {
+          var label = h.textContent.trim();
+          sectionSlides.push({ index: i, label: label });
+          var btn = document.createElement('button');
+          btn.textContent = label;
+          btn.setAttribute('data-slide', i);
+          btn.addEventListener('click', function() { show(i); });
+          sectionNav.appendChild(btn);
+        }
+      }
+    });
+
+    function updateSectionNav() {
+      var btns = sectionNav.querySelectorAll('button');
+      var activeSection = 0;
+      for (var i = sectionSlides.length - 1; i >= 0; i--) {
+        if (current >= sectionSlides[i].index) { activeSection = i; break; }
+      }
+      btns.forEach(function(b, idx) {
+        b.classList.toggle('active', idx === activeSection);
+      });
+    }
+
+    // Patch show/next/prev to update section nav
+    var __origShow = show;
+    show = function(n) { __origShow(n); setTimeout(function() { updateSectionNav(); updatePresenter(); }, 50); };
+    var __origNext = next;
+    next = function() { __origNext(); setTimeout(function() { updateSectionNav(); updatePresenter(); }, 50); };
+    var __origPrev = prev;
+    prev = function() { __origPrev(); setTimeout(function() { updateSectionNav(); updatePresenter(); }, 50); };
+
+    document.querySelector('#nav button:nth-child(1)').onclick = function() { prev(); };
+    document.querySelector('#nav button:nth-child(2)').onclick = function() { next(); };
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prev(); }
+      if (e.key === 'Home') { e.preventDefault(); show(0); }
+      if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+      if (e.key === 'p' || e.key === 'P') openPresenter();
+      if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+      if (e.key === 'n' || e.key === 'N') sectionNav.classList.toggle('visible');
+    });
+
+    var touchStartX = 0;
+    document.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', function(e) {
+      var diff = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(diff) > 50) { diff < 0 ? next() : prev(); }
+    });
+
+    updateSectionNav();
+    show(0);
+  </script>
+
+</body>
+</html>
